@@ -1,0 +1,25 @@
+{
+  "active": [],
+  "completed": [],
+  "hooks": [
+    {
+      "id": "hook-phandalin-arrival",
+      "summary": "Gundren Rockseeker hired the party to escort supplies to Phandalin from Neverwinter.",
+      "exposure": "given to party",
+      "consequence_if_ignored": "Gundren remains missing; the Cragmaw threat grows."
+    }
+  ],
+  "_schema": {
+    "active_quest_fields": [
+      "id",
+      "title",
+      "given_by",
+      "summary",
+      "objectives",
+      "obstacles",
+      "rewards",
+      "known_to_party",
+      "secret_truth"
+    ]
+  }
+}

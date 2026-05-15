@@ -1,0 +1,42 @@
+{
+  "id": "pc-friend",
+  "name": "REPLACE_ME",
+  "player": "Friend",
+  "race": "REPLACE_ME",
+  "class": "REPLACE_ME",
+  "subclass": null,
+  "level": 1,
+  "xp": 0,
+  "alignment": "",
+  "background": "",
+
+  "abilities": { "str": 10, "dex": 10, "con": 10, "int": 10, "wis": 10, "cha": 10 },
+  "proficiency_bonus": 2,
+  "save_proficiencies": [],
+
+  "skills": {},
+
+  "ac": 10,
+  "hp": { "max": 8, "current": 8, "temp": 0 },
+  "hit_dice": { "size": "d8", "total": 1, "remaining": 1 },
+  "speed": 30,
+  "initiative_bonus": 0,
+  "passive_perception": 10,
+
+  "languages": ["Common"],
+  "proficiencies": { "armor": [], "weapons": [], "tools": [] },
+
+  "features": [],
+  "attacks": [],
+  "spells": { "ability": null, "save_dc": null, "attack_bonus": null, "slots": {}, "known": [] },
+
+  "inventory": [],
+  "gold": 0,
+
+  "conditions": [],
+  "exhaustion": 0,
+  "death_saves": { "successes": 0, "failures": 0 },
+
+  "personality": { "traits": [], "ideals": [], "bonds": [], "flaws": [] },
+  "notes": "Replace with real character at session 0. See characters/SCHEMA.md."
+}

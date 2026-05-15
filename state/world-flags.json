@@ -1,0 +1,11 @@
+{
+  "_description": "Persistent world facts the party has changed or learned. Append-only in practice — flipping a flag back should be rare and noted.",
+  "flags": {},
+  "_example": {
+    "tresendar_manor_cleared": {
+      "value": false,
+      "set_session": null,
+      "note": "Set true when party defeats Glasstaff and clears the Redbrand hideout."
+    }
+  }
+}

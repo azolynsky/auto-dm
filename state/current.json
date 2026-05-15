@@ -1,0 +1,24 @@
+{
+  "campaign_day": 1,
+  "in_game_date": "1st of Mirtul, 1492 DR",
+  "time_of_day": "morning",
+  "location": {
+    "region": "Sword Coast",
+    "settlement": "Phandalin",
+    "specific": "The Stonehill Inn, common room"
+  },
+  "weather": "clear, cool spring morning",
+  "party": ["pc-alex", "pc-friend"],
+  "party_resources": {
+    "gold": 0,
+    "rations": 0,
+    "torches": 0
+  },
+  "present_entities": [
+    "world/locations/phandalin",
+    "npcs/recurring/toblen-stonehill",
+    "npcs/recurring/trilena-stonehill"
+  ],
+  "active_effects": [],
+  "notes": "Campaign has not started yet. present_entities is what's currently 'in scene' — Director updates this whenever the party moves or new NPCs enter. All listed entities' summary.md is auto-loaded by Director and Narrator; motivations.md / secrets.md is auto-loaded by Director only (firewall)."
+}
