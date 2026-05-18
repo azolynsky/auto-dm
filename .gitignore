@@ -14,3 +14,8 @@ Thumbs.db
 .idea/
 *.swp
 *~
+
+# Web companion (ephemeral session data)
+state/player-feed.jsonl
+characters/images/
+.gstack/

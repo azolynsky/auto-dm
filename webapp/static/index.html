@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lost Mine of Phandelver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header id="header">
+    <span class="header-campaign">Lost Mine of Phandelver</span>
+    <span class="header-divider">·</span>
+    <span id="header-date"></span>
+    <span class="header-divider">·</span>
+    <span id="header-location"></span>
+    <span class="header-divider">·</span>
+    <span id="header-weather"></span>
+  </header>
+
+  <main id="main-grid">
+
+    <!-- LEFT: Character Panels -->
+    <section id="characters-column">
+      <div id="characters-inner"></div>
+    </section>
+
+    <!-- CENTER: Narration Feed -->
+    <section id="feed-column">
+      <div id="feed-header">
+        <span class="section-label">Chronicle</span>
+      </div>
+      <div id="feed-entries"></div>
+    </section>
+
+    <!-- RIGHT: Sidebar -->
+    <aside id="sidebar-column">
+      <section class="sidebar-section" id="quests-section">
+        <h2 class="section-label">Quests</h2>
+        <ul id="quests-list"></ul>
+      </section>
+      <section class="sidebar-section" id="worldflags-section">
+        <h2 class="section-label">Known Facts</h2>
+        <ul id="worldflags-list"></ul>
+      </section>
+      <section class="sidebar-section" id="location-section">
+        <h2 class="section-label">Where You Are</h2>
+        <div id="location-detail"></div>
+      </section>
+    </aside>
+
+  </main>
+
+  <!-- COMBAT BAR — hidden until combat is active -->
+  <footer id="combat-bar" class="hidden">
+    <span class="combat-label">⚔ Combat</span>
+    <span id="combat-round"></span>
+    <div id="initiative-track"></div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
