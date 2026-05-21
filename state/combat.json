@@ -1,7 +1,56 @@
 {
   "active": false,
-  "round": 0,
+  "round": 2,
   "turn_index": 0,
-  "order": [],
-  "log": []
+  "order": [
+    {
+      "name": "Relthus",
+      "init": 20,
+      "mod": 3,
+      "hp": 12,
+      "max_hp": 12,
+      "conditions": []
+    },
+    {
+      "name": "GoblinBlade",
+      "init": 14,
+      "mod": 2,
+      "hp": 0,
+      "max_hp": 7,
+      "conditions": []
+    },
+    {
+      "name": "GoblinArcher",
+      "init": 10,
+      "mod": 2,
+      "hp": -3,
+      "max_hp": 7,
+      "conditions": []
+    },
+    {
+      "name": "Mira",
+      "init": 8,
+      "mod": 3,
+      "hp": 12,
+      "max_hp": 12,
+      "conditions": []
+    }
+  ],
+  "log": [
+    "Combat started. Initiative: Relthus(20), GoblinBlade(14), GoblinArcher(10), Mira(8)",
+    "GoblinArcher takes 10 damage (now -3 HP) \u2014 DOWN",
+    "Mira takes 7 damage (now -7 HP) \u2014 DOWN",
+    "Mira takes 7 damage (now 5 HP)",
+    "Turn: GoblinBlade",
+    "Turn: GoblinArcher",
+    "Turn: Mira",
+    "--- Round 2 ---",
+    "Turn: Relthus",
+    "Mira takes 3 damage (now 2 HP)",
+    "Mira healed 2 (now 4 HP)",
+    "GoblinBlade takes 6 damage (now 1 HP)",
+    "GoblinBlade takes 1 damage (now 0 HP) \u2014 DOWN",
+    "Combat ended.",
+    "Mira healed 8 (now 12 HP)"
+  ]
 }

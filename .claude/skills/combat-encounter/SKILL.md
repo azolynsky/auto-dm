@@ -25,12 +25,21 @@ Combat is the highest-state-density part of D&D. Use this skill as the procedure
 
 Order: top of initiative → bottom → repeat.
 
-1. **Apply start-of-turn effects** (regen, ongoing saves to end conditions, lair actions on init 20).
-2. **Director decides intent** for NPCs; PCs declare action.
-3. **Rules Lawyer validates** mechanics if anything is non-obvious.
-4. **Dice rolls** via `tools/dice.py` — never mental math. For attacks: roll to-hit, then damage on hit. For saves: target rolls.
-5. **Bookkeeper applies** damage/conditions/movement via `combat_tracker.py`.
-6. **Narrator describes** the outcome.
+### PC turn
+1. **Apply start-of-turn effects** (regen, ongoing saves to end conditions).
+2. **STOP. Ask the player what they do.** State whose turn it is and their current HP. Do not assume, guess, or auto-resolve their action. Wait for explicit declaration.
+   Example: `It's Alex's turn (14 HP). What do you do?`
+3. Once they declare: Rules Lawyer validates mechanics if anything is non-obvious.
+4. Roll via `tools/dice.py`; Bookkeeper applies; Narrator describes.
+5. Advance: `python tools/combat_tracker.py next`
+
+### NPC/monster turn
+1. **Apply start-of-turn effects.**
+2. **Director decides intent** based on the monster's intelligence, motivation, and tactical position.
+3. **Rules Lawyer validates** if non-obvious.
+4. **Roll each attack separately** via `tools/dice.py` — one roll call per attack, then describe the outcome before moving to the next. Never batch multiple attacks into one summary.
+5. **Bookkeeper applies** damage/conditions/movement.
+6. **Narrator describes each attack as it lands** — hit or miss, in full prose, before proceeding to the next roll.
 7. Advance: `python tools/combat_tracker.py next`
 
 ## Common micro-procedures

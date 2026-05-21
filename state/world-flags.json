@@ -1,6 +1,12 @@
 {
   "_description": "Persistent world facts the party has changed or learned. Append-only in practice — flipping a flag back should be rare and noted.",
-  "flags": {},
+  "flags": {
+    "cragmaw_hideout_scouted": {
+      "value": true,
+      "set_session": 1,
+      "note": "Party cleared the entrance sentries and prisoner cave. Klarg and ledge goblins untouched. Sildar rescued."
+    }
+  },
   "_example": {
     "tresendar_manor_cleared": {
       "value": false,

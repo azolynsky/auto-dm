@@ -1,13 +1,13 @@
 {
   "campaign_day": 1,
   "in_game_date": "1st of Mirtul, 1492 DR",
-  "time_of_day": "morning",
+  "time_of_day": "midday",
   "location": {
     "region": "Sword Coast",
     "settlement": "Phandalin",
     "specific": "The Stonehill Inn, common room"
   },
-  "weather": "clear, cool spring morning",
+  "weather": "clear, cool spring day",
   "party": ["pc-alex", "pc-friend"],
   "party_resources": {
     "gold": 0,
@@ -17,8 +17,9 @@
   "present_entities": [
     "world/locations/phandalin",
     "npcs/recurring/toblen-stonehill",
-    "npcs/recurring/trilena-stonehill"
+    "npcs/recurring/trilena-stonehill",
+    "npcs/recurring/sildar-hallwinter"
   ],
   "active_effects": [],
-  "notes": "Campaign has not started yet. present_entities is what's currently 'in scene' — Director updates this whenever the party moves or new NPCs enter. All listed entities' summary.md is auto-loaded by Director and Narrator; motivations.md / secrets.md is auto-loaded by Director only (firewall)."
+  "notes": "Session 0 complete. Characters created. Session 1 begins at the Stonehill Inn. present_entities is what's currently 'in scene' — Director updates this whenever the party moves or new NPCs enter. All listed entities' summary.md is auto-loaded by Director and Narrator; motivations.md / secrets.md is auto-loaded by Director only (firewall)."
 }

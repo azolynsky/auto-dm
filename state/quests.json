@@ -1,5 +1,36 @@
 {
-  "active": [],
+  "active": [
+    {
+      "id": "quest-gundren-rescue",
+      "title": "Rescue Gundren Rockseeker",
+      "given_by": "Sildar Hallwinter",
+      "summary": "Gundren was taken by Cragmaw goblins and transported to Cragmaw Castle, north of Phandalin, on orders from the Black Spider — a drow agent who wants Gundren's map to Wave Echo Cave.",
+      "objectives": [
+        "Locate Cragmaw Castle",
+        "Rescue Gundren",
+        "Recover the map if possible"
+      ],
+      "obstacles": "Unknown number of Cragmaw goblins and their leadership at the castle. The Black Spider's network is watching.",
+      "rewards": "Sildar has offered unspecified Lords' Alliance support. Gundren would owe the party significantly.",
+      "known_to_party": true,
+      "secret_truth": "The Black Spider is a drow named Nezznar working for Lolth's faction. He wants the Forge of Spells inside Wave Echo Cave. Gundren's brothers may still be at the cave entrance."
+    },
+    {
+      "id": "quest-wave-echo-cave",
+      "title": "The Forge of Spells",
+      "given_by": "Sildar Hallwinter (partial) / Gundren's note",
+      "summary": "Wave Echo Cave, east of Phandalin, contains the Forge of Spells — a Phalorm-era enchanting forge. The Black Spider wants it. The Lords' Alliance wants it secured. The Rockseeker brothers found the entrance before Gundren was taken.",
+      "objectives": [
+        "Learn the cave's location (currently only Gundren's map leads there)",
+        "Reach the cave before the Black Spider does",
+        "Secure the Forge of Spells"
+      ],
+      "obstacles": "Map is in the Black Spider's hands. Cave location otherwise unknown.",
+      "rewards": "Unknown — potentially significant.",
+      "known_to_party": true,
+      "secret_truth": "The Forge of Spells is still functional. The Black Spider plans to use it to arm a military force. Gundren's brothers Nundro and Tharden are camped near the cave entrance — fate unknown."
+    }
+  ],
   "completed": [],
   "hooks": [
     {

@@ -23,4 +23,8 @@ Edit this freely as your table forms preferences. Defaults are conservative — 
 
 Things the DM and players have agreed on for the table:
 
-- (fill in as you go — content lines you want to never cross, tone targets like "heroic", "grimdark", "comedic", etc.)
+- **Heroic fantasy with mortal stakes.** Not grimdark. Not comedic. The world is serious; the players are capable.
+- **Complete prose, always.** No fragment sentences, no staccato shorthand narration. The DM speaks like a storyteller, not a telegraph.
+- **Players drive their own decisions.** The DM never suggests how to handle a situation. The world is described; the plan is theirs.
+- **Combat is play-by-play, not summary.** Each attack is narrated as it lands. Rounds are not collapsed into a paragraph.
+- **Player characters are not puppeted.** The DM stops on a PC's turn and asks. Full stop.

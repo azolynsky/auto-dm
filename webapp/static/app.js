@@ -316,7 +316,7 @@ function renderLocationDetail(current) {
   if (current.in_game_date) {
     const dateEl = el('div', null, current.in_game_date);
     dateEl.style.marginTop = '6px';
-    dateEl.style.fontSize = '12px';
+    dateEl.style.fontSize = '17px';
     dateEl.style.color = 'var(--parchment-dim)';
     detail.appendChild(dateEl);
   }

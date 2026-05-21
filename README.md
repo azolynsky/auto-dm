@@ -10,10 +10,12 @@ LLM-as-DM drifts. Improvised state is forgotten between sessions, dice rolls are
 
 ```bash
 cd /path/to/dnd
-claude
+claude     # or: codex
 ```
 
-Then: **"Let's continue the campaign."** Claude reads `CLAUDE.md`, the recap, and current state, then picks up where you left off.
+Then: **"Let's continue the campaign."** The LLM reads its entry-point manual (`CLAUDE.md` for Claude, `AGENTS.md` for Codex — they're the same file), the recap, and current state, then picks up where you left off.
+
+You can swap DMs mid-campaign (e.g., run out of Claude credits, switch to Codex). All state lives in plain JSON/MD files in this repo, all tools are plain Python scripts, and the "subagent" and "skill" files in `.claude/` are just role prompts and procedural recipes any LLM can read. See the "Multi-LLM operation" section of `CLAUDE.md` for details.
 
 For the very first session: **"Let's run session 0 — character creation."** Walk through `characters/SCHEMA.md` to fill in `pc-alex.json` and `pc-friend.json`.
 
@@ -22,6 +24,7 @@ For the very first session: **"Let's run session 0 — character creation."** Wa
 ```
 dnd/
 ├── CLAUDE.md                   # DM operating manual — read every session
+├── AGENTS.md                   # symlink → CLAUDE.md (so Codex/other LLMs read the same file)
 ├── README.md
 ├── rules/                      # SRD reference + house rules (slow-moving canon)
 ├── world/                      # Setting, regions, lore (slow-moving canon)
