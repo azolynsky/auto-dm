@@ -10,12 +10,15 @@ Usage:
 """
 import argparse
 import json
+import os
 import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+# DND_ROOT overrides the campaign root (used by tests; also lets one clone
+# host multiple campaign directories).
+ROOT = Path(os.environ.get("DND_ROOT") or Path(__file__).resolve().parent.parent)
 FEED = ROOT / "state" / "player-feed.jsonl"
 CURRENT = ROOT / "state" / "current.json"
 
@@ -26,7 +29,7 @@ def main() -> int:
     p.add_argument(
         "--type",
         default="narration",
-        choices=["narration", "scene_change", "system"],
+        choices=["narration", "scene_change", "system", "player"],
         help="Entry type (default: narration)",
     )
     args = p.parse_args()

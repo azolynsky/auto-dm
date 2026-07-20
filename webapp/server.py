@@ -14,16 +14,22 @@ Opens on: http://localhost:8765
 """
 import asyncio
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
-import aiofiles
-import uvicorn
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from sse_starlette.sse import EventSourceResponse
-from watchfiles import awatch
+try:
+    import uvicorn
+    from fastapi import FastAPI, HTTPException, Request
+    from fastapi.responses import FileResponse, JSONResponse
+    from fastapi.staticfiles import StaticFiles
+    from sse_starlette.sse import EventSourceResponse
+    from watchfiles import awatch
+except ImportError as e:
+    sys.exit(
+        f"Missing dependency: {e.name}\n"
+        f"Install with: pip install -r {Path(__file__).parent / 'requirements.txt'}"
+    )
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = Path(__file__).resolve().parent / "static"
@@ -37,6 +43,7 @@ CURRENT_FILE = STATE_DIR / "current.json"
 QUESTS_FILE = STATE_DIR / "quests.json"
 COMBAT_FILE = STATE_DIR / "combat.json"
 FLAGS_FILE = STATE_DIR / "world-flags.json"
+DRAMATIS_FILE = STATE_DIR / "dramatis-personae.json"
 
 DISPLAY_KEYS = {
     "id", "name", "player", "race", "class", "subclass", "level", "xp",
@@ -44,10 +51,19 @@ DISPLAY_KEYS = {
     "conditions", "exhaustion", "death_saves",
     "abilities", "proficiency_bonus", "languages", "proficiencies",
     "features", "attacks", "spells", "inventory", "gold",
+    "background", "alignment", "personality", "appearance",
 }
 
 app = FastAPI(title="D&D Companion")
 app.mount("/static", StaticFiles(directory=str(STATIC)), name="static")
+
+
+@app.middleware("http")
+async def no_cache_static(request: Request, call_next):
+    # Local single-user app: stale cached JS/CSS costs more than re-fetching it.
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -80,6 +96,19 @@ def load_quests() -> list[dict]:
         q.pop("secret_truth", None)
         q.pop("obstacles", None)  # GM planning detail
         visible.append(q)
+    return visible
+
+
+def load_dramatis() -> list[dict]:
+    """Who's Who cheat sheet. Only known_to_party entries, whitelisted keys."""
+    data = read_json(DRAMATIS_FILE)
+    if not data:
+        return []
+    visible = []
+    for c in data.get("characters", []):
+        if not c.get("known_to_party", False):
+            continue
+        visible.append({k: c[k] for k in ("name", "disposition", "note") if k in c})
     return visible
 
 
@@ -119,6 +148,7 @@ def build_state_snapshot() -> dict:
         "current": read_json(CURRENT_FILE) or {},
         "quests": load_quests(),
         "world_flags": load_world_flags(),
+        "dramatis": load_dramatis(),
         "combat": load_combat(),
         "feed": load_feed(50),
     }
@@ -157,6 +187,7 @@ def build_sidebar_payload() -> dict:
     return {
         "quests": load_quests(),
         "world_flags": load_world_flags(),
+        "dramatis": load_dramatis(),
         "current": read_json(CURRENT_FILE) or {},
     }
 
@@ -194,7 +225,7 @@ async def portrait(pc_id: str):
 
 
 @app.get("/events")
-async def events(request):
+async def events(request: Request):
     async def generator():
         byte_pos = FEED_FILE.stat().st_size if FEED_FILE.exists() else 0
 
@@ -236,7 +267,7 @@ async def events(request):
                             "data": json.dumps(current),
                         }
 
-                    elif path.name in ("quests.json", "world-flags.json"):
+                    elif path.name in ("quests.json", "world-flags.json", "dramatis-personae.json"):
                         yield {
                             "event": "sidebar_update",
                             "data": json.dumps(build_sidebar_payload()),

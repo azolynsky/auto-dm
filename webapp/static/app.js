@@ -133,10 +133,141 @@ function buildCharCard(char) {
   });
   card.appendChild(statsRow);
 
-  // Inventory
+  card.appendChild(buildCardTabs(char));
+
+  return card;
+}
+
+// Remember which tab each character card is on across re-renders
+const _selectedTabs = {};
+
+function buildCardTabs(char) {
+  const wrap = el('div', 'card-tabs');
+  const panes = {};
+
+  panes['Bio'] = buildBioPane(char);
+  panes['Attacks'] = buildAttacksPane(char);
+  panes['Features'] = buildFeaturesPane(char);
+  if ((char.spells?.known || []).length > 0 || Object.keys(char.spells?.slots || {}).length > 0) {
+    panes['Spells'] = buildSpellsPane(char);
+  }
+  panes['Inventory'] = buildInventoryPane(char);
+
+  const bar = el('div', 'tab-bar');
+  const body = el('div', 'tab-body');
+  const names = Object.keys(panes);
+  const selected = _selectedTabs[char.id] && panes[_selectedTabs[char.id]]
+    ? _selectedTabs[char.id] : names[0];
+
+  names.forEach(name => {
+    const btn = el('button', `tab-btn${name === selected ? ' active' : ''}`, name);
+    btn.addEventListener('click', () => {
+      _selectedTabs[char.id] = name;
+      bar.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent === name));
+      body.innerHTML = '';
+      body.appendChild(panes[name]);
+    });
+    bar.appendChild(btn);
+  });
+  body.appendChild(panes[selected]);
+
+  wrap.appendChild(bar);
+  wrap.appendChild(body);
+  return wrap;
+}
+
+function buildBioPane(char) {
+  const pane = el('div', 'tab-pane');
+
+  const idLine = [char.alignment, char.background ? `${char.background} background` : null]
+    .filter(Boolean).join(' · ');
+  if (idLine) pane.appendChild(el('div', 'bio-idline', idLine));
+
+  if (char.appearance) {
+    const app = typeof char.appearance === 'string'
+      ? char.appearance
+      : Object.values(char.appearance).join(' ');
+    pane.appendChild(el('div', 'bio-label', 'Appearance'));
+    pane.appendChild(el('div', 'bio-text', app));
+  }
+
+  const p = char.personality || {};
+  [['Traits', p.traits], ['Ideals', p.ideals], ['Bonds', p.bonds], ['Flaws', p.flaws]]
+    .forEach(([label, items]) => {
+      if (items && items.length > 0) {
+        pane.appendChild(el('div', 'bio-label', label));
+        items.forEach(t => pane.appendChild(el('div', 'bio-text', t)));
+      }
+    });
+
+  if (pane.children.length === 0) return el('div', 'tab-pane tab-empty', 'A mysterious stranger.');
+  return pane;
+}
+
+function buildAttacksPane(char) {
+  const pane = el('div', 'tab-pane');
+  const attacks = char.attacks || [];
+  if (attacks.length === 0) return el('div', 'tab-pane tab-empty', 'No attacks listed.');
+  attacks.forEach(a => {
+    const row = el('div', 'attack-row');
+    const head = el('div', 'attack-head');
+    head.appendChild(el('span', 'attack-name', a.name));
+    head.appendChild(el('span', 'attack-tohit', `${a.to_hit} to hit`));
+    row.appendChild(head);
+    const parts = [a.damage, a.range ? `range ${a.range}` : null,
+      (a.properties || []).join(', ') || null, a.note || null].filter(Boolean);
+    row.appendChild(el('div', 'attack-detail', parts.join(' · ')));
+    pane.appendChild(row);
+  });
+  return pane;
+}
+
+function buildFeaturesPane(char) {
+  const pane = el('div', 'tab-pane');
+  const features = char.features || [];
+  if (features.length === 0) return el('div', 'tab-pane tab-empty', 'No features listed.');
+  features.forEach(f => {
+    const row = el('div', 'feature-row');
+    const head = el('div', 'feature-head');
+    head.appendChild(el('span', 'feature-name', f.name));
+    if (f.uses) head.appendChild(el('span', 'feature-uses', f.uses));
+    row.appendChild(head);
+    const detail = [f.detail, f.source ? `(${f.source})` : null].filter(Boolean).join(' ');
+    if (detail) row.appendChild(el('div', 'feature-detail', detail));
+    pane.appendChild(row);
+  });
+  return pane;
+}
+
+function buildSpellsPane(char) {
+  const pane = el('div', 'tab-pane');
+  const spells = char.spells || {};
+  const slots = spells.slots || {};
+  Object.entries(slots).forEach(([lvl, s]) => {
+    // slots stored as {"1": {"total": 2, "used": 1}} or {"1": 2}
+    const total = typeof s === 'object' ? s.total : s;
+    const used = typeof s === 'object' ? (s.used || 0) : 0;
+    const row = el('div', 'slot-row');
+    row.appendChild(el('span', 'slot-label', `Level ${lvl} slots`));
+    const pips = el('span', 'slot-pips');
+    for (let i = 0; i < total; i++) {
+      pips.appendChild(el('span', `slot-pip${i < total - used ? ' available' : ''}`, '◆'));
+    }
+    row.appendChild(pips);
+    pane.appendChild(row);
+  });
+  (spells.known || []).forEach(sp => {
+    const name = typeof sp === 'string' ? sp : sp.name;
+    pane.appendChild(el('div', 'spell-known', name));
+  });
+  if (pane.children.length === 0) return el('div', 'tab-pane tab-empty', 'No spells yet.');
+  return pane;
+}
+
+function buildInventoryPane(char) {
+  const pane = el('div', 'tab-pane');
   const inventory = char.inventory || [];
   if (inventory.length > 0) {
-    card.appendChild(el('div', 'card-section-label', 'Inventory'));
     const invList = el('ul', 'inventory-list');
     inventory.slice(0, 20).forEach(entry => {
       const li = document.createElement('li');
@@ -146,13 +277,13 @@ function buildCharCard(char) {
       }
       invList.appendChild(li);
     });
-    card.appendChild(invList);
-    if (char.gold != null) {
-      card.appendChild(el('div', 'gold-line', `${char.gold} gp`));
-    }
+    pane.appendChild(invList);
   }
-
-  return card;
+  if (char.gold != null) {
+    pane.appendChild(el('div', 'gold-line', `${char.gold} gp`));
+  }
+  if (pane.children.length === 0) return el('div', 'tab-pane tab-empty', 'Empty pockets.');
+  return pane;
 }
 
 function renderCharacters(chars) {
@@ -208,14 +339,26 @@ function updateCharacterCard(char) {
   } else if (dsEl) {
     dsEl.remove();
   }
+
+  // Rebuild tabs so feature uses / slots / inventory stay current
+  const tabs = existing.querySelector('.card-tabs');
+  if (tabs) tabs.replaceWith(buildCardTabs(char));
 }
 
 // ── Feed rendering ─────────────────────────────────────────────────────────────
 
 let _lastFeedLocation = null;
+const _seenFeedIds = new Set();
 
 function appendFeedEntry(entry) {
   const container = document.getElementById('feed-entries');
+
+  // The same entry can arrive via both /api/state and SSE (initial-load and
+  // reconnect races) — render each id once.
+  if (entry.id) {
+    if (_seenFeedIds.has(entry.id)) return;
+    _seenFeedIds.add(entry.id);
+  }
 
   // Location change marker
   if (entry.location && entry.location !== _lastFeedLocation && _lastFeedLocation !== null) {
@@ -237,6 +380,7 @@ function appendFeedEntry(entry) {
 
 function renderFeed(entries) {
   _lastFeedLocation = null;
+  _seenFeedIds.clear();
   document.getElementById('feed-entries').innerHTML = '';
   if (!entries || entries.length === 0) return;
 
@@ -263,10 +407,32 @@ function renderHeader(current) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
-function renderSidebar(quests, worldFlags, current) {
+function renderSidebar(quests, worldFlags, current, dramatis) {
   renderQuests(quests);
+  renderWhosWho(dramatis);
   renderWorldFlags(worldFlags);
   renderLocationDetail(current);
+}
+
+function renderWhosWho(dramatis) {
+  const list = document.getElementById('whoswho-list');
+  list.innerHTML = '';
+  if (!dramatis || dramatis.length === 0) {
+    list.appendChild(el('li', null, 'No one yet — go meet somebody!'));
+    return;
+  }
+  const tagLabels = { friend: 'Friend', enemy: 'Enemy', unknown: '?' };
+  dramatis.forEach(c => {
+    const li = document.createElement('li');
+    li.className = 'whoswho-item';
+    const head = el('div', 'whoswho-head');
+    head.appendChild(el('span', 'whoswho-name', c.name));
+    const disp = tagLabels[c.disposition] ? c.disposition : 'unknown';
+    head.appendChild(el('span', `whoswho-tag whoswho-${disp}`, tagLabels[disp]));
+    li.appendChild(head);
+    if (c.note) li.appendChild(el('div', 'whoswho-note', c.note));
+    list.appendChild(li);
+  });
 }
 
 function renderQuests(quests) {
@@ -351,6 +517,22 @@ function renderCombat(combat) {
 
 function connectSSE() {
   const es = new EventSource('/events');
+  let _dropped = false;
+
+  // Anything pushed while the connection was down is gone from the stream,
+  // so after a reconnect pull the full snapshot and re-render.
+  es.onopen = async () => {
+    if (!_dropped) return;
+    _dropped = false;
+    try {
+      const data = await fetch('/api/state').then(r => r.json());
+      renderCharacters(data.characters || []);
+      renderFeed(data.feed || []);
+      renderHeader(data.current || {});
+      renderSidebar(data.quests || [], data.world_flags || {}, data.current || {}, data.dramatis || []);
+      renderCombat(data.combat);
+    } catch { /* next reconnect will retry */ }
+  };
 
   es.addEventListener('feed_entry', e => {
     appendFeedEntry(JSON.parse(e.data));
@@ -371,11 +553,12 @@ function connectSSE() {
 
   es.addEventListener('sidebar_update', e => {
     const data = JSON.parse(e.data);
-    renderSidebar(data.quests, data.world_flags, data.current);
+    renderSidebar(data.quests, data.world_flags, data.current, data.dramatis);
   });
 
   es.onerror = () => {
-    // Browser auto-reconnects EventSource — no manual retry needed
+    // Browser auto-reconnects EventSource; onopen resyncs the snapshot
+    _dropped = true;
   };
 }
 
@@ -387,7 +570,7 @@ async function init() {
     renderCharacters(data.characters || []);
     renderFeed(data.feed || []);
     renderHeader(data.current || {});
-    renderSidebar(data.quests || [], data.world_flags || {}, data.current || {});
+    renderSidebar(data.quests || [], data.world_flags || {}, data.current || {}, data.dramatis || []);
     renderCombat(data.combat);
     connectSSE();
   } catch (err) {
