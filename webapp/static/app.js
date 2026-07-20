@@ -350,6 +350,46 @@ function updateCharacterCard(char) {
 let _lastFeedLocation = null;
 const _seenFeedIds = new Set();
 
+// "DM is thinking" indicator — shown while the last feed entry is a player
+// message (the DM mirrors player input immediately, then responds later).
+const DM_PHRASES = [
+  'The DM consults the ancient tomes...',
+  'The dice are tumbling...',
+  'The DM peers into the crystal ball...',
+  'Somewhere, a goblin is deciding what to do...',
+  'The fates are being consulted...',
+  'The DM strokes an imaginary beard...',
+  'Rolling behind the screen...',
+  'The world holds its breath...',
+];
+let _dmPhraseTimer = null;
+
+function showDmThinking() {
+  const container = document.getElementById('feed-entries');
+  if (document.getElementById('dm-thinking')) return;
+  const row = el('div', 'dm-thinking');
+  row.id = 'dm-thinking';
+  row.appendChild(el('span', 'dm-die', '⟡'));
+  const phrase = el('span', 'dm-phrase', DM_PHRASES[0]);
+  row.appendChild(phrase);
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+  let i = 1;
+  _dmPhraseTimer = setInterval(() => {
+    phrase.textContent = DM_PHRASES[i % DM_PHRASES.length];
+    i++;
+  }, 4000);
+}
+
+function hideDmThinking() {
+  const row = document.getElementById('dm-thinking');
+  if (row) row.remove();
+  if (_dmPhraseTimer) {
+    clearInterval(_dmPhraseTimer);
+    _dmPhraseTimer = null;
+  }
+}
+
 function appendFeedEntry(entry) {
   const container = document.getElementById('feed-entries');
 
@@ -367,6 +407,8 @@ function appendFeedEntry(entry) {
   }
   _lastFeedLocation = entry.location;
 
+  hideDmThinking();
+
   const bq = document.createElement('blockquote');
   bq.className = `feed-entry feed-type-${entry.type || 'narration'}`;
   bq.textContent = entry.text;
@@ -375,6 +417,7 @@ function appendFeedEntry(entry) {
   bq.appendChild(ts);
 
   container.appendChild(bq);
+  if (entry.type === 'player') showDmThinking();
   container.scrollTop = container.scrollHeight;
 }
 
