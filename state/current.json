@@ -1,13 +1,13 @@
 {
   "campaign_day": 3,
   "in_game_date": "3rd of Mirtul, 1492 DR",
-  "time_of_day": "midday",
+  "time_of_day": "dusk",
   "location": {
     "region": "Sword Coast",
-    "settlement": "southern edge of Neverwinter Wood",
-    "specific": "Camp beneath the eaves of the wood"
+    "settlement": "Neverwinter Wood",
+    "specific": "Hollow beneath a rock shelf, ~half mile south of Cragmaw Castle"
   },
-  "weather": "misty morning, still air",
+  "weather": "clear night falling, cold; moonrise late",
   "party": [
     "pc-alex",
     "pc-friend"
@@ -19,8 +19,9 @@
   },
   "present_entities": [
     "npcs/recurring/yark",
-    "Black Pearl (Mira's wolf companion \u2014 MM wolf stat block)"
+    "Black Pearl (Mira's wolf companion \u2014 MM wolf stat block)",
+    "Grib (goblin prisoner, one-shot \u2014 see prep-003)"
   ],
   "active_effects": [],
-  "notes": "Session 0 complete. Characters created. Session 1 begins at the Stonehill Inn. present_entities is what's currently 'in scene' \u2014 Director updates this whenever the party moves or new NPCs enter. All listed entities' summary.md is auto-loaded by Director and Narrator; motivations.md / secrets.md is auto-loaded by Director only (firewall)."
+  "notes": "END OF SESSION 2. Level 2 pending for both PCs (apply at session 3 start). Prisoner Grib uninterrogated. See sessions/prep-003.md. Convention: party_resources.gold is pooled party gold only; each PC's own gold lives on their sheet."
 }

@@ -6,7 +6,7 @@
   "class": "Ranger",
   "subclass": null,
   "level": 1,
-  "xp": 250,
+  "xp": 325,
   "alignment": "Neutral Good",
   "background": "Outlander",
   "abilities": {
@@ -150,7 +150,7 @@
     },
     {
       "item": "Arrows",
-      "qty": 20
+      "qty": 9
     },
     {
       "item": "Shortsword",
@@ -194,5 +194,5 @@
       "Distrusts walls and rooftops. Indoors makes him restless."
     ]
   },
-  "notes": "Wood Elf Ranger. +7 longbow thanks to Archery fighting style. Ranger spells unlock at level 2. Favored terrain: Forest."
+  "notes": "Wood Elf Ranger. +7 longbow thanks to Archery fighting style. Ranger spells unlock at level 2. Favored terrain: Forest. Ammo: 11 arrows spent through session 2 (20\u21929); recover spent arrows when there's time to police a battlefield."
 }

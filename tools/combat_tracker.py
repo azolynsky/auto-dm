@@ -20,13 +20,43 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+# DND_ROOT overrides the campaign root (used by tests; also lets one clone
+# host multiple campaign directories).
+ROOT = Path(os.environ.get("DND_ROOT") or Path(__file__).resolve().parent.parent)
 STATE = ROOT / "state" / "combat.json"
-DICE = ROOT / "tools" / "dice.py"
+DICE = Path(__file__).resolve().parent / "dice.py"
+
+
+def _feed(text: str) -> None:
+    """Mirror a combat event to the web companion feed. Never blocks combat."""
+    try:
+        import uuid
+        from datetime import datetime, timezone
+        feed = ROOT / "state" / "player-feed.jsonl"
+        current_file = ROOT / "state" / "current.json"
+        try:
+            current = json.loads(current_file.read_text(encoding="utf-8"))
+            loc = current.get("location", {}).get("specific", "unknown")
+        except Exception:
+            loc = "unknown"
+        session_files = sorted((ROOT / "sessions").glob("session-[0-9]*.md"), reverse=True)
+        entry = {
+            "id": uuid.uuid4().hex,
+            "ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "type": "combat",
+            "text": text,
+            "location": loc,
+            "session": session_files[0].stem if session_files else "unknown",
+        }
+        with open(feed, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
 
 
 def load() -> dict:
@@ -60,6 +90,7 @@ def cmd_start(args) -> None:
     state = {"active": True, "round": 1, "turn_index": 0, "order": order, "log": []}
     state["log"].append(f"Combat started. Initiative: " + ", ".join(f"{o['name']}({o['init']})" for o in order))
     save(state)
+    _feed("⚔ Combat! Initiative: " + " → ".join(f"{o['name']} ({o['init']})" for o in order))
     print(json.dumps(state, indent=2))
 
 
@@ -85,6 +116,7 @@ def cmd_damage(args) -> None:
         line += " — DOWN"
     s["log"].append(line)
     save(s)
+    _feed(line)
     print(line)
 
 
@@ -97,6 +129,7 @@ def cmd_heal(args) -> None:
     line = f"{args.who} healed {args.amount} (now {p['hp']} HP)"
     s["log"].append(line)
     save(s)
+    _feed(line)
     print(line)
 
 
@@ -144,6 +177,7 @@ def cmd_end(args) -> None:
     s["active"] = False
     s["log"].append("Combat ended.")
     save(s)
+    _feed("⚔ Combat over.")
     print("ended")
 
 

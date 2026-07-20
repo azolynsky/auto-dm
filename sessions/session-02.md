@@ -1,8 +1,13 @@
-# Session 02
+# Session 02 — The Tallest Tribe
 
 **Real date**: 2026-07-20
-**In-game date**: 1st of Mirtul, 1492 DR — midday
-**Starting location**: The Stonehill Inn, common room, Phandalin
+**In-game**: started 1st of Mirtul midday; ended 3rd of Mirtul, dusk
+**Location at start**: The Stonehill Inn, Phandalin
+**Location at end**: Hollow beneath a rock shelf, ~half mile south of Cragmaw Castle
+
+## Recap
+
+The party quizzed Sildar about the Black Spider and learned of Gundren's brothers near Wave Echo Cave, then chose to find Yark rather than wait for Sildar's contacts. Relthus tracked the exiled goblin to a gully north of Phandalin; Yark joined the party as guide in exchange for food and protection. That night two of Klarg's hunters ambushed the camp and were killed. Two days' travel north followed: a bonding campfire night at the wood's edge, then a standoff with a Cragmaw patrol in Neverwinter Wood where Mira won over their mistreated wolf — Black Pearl — and the patrol fled (both runners escaped, warning the castle in general terms). At dusk within sight of Cragmaw Castle, the party ambushed a 3-goblin search party: two killed, one (Grib) captured, none escaped. Relthus and Mira hit level 2 (not yet applied).
 
 ---
 
@@ -49,3 +54,39 @@ Party: Relthus (Wood Elf Ranger 1, 8/12 HP, 200 XP) and Mira (Human Fighter 1, 1
 - Mira Animal Handling 17 vs DC 13 (advantage from her animal-affinity trait) — wolf defected to her. Relthus stealth bow-draw 24 — unnoticed.
 - Goblin nerve roll 14 vs 60 — both fled north toward the castle. Relthus shot twice: 10 (miss), 11 with disadvantage (miss). BOTH GOBLINS ESCAPED — Cragmaw Castle will be warned that the party is coming with Yark.
 - Wolf joined the party; follows Mira. Named **Black Pearl**. Wolf stat block (AC 13, HP 11, bite +4, 2d4+2, pack tactics).
+
+### Approach to Cragmaw Castle (dusk, 3rd Mirtul)
+- Party plan: arrive by dusk, short rest out of sight, night infiltration using Pearl's scent + Relthus's darkvision.
+- March encounter roll: 1 vs 30% — castle sent a search party. 3 goblins with hooded lantern sweeping the woods ~100 yds east of the party's hollow, unaware they've been spotted (Pearl smelled them; Relthus darkvision).
+- Party holed up beneath rock shelf ~half mile south of castle. First sight of castle: seven ruined towers, firelight in arrow slits.
+
+### Ambush on the search party (dusk)
+- Party ambushed the 3-goblin search party. Group stealth failed (12/5/7/5, two nat 1s) — no surprise, straight fight.
+- Initiative: Yark 22, Pearl 20, Relthus 18, Goblin3 18, Goblin1 6, Mira 5, Goblin2 3.
+- Pearl killed Goblin2 instantly (22 to hit, 8 dmg). Relthus wounded Goblin3 (26, 5 dmg → 2/7). Both remaining goblins broke (nerve 60, 16) and fled — G3 north toward castle, G1 east.
+- Chase: Mira ran down G1 in brambles (Athletics 16 vs 7); Pearl missed the north runner (7); Relthus dropped it at 80 ft (24 to hit, 10 dmg — dead).
+- G1 ("Grib") surrendered to Mira. NO goblins escaped — castle not warned of the camp position.
+- XP: 2 kills + 1 capture = 150 XP → +75 each. **Relthus and Mira: 325/300 — LEVEL 2.** Level-up pending.
+- Prisoner Grib in hand; interrogation pending.
+
+## NPCs introduced / changed
+
+- **Yark** (goblin): joined the party as guide/companion. Promoted to `npcs/recurring/yark/`. Loyal — "the tallest tribe."
+- **Black Pearl** (wolf): patrol wolf won over by Mira; now her companion. MM wolf stat block.
+- **Grib** (goblin): captured at session end. Works inside Cragmaw Castle. Not yet interrogated. One-shot NPC, no folder.
+- **Sildar Hallwinter**: stayed in Phandalin working contacts for the castle location (day 1 task — presumably has it by now).
+
+## Loot
+
+- None this session. Party gained 4 rations (Relthus foraging).
+
+## State changes
+
+- Cragmaw Castle knows "the tall ones" travel with Yark the traitor (patrol runners, midday day 3) — but does NOT know the party is camped half a mile south (search party wiped out).
+- Time elapsed: 1st Mirtul midday → 3rd Mirtul dusk (~2.5 days).
+- XP: both PCs at 325. **Level 2 pending — apply at start of next session** (Relthus: spellcasting; Mira: Action Surge; both roll HP).
+
+## Session end state
+
+- Party (Relthus 12/12, Mira 12/12, Yark 7/7, Pearl 11/11) at dusk camp, half mile south of Cragmaw Castle, with prisoner Grib.
+- Plan on the table: short rest, level up, interrogate Grib, night infiltration via Yark's supply-path knowledge (Pearl's nose + Relthus's darkvision).

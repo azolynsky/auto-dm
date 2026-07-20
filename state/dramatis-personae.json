@@ -10,7 +10,7 @@
     {
       "name": "Sildar Hallwinter",
       "disposition": "friend",
-      "note": "Soldier you rescued from the goblin cave. Owes you his life. Recovering at the inn.",
+      "note": "Soldier you rescued from the goblin cave. Back in Phandalin, working his contacts to find Cragmaw Castle.",
       "known_to_party": true
     },
     {
@@ -53,6 +53,12 @@
       "name": "Klarg",
       "disposition": "enemy",
       "note": "Bugbear boss of the goblin hideout. You slipped past him \u2014 he's still out there.",
+      "known_to_party": true
+    },
+    {
+      "name": "Grib",
+      "disposition": "unknown",
+      "note": "Goblin prisoner captured outside Cragmaw Castle. He works inside the castle \u2014 and he talks a LOT when scared.",
       "known_to_party": true
     }
   ]

@@ -1,71 +1,79 @@
 {
   "active": false,
-  "round": 3,
-  "turn_index": 4,
+  "round": 2,
+  "turn_index": 1,
   "order": [
     {
-      "name": "Relthus",
-      "init": 20,
-      "mod": 3,
-      "hp": 12,
-      "max_hp": 12,
-      "conditions": []
-    },
-    {
-      "name": "GoblinHunter2",
-      "init": 19,
-      "mod": 2,
-      "hp": 0,
-      "max_hp": 7,
-      "conditions": []
-    },
-    {
       "name": "Yark",
-      "init": 18,
+      "init": 22,
       "mod": 2,
       "hp": 7,
       "max_hp": 7,
       "conditions": []
     },
     {
-      "name": "GoblinHunter1",
+      "name": "BlackPearl",
+      "init": 20,
+      "mod": 2,
+      "hp": 11,
+      "max_hp": 11,
+      "conditions": []
+    },
+    {
+      "name": "Relthus",
+      "init": 18,
+      "mod": 3,
+      "hp": 12,
+      "max_hp": 12,
+      "conditions": []
+    },
+    {
+      "name": "Goblin3",
       "init": 18,
       "mod": 2,
-      "hp": 3,
+      "hp": -8,
+      "max_hp": 7,
+      "conditions": []
+    },
+    {
+      "name": "Goblin1",
+      "init": 6,
+      "mod": 2,
+      "hp": 7,
       "max_hp": 7,
       "conditions": []
     },
     {
       "name": "Mira",
-      "init": 12,
+      "init": 5,
       "mod": 3,
       "hp": 12,
       "max_hp": 12,
       "conditions": []
+    },
+    {
+      "name": "Goblin2",
+      "init": 3,
+      "mod": 2,
+      "hp": -1,
+      "max_hp": 7,
+      "conditions": []
     }
   ],
   "log": [
-    "Combat started. Initiative: Relthus(20), GoblinHunter2(19), Yark(18), GoblinHunter1(18), Mira(12)",
-    "Turn: GoblinHunter2",
-    "Turn: Yark",
-    "Turn: GoblinHunter1",
+    "Combat started. Initiative: Yark(22), BlackPearl(20), Relthus(18), Goblin3(18), Goblin1(6), Mira(5), Goblin2(3)",
+    "Turn: BlackPearl",
+    "Goblin2 takes 8 damage (now -1 HP) \u2014 DOWN",
+    "Turn: Relthus",
+    "Goblin3 takes 5 damage (now 2 HP)",
+    "Turn: Goblin3",
+    "Turn: Goblin1",
     "Turn: Mira",
+    "Turn: Goblin2",
     "--- Round 2 ---",
-    "Turn: Relthus",
-    "Turn: GoblinHunter2",
-    "DM correction: reset turn to Relthus (top of round 2)",
-    "GoblinHunter1 takes 4 damage (now 3 HP)",
-    "Turn: GoblinHunter2",
     "Turn: Yark",
-    "GoblinHunter2 takes 7 damage (now 0 HP) \u2014 DOWN",
-    "Turn: GoblinHunter1",
-    "Turn: Mira",
-    "--- Round 3 ---",
-    "Turn: Relthus",
-    "Turn: GoblinHunter2",
-    "Turn: Yark",
-    "Turn: GoblinHunter1",
-    "Turn: Mira",
+    "Turn: BlackPearl",
+    "Goblin3 takes 10 damage (now -8 HP) \u2014 DOWN",
     "Combat ended."
   ]
 }

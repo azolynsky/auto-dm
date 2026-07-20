@@ -503,6 +503,17 @@ blockquote.feed-entry.feed-type-system {
   font-size: 23px;
 }
 
+blockquote.feed-entry.feed-type-combat {
+  border-left-color: var(--danger);
+  background: transparent;
+  font-style: normal;
+  font-family: var(--font-header);
+  color: var(--parchment-dim);
+  font-size: 21px;
+  padding: 5px 14px;
+  margin-bottom: 6px;
+}
+
 blockquote.feed-entry.feed-type-player {
   border-left-color: var(--parchment-dim);
   background: transparent;

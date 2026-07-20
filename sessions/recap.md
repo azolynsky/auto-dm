@@ -1,26 +1,33 @@
 # Campaign so far
 
-## Session 1 summary (1st Mirtul, 1492 DR)
+## Sessions 1–2 (1st–3rd Mirtul, 1492 DR)
 
-Relthus and Mira arrived in Phandalin having escorted Gundren Rockseeker's supply wagon from Neverwinter. Gundren himself was missing — ambushed on the Triboar Trail by Cragmaw goblins. They tracked the goblins to a ravine hideout, fought their way through (with a goblin guide named Yark), and rescued Sildar Hallwinter — Gundren's escort and a Lords' Alliance agent. Yark was freed; a captive wolf was also freed.
+Relthus and Mira escorted Gundren Rockseeker's supplies to Phandalin, learned he'd been ambushed by Cragmaw goblins, and rescued Sildar Hallwinter (Lords' Alliance agent) from the Cragmaw Hideout. Gundren and his map to Wave Echo Cave were taken to Cragmaw Castle on the Black Spider's orders.
 
-Sildar confirmed: Gundren was taken to Cragmaw Castle, north of Phandalin, on orders from someone called the Black Spider — believed to be a drow — who wants Gundren's map to Wave Echo Cave, a lost Phalorm mine containing the Forge of Spells. The party is back at the Stonehill Inn, midday, with two open quests.
+In Session 2 the party recruited Yark — the goblin they'd spared — as guide to Cragmaw Castle (he'd been exiled; Klarg blames him for the hideout losses). En route: killed two of Klarg's hunters at night camp; won over a Cragmaw patrol's mistreated wolf (now Mira's companion, **Black Pearl**); and at dusk on day 3, half a mile from the castle, wiped out a 3-goblin search party — two dead, one prisoner (**Grib**, who works inside the castle). Both PCs hit **level 2 (not yet applied)**.
+
+## Where things stand
+
+Party + Yark + Pearl camped in a hollow half a mile south of Cragmaw Castle, dusk, 3rd Mirtul. Prisoner Grib not yet interrogated. Plan: short rest, level up, interrogate, night infiltration (Yark knows the supply paths; castle has 7 ruined towers, garrison alerted generally but not to the party's position).
 
 ## Open threads
 
-- **Rescue Gundren** — held at Cragmaw Castle (location unknown, north)
-- **Wave Echo Cave / Forge of Spells** — map is in the Black Spider's hands; cave location otherwise unknown
-- **Redbrands** — extorting Phandalin, operating from Tresendar Manor ruins; Toblen afraid of them
-- **The miner who came back** — Toblen mentioned one kidnapped miner returned and wouldn't talk; untouched thread
+- **Rescue Gundren + recover the map** — held at Cragmaw Castle for the Black Spider
+- **Wave Echo Cave / Forge of Spells** — location known only via Gundren/map; Gundren's brothers Nundro and Tharden camped near its entrance, unaware they're hunted
+- **Redbrands** — still extorting Phandalin; Tresendar Manor; untouched
+- **The miner who came back** — untouched thread from Toblen
+- **Sildar** — in Phandalin, was working contacts for the castle location; owes the party
 
 ## What the party knows that the world doesn't think they know
 
-- Gundren's hidden note: the Black Spider has agents in Neverwinter
-- Sildar is a Lords' Alliance agent (not just a hired sword)
-- The Forge of Spells is the Spider's actual target, not just Gundren
+- Gundren's note: the Spider has ears in Neverwinter
+- Sildar is a Lords' Alliance agent
+- The Forge is the Spider's true target
+- The castle doesn't know the party is camped half a mile out
 
 ## What the world is doing offscreen
 
-- Klarg (bugbear) is still in the Cragmaw Hideout, unaware his sentries are dead
-- The Black Spider has the map; is moving toward Wave Echo Cave
-- Redbrands continue operations in Phandalin
+- The Black Spider has the map, moving on Wave Echo Cave
+- Klarg still at the hideout, angry, hunting Yark
+- Castle garrison alerted that "the tall ones" travel with Yark (as of midday day 3)
+- Redbrands continue operations; Glasstaff knows the party arrived in Phandalin
