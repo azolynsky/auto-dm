@@ -1,7 +1,7 @@
 {
   "active": false,
-  "round": 2,
-  "turn_index": 0,
+  "round": 3,
+  "turn_index": 4,
   "order": [
     {
       "name": "Relthus",
@@ -12,24 +12,32 @@
       "conditions": []
     },
     {
-      "name": "GoblinBlade",
-      "init": 14,
+      "name": "GoblinHunter2",
+      "init": 19,
       "mod": 2,
       "hp": 0,
       "max_hp": 7,
       "conditions": []
     },
     {
-      "name": "GoblinArcher",
-      "init": 10,
+      "name": "Yark",
+      "init": 18,
       "mod": 2,
-      "hp": -3,
+      "hp": 7,
+      "max_hp": 7,
+      "conditions": []
+    },
+    {
+      "name": "GoblinHunter1",
+      "init": 18,
+      "mod": 2,
+      "hp": 3,
       "max_hp": 7,
       "conditions": []
     },
     {
       "name": "Mira",
-      "init": 8,
+      "init": 12,
       "mod": 3,
       "hp": 12,
       "max_hp": 12,
@@ -37,20 +45,27 @@
     }
   ],
   "log": [
-    "Combat started. Initiative: Relthus(20), GoblinBlade(14), GoblinArcher(10), Mira(8)",
-    "GoblinArcher takes 10 damage (now -3 HP) \u2014 DOWN",
-    "Mira takes 7 damage (now -7 HP) \u2014 DOWN",
-    "Mira takes 7 damage (now 5 HP)",
-    "Turn: GoblinBlade",
-    "Turn: GoblinArcher",
+    "Combat started. Initiative: Relthus(20), GoblinHunter2(19), Yark(18), GoblinHunter1(18), Mira(12)",
+    "Turn: GoblinHunter2",
+    "Turn: Yark",
+    "Turn: GoblinHunter1",
     "Turn: Mira",
     "--- Round 2 ---",
     "Turn: Relthus",
-    "Mira takes 3 damage (now 2 HP)",
-    "Mira healed 2 (now 4 HP)",
-    "GoblinBlade takes 6 damage (now 1 HP)",
-    "GoblinBlade takes 1 damage (now 0 HP) \u2014 DOWN",
-    "Combat ended.",
-    "Mira healed 8 (now 12 HP)"
+    "Turn: GoblinHunter2",
+    "DM correction: reset turn to Relthus (top of round 2)",
+    "GoblinHunter1 takes 4 damage (now 3 HP)",
+    "Turn: GoblinHunter2",
+    "Turn: Yark",
+    "GoblinHunter2 takes 7 damage (now 0 HP) \u2014 DOWN",
+    "Turn: GoblinHunter1",
+    "Turn: Mira",
+    "--- Round 3 ---",
+    "Turn: Relthus",
+    "Turn: GoblinHunter2",
+    "Turn: Yark",
+    "Turn: GoblinHunter1",
+    "Turn: Mira",
+    "Combat ended."
   ]
 }

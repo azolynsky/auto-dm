@@ -10,6 +10,7 @@ When a one-shot NPC reappears, the Bookkeeper promotes them: copy `recurring/_TE
 - **[Sildar Hallwinter](recurring/sildar-hallwinter/summary.md)** — Lords' Alliance agent; rescued from Cragmaw Hideout Session 1; recovering in Phandalin.
 - **[Toblen Stonehill](recurring/toblen-stonehill/summary.md)** — Warm, gossipy human innkeeper of Phandalin's Stonehill Inn.
 - **[Trilena Stonehill](recurring/trilena-stonehill/summary.md)** — Toblen's wife; co-runs the inn, runs the kitchen and books.
+- **[Yark](recurring/yark/summary.md)** — Exiled Cragmaw goblin; joined the party Session 2 as guide to Cragmaw Castle.
 
 ## One-shots (most recent first)
 
