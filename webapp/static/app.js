@@ -396,19 +396,21 @@ async function uploadPortrait(id, file, statusEl) {
   }
 }
 
-function buildPortraitUploader(id) {
-  const wrap = el('div', 'portrait-upload');
+// Click the portrait in the full sheet to change it
+function makePortraitClickable(img, id, statusEl) {
+  const wrap = el('div', 'sheet-portrait-wrap');
+  wrap.title = 'Change portrait';
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/png,image/jpeg,image/webp';
   input.hidden = true;
-  const btn = el('button', 'portrait-upload-btn', 'Set portrait…');
-  const status = el('span', 'portrait-upload-status');
-  btn.addEventListener('click', () => input.click());
   input.addEventListener('change', () => {
-    if (input.files[0]) uploadPortrait(id, input.files[0], status);
+    if (input.files[0]) uploadPortrait(id, input.files[0], statusEl);
   });
-  wrap.append(btn, input, status);
+  wrap.addEventListener('click', () => input.click());
+  wrap.appendChild(img);
+  wrap.appendChild(el('span', 'sheet-portrait-hint', 'change portrait'));
+  wrap.appendChild(input);
   return wrap;
 }
 
@@ -430,13 +432,14 @@ function buildFullSheet(char) {
   img.dataset.charId = char.id;
   img.src = portraitSrc(char.id);
   img.onerror = () => img.classList.add('missing');
-  head.appendChild(img);
+  const uploadStatus = el('span', 'portrait-upload-status');
+  head.appendChild(makePortraitClickable(img, char.id, uploadStatus));
   const id = el('div', 'sheet-identity');
   id.appendChild(el('div', 'sheet-name', char.name));
   id.appendChild(el('div', 'sheet-subtitle',
     `${char.race} ${char.class}${char.subclass ? ` (${char.subclass})` : ''} · Level ${char.level}${char.xp != null ? ` · ${char.xp} XP` : ''}`));
   if (char.player) id.appendChild(el('div', 'char-player', `played by ${char.player}`));
-  id.appendChild(buildPortraitUploader(char.id));
+  id.appendChild(uploadStatus);
   const hp = char.hp || {};
   const vitals = el('div', 'sheet-vitals');
   [
