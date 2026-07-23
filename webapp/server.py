@@ -2,12 +2,14 @@
 """
 D&D Campaign Web Companion — FastAPI server.
 
-Serves a read-only player-facing view of:
-  - Character sheets (from characters/pc-*.json)
-  - Live narration feed (from state/player-feed.jsonl, written by tools/narrate.py)
+Serves a player-facing view of the active campaign (resolved by
+tools/campaign_lib.py: DND_ROOT env var, else <repo>/campaign):
+  - Character sheets (every JSON sheet in characters/)
+  - Live narration feed (state/player-feed.jsonl, written by tools/narrate.py)
   - Quest log (known_to_party=True only, secret_truth stripped)
   - Current state: location, date, weather
   - Combat tracker (when active)
+  - Table settings (read/write — the one thing players can edit)
 
 Start: python webapp/server.py
 Opens on: http://localhost:8765
@@ -17,6 +19,9 @@ import json
 import sys
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+import campaign_lib
 
 try:
     import uvicorn
@@ -31,12 +36,11 @@ except ImportError as e:
         f"Install with: pip install -r {Path(__file__).parent / 'requirements.txt'}"
     )
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = campaign_lib.resolve_root()
 STATIC = Path(__file__).resolve().parent / "static"
 CHARACTERS_DIR = ROOT / "characters"
 IMAGES_DIR = CHARACTERS_DIR / "images"
 STATE_DIR = ROOT / "state"
-SESSIONS_DIR = ROOT / "sessions"
 
 FEED_FILE = STATE_DIR / "player-feed.jsonl"
 CURRENT_FILE = STATE_DIR / "current.json"
@@ -44,12 +48,14 @@ QUESTS_FILE = STATE_DIR / "quests.json"
 COMBAT_FILE = STATE_DIR / "combat.json"
 FLAGS_FILE = STATE_DIR / "world-flags.json"
 DRAMATIS_FILE = STATE_DIR / "dramatis-personae.json"
+SETTINGS_FILE = STATE_DIR / "settings.json"
 
 DISPLAY_KEYS = {
     "id", "name", "player", "race", "class", "subclass", "level", "xp",
     "hp", "ac", "speed", "initiative_bonus", "passive_perception",
     "conditions", "exhaustion", "death_saves",
     "abilities", "proficiency_bonus", "languages", "proficiencies",
+    "skills", "save_proficiencies", "hit_dice",
     "features", "attacks", "spells", "inventory", "gold",
     "background", "alignment", "personality", "appearance",
 }
@@ -75,12 +81,23 @@ def read_json(path: Path) -> Any:
         return None
 
 
+def char_display_subset(path: Path) -> dict | None:
+    raw = read_json(path)
+    if not raw or not isinstance(raw, dict) or "name" not in raw:
+        return None
+    return {k: v for k, v in raw.items() if k in DISPLAY_KEYS}
+
+
 def load_characters() -> list[dict]:
+    """Every character sheet, party members first (in party order)."""
+    party = (read_json(CURRENT_FILE) or {}).get("party", [])
     chars = []
-    for path in sorted(CHARACTERS_DIR.glob("pc-*.json")):
-        raw = read_json(path)
-        if raw:
-            chars.append({k: v for k, v in raw.items() if k in DISPLAY_KEYS})
+    for path in sorted(CHARACTERS_DIR.glob("*.json")):
+        subset = char_display_subset(path)
+        if subset:
+            chars.append(subset)
+    order = {pc_id: i for i, pc_id in enumerate(party)}
+    chars.sort(key=lambda c: (order.get(c.get("id"), len(order)), c.get("name", "")))
     return chars
 
 
@@ -142,6 +159,10 @@ def load_feed(limit: int = 50) -> list[dict]:
     return entries
 
 
+def load_settings() -> dict:
+    return campaign_lib.load_settings(ROOT)
+
+
 def build_state_snapshot() -> dict:
     return {
         "characters": load_characters(),
@@ -151,6 +172,7 @@ def build_state_snapshot() -> dict:
         "dramatis": load_dramatis(),
         "combat": load_combat(),
         "feed": load_feed(50),
+        "settings": load_settings(),
     }
 
 
@@ -159,6 +181,8 @@ def read_new_feed_lines(byte_pos: int) -> tuple[list[dict], int]:
     if not FEED_FILE.exists():
         return [], byte_pos
     try:
+        if FEED_FILE.stat().st_size < byte_pos:
+            byte_pos = 0  # feed was truncated/rewritten — start over (client dedupes by id)
         with open(FEED_FILE, "rb") as f:
             f.seek(byte_pos)
             new_bytes = f.read()
@@ -174,13 +198,6 @@ def read_new_feed_lines(byte_pos: int) -> tuple[list[dict], int]:
         return entries, new_pos
     except Exception:
         return [], byte_pos
-
-
-def char_display_subset(path: Path) -> dict | None:
-    raw = read_json(path)
-    if not raw:
-        return None
-    return {k: v for k, v in raw.items() if k in DISPLAY_KEYS}
 
 
 def build_sidebar_payload() -> dict:
@@ -202,6 +219,30 @@ async def index():
 @app.get("/api/state")
 async def state():
     return JSONResponse(build_state_snapshot())
+
+
+@app.get("/api/settings")
+async def get_settings():
+    return JSONResponse(load_settings())
+
+
+@app.post("/api/settings")
+async def post_settings(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="expected an object")
+    settings = load_settings()
+    unknown = set(body) - set(campaign_lib.DEFAULT_SETTINGS)
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"unknown settings: {sorted(unknown)}")
+    settings.update(body)
+    SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    SETTINGS_FILE.write_text(json.dumps(settings, indent=2, ensure_ascii=False) + "\n",
+                             encoding="utf-8")
+    return JSONResponse(settings)
 
 
 @app.get("/api/portraits/{pc_id}")
@@ -245,7 +286,7 @@ async def events(request: Request):
                                 "data": json.dumps(entry),
                             }
 
-                    elif path.name.startswith("pc-") and path.suffix == ".json":
+                    elif path.parent == CHARACTERS_DIR and path.suffix == ".json":
                         subset = char_display_subset(path)
                         if subset:
                             yield {
@@ -265,6 +306,12 @@ async def events(request: Request):
                         yield {
                             "event": "state_update",
                             "data": json.dumps(current),
+                        }
+
+                    elif path.name == "settings.json":
+                        yield {
+                            "event": "settings_update",
+                            "data": json.dumps(load_settings()),
                         }
 
                     elif path.name in ("quests.json", "world-flags.json", "dramatis-personae.json"):

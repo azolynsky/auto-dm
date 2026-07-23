@@ -11,6 +11,10 @@ function modStr(score) {
   return m >= 0 ? `+${m}` : `${m}`;
 }
 
+function bonusStr(b) {
+  return b >= 0 ? `+${b}` : `${b}`;
+}
+
 function hpClass(current, max) {
   if (max <= 0) return 'medium';
   const pct = current / max;
@@ -40,6 +44,9 @@ function el(tag, cls, text) {
   return e;
 }
 
+// Latest full data for every character, for the full-sheet modal
+const _charData = {};
+
 // ── Character rendering ────────────────────────────────────────────────────────
 
 function buildCharCard(char) {
@@ -50,8 +57,10 @@ function buildCharCard(char) {
   const acBadge = el('span', 'char-ac-badge', `AC ${char.ac}`);
   card.appendChild(acBadge);
 
-  // Portrait + identity
+  // Portrait + identity — click for the full sheet
   const portraitWrap = el('div', 'char-portrait-wrap');
+  portraitWrap.title = 'Open full character sheet';
+  portraitWrap.addEventListener('click', () => openCharModal(char.id));
 
   const img = document.createElement('img');
   img.className = 'char-portrait';
@@ -64,6 +73,7 @@ function buildCharCard(char) {
   identity.appendChild(el('div', 'char-name', char.name));
   identity.appendChild(el('div', 'char-subtitle', `${char.race} ${char.class}${char.subclass ? ` (${char.subclass})` : ''} · Level ${char.level}`));
   identity.appendChild(el('div', 'char-player', char.player ? `played by ${char.player}` : ''));
+  identity.appendChild(el('div', 'char-sheet-hint', 'view full sheet ↗'));
   portraitWrap.appendChild(identity);
   card.appendChild(portraitWrap);
 
@@ -104,26 +114,14 @@ function buildCharCard(char) {
   }
 
   // Abilities
-  const abils = char.abilities || {};
-  const abilOrder = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-  const abilLabels = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
-  const abilGrid = el('div', 'abilities-grid');
-  abilOrder.forEach(key => {
-    const score = abils[key] ?? 10;
-    const box = el('div', 'ability-box');
-    box.appendChild(el('span', 'ability-label', abilLabels[key]));
-    box.appendChild(el('span', 'ability-score', score));
-    box.appendChild(el('span', 'ability-mod', modStr(score)));
-    abilGrid.appendChild(box);
-  });
-  card.appendChild(abilGrid);
+  card.appendChild(buildAbilitiesGrid(char));
 
   // Stats row
   const statsRow = el('div', 'stats-row');
   const statsData = [
     { val: char.speed ? `${char.speed} ft` : '—', lbl: 'Speed' },
     { val: char.passive_perception ?? '—', lbl: 'Passive Perc' },
-    { val: char.initiative_bonus != null ? (char.initiative_bonus >= 0 ? `+${char.initiative_bonus}` : `${char.initiative_bonus}`) : '—', lbl: 'Initiative' },
+    { val: char.initiative_bonus != null ? bonusStr(char.initiative_bonus) : '—', lbl: 'Initiative' },
   ];
   statsData.forEach(s => {
     const item = el('div', 'stat-item');
@@ -136,6 +134,22 @@ function buildCharCard(char) {
   card.appendChild(buildCardTabs(char));
 
   return card;
+}
+
+function buildAbilitiesGrid(char) {
+  const abils = char.abilities || {};
+  const abilOrder = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+  const abilLabels = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
+  const abilGrid = el('div', 'abilities-grid');
+  abilOrder.forEach(key => {
+    const score = abils[key] ?? 10;
+    const box = el('div', 'ability-box');
+    box.appendChild(el('span', 'ability-label', abilLabels[key]));
+    box.appendChild(el('span', 'ability-score', score));
+    box.appendChild(el('span', 'ability-mod', modStr(score)));
+    abilGrid.appendChild(box);
+  });
+  return abilGrid;
 }
 
 // Remember which tab each character card is on across re-renders
@@ -271,12 +285,12 @@ function buildSpellsPane(char) {
   return pane;
 }
 
-function buildInventoryPane(char) {
+function buildInventoryPane(char, limit = 20) {
   const pane = el('div', 'tab-pane');
   const inventory = char.inventory || [];
   if (inventory.length > 0) {
     const invList = el('ul', 'inventory-list');
-    inventory.slice(0, 20).forEach(entry => {
+    inventory.slice(0, limit).forEach(entry => {
       const li = document.createElement('li');
       li.appendChild(el('span', 'item-name', entry.item));
       if (entry.qty && entry.qty !== 1) {
@@ -284,6 +298,9 @@ function buildInventoryPane(char) {
       }
       invList.appendChild(li);
     });
+    if (inventory.length > limit) {
+      invList.appendChild(el('li', 'inventory-more', `…and ${inventory.length - limit} more (full sheet)`));
+    }
     pane.appendChild(invList);
   }
   if (char.gold != null) {
@@ -296,60 +313,158 @@ function buildInventoryPane(char) {
 function renderCharacters(chars) {
   const inner = document.getElementById('characters-inner');
   inner.innerHTML = '';
-  chars.forEach(char => inner.appendChild(buildCharCard(char)));
+  chars.forEach(char => {
+    _charData[char.id] = char;
+    inner.appendChild(buildCharCard(char));
+  });
 }
 
 function updateCharacterCard(char) {
+  _charData[char.id] = char;
   const existing = document.querySelector(`.character-card[data-id="${char.id}"]`);
-  if (!existing) {
-    // New character — full render
+  if (existing) {
+    // Full rebuild keeps every field honest (AC, level, stats — not just HP);
+    // _selectedTabs preserves the open tab across the swap.
+    existing.replaceWith(buildCharCard(char));
+  } else {
     document.getElementById('characters-inner').appendChild(buildCharCard(char));
-    return;
   }
+  refreshCharModal(char.id);
+}
 
-  // Patch HP fill
+// ── Character full-sheet modal ─────────────────────────────────────────────────
+
+const SKILLS = {
+  acrobatics: 'dex', animal_handling: 'wis', arcana: 'int', athletics: 'str',
+  deception: 'cha', history: 'int', insight: 'wis', intimidation: 'cha',
+  investigation: 'int', medicine: 'wis', nature: 'int', perception: 'wis',
+  performance: 'cha', persuasion: 'cha', religion: 'int',
+  sleight_of_hand: 'dex', stealth: 'dex', survival: 'wis',
+};
+
+function skillLabel(key) {
+  return key.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+}
+
+let _openCharId = null;
+
+function openCharModal(id) {
+  _openCharId = id;
+  refreshCharModal(id);
+  document.getElementById('char-modal').classList.remove('hidden');
+}
+
+function refreshCharModal(id) {
+  if (_openCharId !== id) return;
+  const char = _charData[id];
+  if (!char) return;
+  const body = document.getElementById('char-modal-body');
+  body.innerHTML = '';
+  body.appendChild(buildFullSheet(char));
+}
+
+function sheetSection(title, node) {
+  const sec = el('section', 'sheet-section');
+  sec.appendChild(el('h3', 'sheet-section-title', title));
+  sec.appendChild(node);
+  return sec;
+}
+
+function buildFullSheet(char) {
+  const sheet = el('div', 'full-sheet');
+
+  // Header
+  const head = el('div', 'sheet-head');
+  const img = document.createElement('img');
+  img.className = 'sheet-portrait';
+  img.alt = char.name;
+  img.src = `/api/portraits/${char.id}`;
+  img.onerror = () => img.remove();
+  head.appendChild(img);
+  const id = el('div', 'sheet-identity');
+  id.appendChild(el('div', 'sheet-name', char.name));
+  id.appendChild(el('div', 'sheet-subtitle',
+    `${char.race} ${char.class}${char.subclass ? ` (${char.subclass})` : ''} · Level ${char.level}${char.xp != null ? ` · ${char.xp} XP` : ''}`));
+  if (char.player) id.appendChild(el('div', 'char-player', `played by ${char.player}`));
   const hp = char.hp || {};
-  const hpFill = existing.querySelector('.hp-fill');
-  if (hpFill) {
-    hpFill.style.width = `${hpPct(hp.current, hp.max)}%`;
-    hpFill.className = `hp-fill ${hpClass(hp.current, hp.max)}`;
-  }
-  const hpText = existing.querySelector('.hp-text');
-  if (hpText) hpText.textContent = `${hp.current ?? '?'}/${hp.max ?? '?'}`;
+  const vitals = el('div', 'sheet-vitals');
+  [
+    ['HP', `${hp.current ?? '?'}/${hp.max ?? '?'}${hp.temp ? ` +${hp.temp}` : ''}`],
+    ['AC', char.ac ?? '—'],
+    ['Speed', char.speed ? `${char.speed} ft` : '—'],
+    ['Init', char.initiative_bonus != null ? bonusStr(char.initiative_bonus) : '—'],
+    ['Passive Perc', char.passive_perception ?? '—'],
+    ['Hit Dice', char.hit_dice ? `${char.hit_dice.remaining}/${char.hit_dice.total} ${char.hit_dice.size}` : '—'],
+  ].forEach(([lbl, val]) => {
+    const v = el('div', 'sheet-vital');
+    v.appendChild(el('span', 'stat-val', String(val)));
+    v.appendChild(el('span', 'stat-lbl', lbl));
+    vitals.appendChild(v);
+  });
+  id.appendChild(vitals);
+  head.appendChild(id);
+  sheet.appendChild(head);
 
-  // Patch conditions
-  const conditions = char.conditions || [];
-  const exhaustion = char.exhaustion || 0;
-  let condRow = existing.querySelector('.conditions-row');
-  if (conditions.length > 0 || exhaustion > 0) {
-    if (!condRow) {
-      condRow = el('div', 'conditions-row');
-      existing.insertBefore(condRow, existing.querySelector('.abilities-grid'));
-    }
-    condRow.innerHTML = '';
-    conditions.forEach(c => condRow.appendChild(el('span', 'condition-tag', c)));
-    if (exhaustion > 0) condRow.appendChild(el('span', 'condition-tag', `Exhaustion ${exhaustion}`));
-  } else if (condRow) {
-    condRow.remove();
-  }
+  const cols = el('div', 'sheet-columns');
 
-  // Patch death saves
-  const ds = char.death_saves || {};
-  let dsEl = existing.querySelector('.death-saves');
-  if (hp.current <= 0 && (ds.successes > 0 || ds.failures > 0)) {
-    if (!dsEl) {
-      dsEl = el('div', 'death-saves', '');
-      const hpRow = existing.querySelector('.hp-row');
-      hpRow.insertAdjacentElement('afterend', dsEl);
-    }
-    dsEl.textContent = `Death saves — ✓ ${ds.successes}/3   ✗ ${ds.failures}/3`;
-  } else if (dsEl) {
-    dsEl.remove();
-  }
+  // Left column: abilities, saves, skills, languages, proficiencies
+  const left = el('div', 'sheet-col');
+  left.appendChild(sheetSection('Abilities', buildAbilitiesGrid(char)));
 
-  // Rebuild tabs so feature uses / slots / inventory stay current
-  const tabs = existing.querySelector('.card-tabs');
-  if (tabs) tabs.replaceWith(buildCardTabs(char));
+  const abils = char.abilities || {};
+  const prof = char.proficiency_bonus || 2;
+  const saveProfs = char.save_proficiencies || [];
+  const savesList = el('div', 'sheet-list');
+  ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(a => {
+    const isProf = saveProfs.includes(a);
+    const bonus = mod(abils[a] ?? 10) + (isProf ? prof : 0);
+    const row = el('div', `sheet-list-row${isProf ? ' prof' : ''}`);
+    row.appendChild(el('span', null, `${a.toUpperCase()} save${isProf ? ' ●' : ''}`));
+    row.appendChild(el('span', 'sheet-bonus', bonusStr(bonus)));
+    savesList.appendChild(row);
+  });
+  left.appendChild(sheetSection('Saving Throws', savesList));
+
+  const skills = char.skills || {};
+  const skillsList = el('div', 'sheet-list');
+  Object.entries(SKILLS).forEach(([key, ab]) => {
+    const level = skills[key]; // undefined | "proficient" | "expertise"
+    let bonus = mod(abils[ab] ?? 10);
+    if (level === 'expertise') bonus += 2 * prof;
+    else if (level === 'proficient') bonus += prof;
+    const row = el('div', `sheet-list-row${level ? ' prof' : ''}`);
+    row.appendChild(el('span', null,
+      `${skillLabel(key)} (${ab.toUpperCase()})${level === 'expertise' ? ' ●●' : level === 'proficient' ? ' ●' : ''}`));
+    row.appendChild(el('span', 'sheet-bonus', bonusStr(bonus)));
+    skillsList.appendChild(row);
+  });
+  left.appendChild(sheetSection('Skills', skillsList));
+
+  if ((char.languages || []).length > 0) {
+    left.appendChild(sheetSection('Languages', el('div', 'sheet-text', char.languages.join(', '))));
+  }
+  if (char.proficiencies) {
+    const profNode = el('div', 'sheet-text');
+    Object.entries(char.proficiencies).forEach(([kind, list]) => {
+      if (list && list.length) profNode.appendChild(el('div', null, `${kind}: ${list.join(', ')}`));
+    });
+    left.appendChild(sheetSection('Proficiencies', profNode));
+  }
+  cols.appendChild(left);
+
+  // Right column: attacks, spells, features, inventory, bio
+  const right = el('div', 'sheet-col');
+  right.appendChild(sheetSection('Attacks', buildAttacksPane(char)));
+  if ((char.spells?.known || []).length > 0 || Object.keys(char.spells?.slots || {}).length > 0) {
+    right.appendChild(sheetSection('Spells', buildSpellsPane(char)));
+  }
+  right.appendChild(sheetSection('Features', buildFeaturesPane(char)));
+  right.appendChild(sheetSection('Inventory', buildInventoryPane(char, Infinity)));
+  right.appendChild(sheetSection('Bio', buildBioPane(char)));
+  cols.appendChild(right);
+
+  sheet.appendChild(cols);
+  return sheet;
 }
 
 // ── Feed rendering ─────────────────────────────────────────────────────────────
@@ -407,6 +522,10 @@ function appendFeedEntry(entry) {
     _seenFeedIds.add(entry.id);
   }
 
+  // Respect the reader: only autoscroll if they were already at the bottom.
+  const nearBottom =
+    container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+
   // Location change marker
   if (entry.location && entry.location !== _lastFeedLocation && _lastFeedLocation !== null) {
     const marker = el('div', 'feed-location-marker', entry.location);
@@ -418,30 +537,38 @@ function appendFeedEntry(entry) {
 
   const bq = document.createElement('blockquote');
   bq.className = `feed-entry feed-type-${entry.type || 'narration'}`;
-  bq.textContent = entry.text;
+  bq.appendChild(el('span', 'feed-text', entry.text));
 
-  const ts = el('span', 'feed-ts', formatTs(entry.ts));
-  bq.appendChild(ts);
+  // Mechanical changes ride under the prose that explains them
+  if (entry.effects && entry.effects.length > 0) {
+    const fx = el('div', 'feed-effects');
+    entry.effects.forEach(effect => fx.appendChild(el('div', 'feed-effect', effect)));
+    bq.appendChild(fx);
+  }
+
+  bq.appendChild(el('span', 'feed-ts', formatTs(entry.ts)));
 
   container.appendChild(bq);
   if (entry.type === 'player') showDmThinking();
-  container.scrollTop = container.scrollHeight;
+  if (nearBottom) container.scrollTop = container.scrollHeight;
 }
 
 function renderFeed(entries) {
+  hideDmThinking();
   _lastFeedLocation = null;
   _seenFeedIds.clear();
-  document.getElementById('feed-entries').innerHTML = '';
+  const container = document.getElementById('feed-entries');
+  container.innerHTML = '';
   if (!entries || entries.length === 0) return;
 
   // Show location marker for first entry
   if (entries[0].location) {
-    const marker = el('div', 'feed-location-marker', entries[0].location);
-    document.getElementById('feed-entries').appendChild(marker);
+    container.appendChild(el('div', 'feed-location-marker', entries[0].location));
     _lastFeedLocation = entries[0].location;
   }
 
   entries.forEach(entry => appendFeedEntry(entry));
+  container.scrollTop = container.scrollHeight;
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
@@ -450,12 +577,22 @@ function renderHeader(current) {
   const campaign = current.campaign || 'Campaign Companion';
   document.getElementById('header-campaign').textContent = campaign;
   document.title = campaign;
-  document.getElementById('header-date').textContent =
-    `${current.in_game_date || ''}${current.time_of_day ? ', ' + current.time_of_day : ''}`;
+
+  const date = `${current.in_game_date || ''}${current.time_of_day ? ', ' + current.time_of_day : ''}`;
   const loc = current.location || {};
-  document.getElementById('header-location').textContent =
-    [loc.specific, loc.settlement].filter(Boolean).join(', ');
-  document.getElementById('header-weather').textContent = current.weather || '';
+  const location = [loc.specific, loc.settlement].filter(Boolean).join(', ');
+  const weather = current.weather || '';
+
+  // Hide dangling separators next to empty fields
+  const fields = [
+    ['header-date', date, 'header-div-1'],
+    ['header-location', location, 'header-div-2'],
+    ['header-weather', weather, 'header-div-3'],
+  ];
+  fields.forEach(([id, value, divId]) => {
+    document.getElementById(id).textContent = value;
+    document.getElementById(divId).classList.toggle('hidden', !value);
+  });
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -533,11 +670,7 @@ function renderLocationDetail(current) {
   }
   if (loc.region) detail.appendChild(el('div', null, loc.region));
   if (current.in_game_date) {
-    const dateEl = el('div', null, current.in_game_date);
-    dateEl.style.marginTop = '6px';
-    dateEl.style.fontSize = '17px';
-    dateEl.style.color = 'var(--parchment-dim)';
-    detail.appendChild(dateEl);
+    detail.appendChild(el('div', 'loc-date', current.in_game_date));
   }
 }
 
@@ -545,11 +678,11 @@ function renderLocationDetail(current) {
 
 function renderCombat(combat) {
   const bar = document.getElementById('combat-bar');
-  if (!combat || !combat.active) {
-    bar.classList.add('hidden');
-    return;
-  }
-  bar.classList.remove('hidden');
+  const active = !!(combat && combat.active);
+  bar.classList.toggle('hidden', !active);
+  // Reserve the bar's row only while it's visible — no dead strip otherwise
+  document.body.classList.toggle('combat-active', active);
+  if (!active) return;
 
   document.getElementById('combat-round').textContent = `Round ${combat.round}`;
 
@@ -559,14 +692,94 @@ function renderCombat(combat) {
   order.forEach((c, i) => {
     const span = el('div', `combatant${i === combat.turn_index ? ' active' : ''}${c.hp <= 0 ? ' down' : ''}`);
     span.appendChild(el('span', 'combatant-name', c.name));
-    const hpStr = c.max_hp ? `${c.hp}/${c.max_hp}` : `${c.hp} HP`;
-    const hpEl = el('span', `combatant-hp${c.hp <= 0 ? ' low' : (c.hp / (c.max_hp || 1) < 0.25 ? ' low' : '')}`, hpStr);
-    span.appendChild(hpEl);
+    const hpStr = c.max_hp ? `${c.hp}/${c.max_hp}` : (c.hp != null ? `${c.hp} HP` : '');
+    const low = c.hp != null && (c.hp <= 0 || c.hp / (c.max_hp || 1) < 0.25);
+    span.appendChild(el('span', `combatant-hp${low ? ' low' : ''}`, hpStr));
     track.appendChild(span);
   });
 }
 
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+const SETTING_CONTROLS = {
+  rules_strictness: ['set-rules-strictness', 'value'],
+  beginner_mode: ['set-beginner-mode', 'checked'],
+  show_rolls: ['set-show-rolls', 'checked'],
+  kid_friendly: ['set-kid-friendly', 'checked'],
+  narration_style: ['set-narration-style', 'value'],
+  custom_rules: ['set-custom-rules', 'value'],
+};
+
+function renderSettings(settings) {
+  Object.entries(SETTING_CONTROLS).forEach(([key, [id, prop]]) => {
+    if (key in settings) document.getElementById(id)[prop] = settings[key];
+  });
+}
+
+function collectSettings() {
+  const out = {};
+  Object.entries(SETTING_CONTROLS).forEach(([key, [id, prop]]) => {
+    out[key] = document.getElementById(id)[prop];
+  });
+  return out;
+}
+
+async function saveSettings() {
+  const status = document.getElementById('settings-status');
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(collectSettings()),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    renderSettings(await res.json());
+    status.textContent = 'Saved — the DM will honor this from their next narration.';
+  } catch (err) {
+    status.textContent = 'Could not save settings.';
+    console.error('settings save failed:', err);
+  }
+  setTimeout(() => { status.textContent = ''; }, 5000);
+}
+
+// ── Modals (shared behavior) ──────────────────────────────────────────────────
+
+function initModals() {
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', e => {
+      if (e.target === backdrop) closeModal(backdrop.id);
+    });
+  });
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.close));
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-backdrop:not(.hidden)')
+        .forEach(b => closeModal(b.id));
+    }
+  });
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    document.getElementById('settings-modal').classList.remove('hidden');
+  });
+  document.getElementById('settings-save').addEventListener('click', saveSettings);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+  if (id === 'char-modal') _openCharId = null;
+}
+
 // ── SSE ───────────────────────────────────────────────────────────────────────
+
+function applySnapshot(data) {
+  renderCharacters(data.characters || []);
+  renderFeed(data.feed || []);
+  renderHeader(data.current || {});
+  renderSidebar(data.quests || [], data.world_flags || {}, data.current || {}, data.dramatis || []);
+  renderCombat(data.combat);
+  if (data.settings) renderSettings(data.settings);
+}
 
 function connectSSE() {
   const es = new EventSource('/events');
@@ -578,12 +791,7 @@ function connectSSE() {
     if (!_dropped) return;
     _dropped = false;
     try {
-      const data = await fetch('/api/state').then(r => r.json());
-      renderCharacters(data.characters || []);
-      renderFeed(data.feed || []);
-      renderHeader(data.current || {});
-      renderSidebar(data.quests || [], data.world_flags || {}, data.current || {}, data.dramatis || []);
-      renderCombat(data.combat);
+      applySnapshot(await fetch('/api/state').then(r => r.json()));
     } catch { /* next reconnect will retry */ }
   };
 
@@ -600,13 +808,18 @@ function connectSSE() {
   });
 
   es.addEventListener('state_update', e => {
-    renderHeader(JSON.parse(e.data));
-    renderLocationDetail(JSON.parse(e.data));
+    const current = JSON.parse(e.data);
+    renderHeader(current);
+    renderLocationDetail(current);
   });
 
   es.addEventListener('sidebar_update', e => {
     const data = JSON.parse(e.data);
     renderSidebar(data.quests, data.world_flags, data.current, data.dramatis);
+  });
+
+  es.addEventListener('settings_update', e => {
+    renderSettings(JSON.parse(e.data));
   });
 
   es.onerror = () => {
@@ -618,13 +831,9 @@ function connectSSE() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 async function init() {
+  initModals();
   try {
-    const data = await fetch('/api/state').then(r => r.json());
-    renderCharacters(data.characters || []);
-    renderFeed(data.feed || []);
-    renderHeader(data.current || {});
-    renderSidebar(data.quests || [], data.world_flags || {}, data.current || {}, data.dramatis || []);
-    renderCombat(data.combat);
+    applySnapshot(await fetch('/api/state').then(r => r.json()));
     connectSSE();
   } catch (err) {
     console.error('Failed to load initial state:', err);

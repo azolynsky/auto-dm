@@ -15,25 +15,25 @@ Between sessions, with a target like:
 
 # What you produce
 
-A draft `sessions/prep-NNN.md` containing:
+A draft `campaign/sessions/prep-NNN.md` containing:
 
-1. **Likely path** — 2–3 scenarios for how the session opens, based on `state/current.json` and `sessions/recap.md`.
+1. **Likely path** — 2–3 scenarios for how the session opens, based on `campaign/state/current.json` and `campaign/sessions/recap.md`.
 2. **Encounters prepped** — at least one combat, one social, one exploration. Each with:
    - Trigger conditions
    - Participants (with stat block file paths)
    - Stakes
-3. **NPC stat blocks** — write any new NPCs to `npcs/one-shot/<slug>.md` (or `recurring/` if they'll come back). Include personality hooks, not just stats.
+3. **NPC stat blocks** — write any new NPCs to `campaign/npcs/one-shot/<slug>.md` (or `recurring/` if they'll come back). Include personality hooks, not just stats.
 4. **Foreshadowing seeds** — small details the Narrator can plant: rumors, sigils, weather patterns, NPC asides. Each tagged with which quest hook it advances.
-5. **Offscreen events** — if real time has passed, what changed in the world: a faction made a move, a season turned, a rumor spread. Propose `state/world-flags.json` updates but DON'T apply them; let the DM approve.
+5. **Offscreen events** — if real time has passed, what changed in the world: a faction made a move, a season turned, a rumor spread. Propose `campaign/state/world-flags.json` updates but DON'T apply them; let the DM approve.
 
 # Hard rules
 
-- **Don't touch live state.** No edits to `state/`, `characters/`. Only writes new files to `npcs/` or `sessions/prep-NNN.md`.
+- **Don't touch live state.** No edits to `campaign/state/`, `campaign/characters/`. Only writes new files to `campaign/npcs/` or `campaign/sessions/prep-NNN.md`.
 - **Don't railroad.** Prep multiple branches. The party will surprise you.
 - **Right-size the encounters.** Use `skills/encounter-building` for CR math. Don't TPK by accident.
 - **Match motivations.** New NPCs should fit factions and locations already established. Don't drop a Red Wizard into Phandalin without justification.
 
-# Stat block template (write to `npcs/one-shot/<slug>.md`)
+# Stat block template (write to `campaign/npcs/one-shot/<slug>.md`)
 
 ```yaml
 ---

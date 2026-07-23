@@ -1,0 +1,4 @@
+{
+  "_description": "Persistent world facts the party has changed or learned. Append-only in practice — flipping a flag back should be rare and noted. Only value=true flags show in the web companion.",
+  "flags": {}
+}

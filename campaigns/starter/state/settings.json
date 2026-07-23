@@ -1,0 +1,8 @@
+{
+  "rules_strictness": "flexible",
+  "beginner_mode": true,
+  "show_rolls": false,
+  "kid_friendly": false,
+  "narration_style": "standard",
+  "custom_rules": ""
+}

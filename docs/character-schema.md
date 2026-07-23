@@ -1,13 +1,15 @@
 # Character JSON schema
 
 Every PC and significant NPC should match this shape so `tools/check_resolver.py`
-and the Bookkeeper agent can read them mechanically.
+and the Bookkeeper agent can read them mechanically. Sheets live in
+`campaign/characters/<id>.json`; the webapp shows every sheet in that folder,
+ordered by `campaign/state/current.json` `party[]`.
 
 ```json
 {
-  "id": "pc-alex",
-  "name": "Player name",
-  "player": "Alex",
+  "id": "pc-kestrel",
+  "name": "Character name",
+  "player": "Player name",
   "race": "Half-Elf",
   "class": "Rogue",
   "subclass": "Arcane Trickster",
@@ -101,6 +103,6 @@ and the Bookkeeper agent can read them mechanically.
 Rules of the road:
 
 - **Bookkeeper is the only writer.** Other agents read, but never edit. Concurrent edits cause drift.
-- **Mid-combat HP for PCs lives in `state/combat.json`**, not here. Sync at end of encounter.
+- **Mid-combat HP for PCs lives in `campaign/state/combat.json`**, not here. Sync at end of encounter.
 - **Spell slots tick down** when used, **reset** on long rest. Bookkeeper handles both.
 - **Inventory uses items with `qty`** — never edit prose lists, always structured entries.

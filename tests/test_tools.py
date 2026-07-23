@@ -3,9 +3,9 @@ Tests for the campaign tools (tools/*.py).
 
 Run:  python3 -m unittest discover -s tests -v
 
-Stdlib only — no pytest needed. Tools that write state (combat_tracker,
-narrate) run against a temp directory via the DND_ROOT env override, so
-running the suite never touches live campaign state.
+Stdlib only — no pytest needed. Tools that read/write state run against a
+temp directory via the DND_ROOT env override, so running the suite never
+touches live campaign state.
 """
 from __future__ import annotations
 
@@ -30,8 +30,23 @@ def load_module(name: str, path: Path):
     return mod
 
 
+campaign_lib = load_module("campaign_lib", TOOLS / "campaign_lib.py")
 dice = load_module("dice", TOOLS / "dice.py")
 check_resolver = load_module("check_resolver", TOOLS / "check_resolver.py")
+
+
+class TempRootMixin(unittest.TestCase):
+    """A temp campaign root wired through DND_ROOT for subprocess calls."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "state").mkdir()
+        (self.root / "sessions").mkdir()
+        self.env = {**os.environ, "DND_ROOT": str(self.root)}
+
+    def tearDown(self):
+        self._tmp.cleanup()
 
 
 class TestDiceParse(unittest.TestCase):
@@ -97,14 +112,72 @@ class TestDiceRoll(unittest.TestCase):
         finally:
             dice.roll_one = original
 
-    def test_cli_emits_json(self):
+
+class TestDiceCli(TempRootMixin):
+    def test_single_expression_emits_object(self):
         out = subprocess.check_output(
-            [sys.executable, str(TOOLS / "dice.py"), "1d20+5", "--label", "test roll"]
+            [sys.executable, str(TOOLS / "dice.py"), "1d20+5", "--label", "test roll"],
+            env=self.env,
         )
         r = json.loads(out)
         self.assertEqual(r["expression"], "1d20+5")
         self.assertEqual(r["label"], "test roll")
         self.assertEqual(r["total"], r["kept"][0] + 5)
+
+    def test_positional_mode_back_compat(self):
+        out = subprocess.check_output(
+            [sys.executable, str(TOOLS / "dice.py"), "1d20+2", "advantage"],
+            env=self.env,
+        )
+        r = json.loads(out)
+        self.assertEqual(r["mode"], "advantage")
+        self.assertEqual(len(r["dice"]), 2)
+
+    def test_batch_emits_array_with_ordered_labels(self):
+        out = subprocess.check_output(
+            [sys.executable, str(TOOLS / "dice.py"), "1d20+5", "2d6+3",
+             "--label", "to-hit", "--label", "damage"],
+            env=self.env,
+        )
+        rolls = json.loads(out)
+        self.assertEqual([r["label"] for r in rolls], ["to-hit", "damage"])
+        self.assertEqual([r["expression"] for r in rolls], ["1d20+5", "2d6+3"])
+
+    def test_show_rolls_queues_public_effects(self):
+        (self.root / "state" / "settings.json").write_text(json.dumps({"show_rolls": True}))
+        subprocess.check_output(
+            [sys.executable, str(TOOLS / "dice.py"), "1d20+5", "--label", "open roll"],
+            env=self.env,
+        )
+        pending = self.root / "state" / "pending-effects.jsonl"
+        self.assertTrue(pending.exists())
+        self.assertIn("open roll", pending.read_text())
+
+    def test_no_settings_means_secret_rolls(self):
+        subprocess.check_output(
+            [sys.executable, str(TOOLS / "dice.py"), "1d20+5", "--label", "secret"],
+            env=self.env,
+        )
+        self.assertFalse((self.root / "state" / "pending-effects.jsonl").exists())
+
+
+class TestEffectsQueue(TempRootMixin):
+    def test_queue_and_drain(self):
+        campaign_lib.queue_effect(self.root, "Goblin1 takes 7 damage")
+        campaign_lib.queue_effect(self.root, "Goblin1 is prone")
+        self.assertEqual(campaign_lib.drain_effects(self.root),
+                         ["Goblin1 takes 7 damage", "Goblin1 is prone"])
+        # drained means gone
+        self.assertEqual(campaign_lib.drain_effects(self.root), [])
+
+    def test_settings_defaults_and_merge(self):
+        s = campaign_lib.load_settings(self.root)
+        self.assertEqual(s, campaign_lib.DEFAULT_SETTINGS)
+        (self.root / "state" / "settings.json").write_text(
+            json.dumps({"show_rolls": True, "bogus_key": 1}))
+        s = campaign_lib.load_settings(self.root)
+        self.assertTrue(s["show_rolls"])
+        self.assertNotIn("bogus_key", s)
 
 
 class TestCheckResolver(unittest.TestCase):
@@ -148,23 +221,15 @@ class TestCheckResolver(unittest.TestCase):
             out = subprocess.check_output([
                 sys.executable, str(TOOLS / "check_resolver.py"),
                 "--char", str(char_path), "--skill", "stealth", "--dc", "10",
-            ])
+            ], env={**os.environ, "DND_ROOT": tmp})
             r = json.loads(out)
             self.assertEqual(r["bonus"], 6)
             self.assertEqual(r["success"], r["roll"]["total"] >= 10)
             self.assertEqual(r["margin"], r["roll"]["total"] - 10)
 
 
-class TestCombatTracker(unittest.TestCase):
+class TestCombatTracker(TempRootMixin):
     """Drive the tracker CLI against a temp DND_ROOT so live state is untouched."""
-
-    def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self._tmp.name)
-        self.env = {**os.environ, "DND_ROOT": str(self.root)}
-
-    def tearDown(self):
-        self._tmp.cleanup()
 
     def run_cmd(self, *args, check=True):
         proc = subprocess.run(
@@ -178,41 +243,69 @@ class TestCombatTracker(unittest.TestCase):
     def state(self) -> dict:
         return json.loads((self.root / "state" / "combat.json").read_text())
 
+    def pending(self) -> str:
+        p = self.root / "state" / "pending-effects.jsonl"
+        return p.read_text() if p.exists() else ""
+
+    def feed(self) -> list[dict]:
+        p = self.root / "state" / "player-feed.jsonl"
+        if not p.exists():
+            return []
+        return [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+
     def test_full_encounter_flow(self):
-        self.run_cmd("start", "--participants", "Alex:+3", "Goblin1:+2", "Goblin2:0")
+        self.run_cmd("start", "--participants", "Ren:+3", "Goblin1:+2:7", "Goblin2:0")
         s = self.state()
         self.assertTrue(s["active"])
         self.assertEqual(s["round"], 1)
         self.assertEqual(len(s["order"]), 3)
         inits = [o["init"] for o in s["order"]]
         self.assertEqual(inits, sorted(inits, reverse=True))
+        # HP came from the participant spec
+        goblin = next(o for o in s["order"] if o["name"] == "Goblin1")
+        self.assertEqual((goblin["hp"], goblin["max_hp"]), (7, 7))
+        # combat start posted a system banner to the feed
+        banners = self.feed()
+        self.assertEqual(len(banners), 1)
+        self.assertEqual(banners[0]["type"], "system")
+        self.assertIn("Combat", banners[0]["text"])
 
-        self.run_cmd("sethp", "--who", "Goblin1", "--current", "7", "--max", "7")
-        out = self.run_cmd("damage", "--who", "Goblin1", "--amount", "9").stdout
-        self.assertIn("DOWN", out)
-        self.assertEqual(next(o for o in self.state()["order"] if o["name"] == "Goblin1")["hp"], -2)
+        out = json.loads(self.run_cmd("damage", "--who", "Goblin1", "--amount", "9").stdout)
+        self.assertEqual(out["action"], "damage")
+        self.assertTrue(out["down"])
+        self.assertEqual(out["hp"], -2)
+        # damage queued as an effect, NOT posted to the feed
+        self.assertIn("takes 9 damage", self.pending())
+        self.assertEqual(len(self.feed()), 1)
 
         # heal caps at max_hp
-        self.run_cmd("heal", "--who", "Goblin1", "--amount", "50")
-        self.assertEqual(next(o for o in self.state()["order"] if o["name"] == "Goblin1")["hp"], 7)
+        out = json.loads(self.run_cmd("heal", "--who", "Goblin1", "--amount", "50").stdout)
+        self.assertEqual(out["hp"], 7)
 
-        self.run_cmd("condition", "--who", "Alex", "--add", "prone")
-        alex = next(o for o in self.state()["order"] if o["name"] == "Alex")
-        self.assertIn("prone", alex["conditions"])
-        self.run_cmd("condition", "--who", "Alex", "--remove", "prone")
-        alex = next(o for o in self.state()["order"] if o["name"] == "Alex")
-        self.assertNotIn("prone", alex["conditions"])
+        self.run_cmd("condition", "--who", "Ren", "--add", "prone")
+        ren = next(o for o in self.state()["order"] if o["name"] == "Ren")
+        self.assertIn("prone", ren["conditions"])
+        self.run_cmd("condition", "--who", "Ren", "--remove", "prone")
+        ren = next(o for o in self.state()["order"] if o["name"] == "Ren")
+        self.assertNotIn("prone", ren["conditions"])
 
         # advance through a full round -> round counter increments
         for _ in range(3):
-            self.run_cmd("next")
+            out = json.loads(self.run_cmd("next").stdout)
+        self.assertEqual(out["round"], 2)
         self.assertEqual(self.state()["round"], 2)
 
         self.run_cmd("end")
         self.assertFalse(self.state()["active"])
+        self.assertEqual(self.feed()[-1]["type"], "system")
+
+    def test_sethp_still_works(self):
+        self.run_cmd("start", "--participants", "Wolf:+1")
+        out = json.loads(self.run_cmd("sethp", "--who", "Wolf", "--current", "11", "--max", "11").stdout)
+        self.assertEqual((out["hp"], out["max_hp"]), (11, 11))
 
     def test_unknown_combatant_fails(self):
-        self.run_cmd("start", "--participants", "Alex:+3")
+        self.run_cmd("start", "--participants", "Ren:+3")
         proc = self.run_cmd("damage", "--who", "Nobody", "--amount", "1", check=False)
         self.assertNotEqual(proc.returncode, 0)
 
@@ -221,34 +314,58 @@ class TestCombatTracker(unittest.TestCase):
         self.assertNotEqual(proc.returncode, 0)
 
 
-class TestNarrate(unittest.TestCase):
+class TestNarrate(TempRootMixin):
+    def setUp(self):
+        super().setUp()
+        (self.root / "state" / "current.json").write_text(json.dumps(
+            {"location": {"specific": "The Stonehill Inn"}}
+        ))
+        (self.root / "sessions" / "session-03.md").write_text("# log\n")
+
+    def run_narrate(self, *args, stdin=None):
+        return subprocess.run(
+            [sys.executable, str(TOOLS / "narrate.py"), *args],
+            env=self.env, check=True, capture_output=True, text=True, input=stdin,
+        )
+
+    def feed_lines(self) -> list[dict]:
+        text = (self.root / "state" / "player-feed.jsonl").read_text()
+        return [json.loads(l) for l in text.splitlines() if l.strip()]
+
     def test_appends_feed_entry_with_context(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            (root / "state").mkdir()
-            (root / "sessions").mkdir()
-            (root / "state" / "current.json").write_text(json.dumps(
-                {"location": {"specific": "The Stonehill Inn"}}
-            ))
-            (root / "sessions" / "session-03.md").write_text("# log\n")
-            env = {**os.environ, "DND_ROOT": str(root)}
+        for text in ("First line.", "Second line."):
+            self.run_narrate(text)
+        lines = self.feed_lines()
+        self.assertEqual(len(lines), 2)
+        entry = lines[0]
+        self.assertEqual(entry["text"], "First line.")
+        self.assertEqual(entry["type"], "narration")
+        self.assertEqual(entry["location"], "The Stonehill Inn")
+        self.assertEqual(entry["session"], "session-03")
+        self.assertTrue(entry["id"])
+        # ids must be unique per entry
+        self.assertNotEqual(entry["id"], lines[1]["id"])
 
-            for i, text in enumerate(["First line.", "Second line."]):
-                subprocess.run(
-                    [sys.executable, str(TOOLS / "narrate.py"), text],
-                    env=env, check=True, capture_output=True,
-                )
+    def test_stdout_echoes_entry_and_settings(self):
+        out = json.loads(self.run_narrate("Hello.").stdout)
+        self.assertEqual(out["entry"]["text"], "Hello.")
+        self.assertIn("rules_strictness", out["settings"])
 
-            lines = (root / "state" / "player-feed.jsonl").read_text().splitlines()
-            self.assertEqual(len(lines), 2)
-            entry = json.loads(lines[0])
-            self.assertEqual(entry["text"], "First line.")
-            self.assertEqual(entry["type"], "narration")
-            self.assertEqual(entry["location"], "The Stonehill Inn")
-            self.assertEqual(entry["session"], "session-03")
-            self.assertTrue(entry["id"])
-            # ids must be unique per entry
-            self.assertNotEqual(entry["id"], json.loads(lines[1])["id"])
+    def test_stdin_input(self):
+        self.run_narrate("-", stdin='Prose with "quotes" and\n\nparagraphs.')
+        self.assertEqual(self.feed_lines()[0]["text"], 'Prose with "quotes" and\n\nparagraphs.')
+
+    def test_drains_queued_effects_and_inline_effects(self):
+        campaign_lib.queue_effect(self.root, "Goblin1 takes 7 damage (now 0 HP) — DOWN")
+        self.run_narrate("The goblin crumples.", "--effect", "Ren marks his kill")
+        entry = self.feed_lines()[0]
+        self.assertEqual(entry["effects"], [
+            "Goblin1 takes 7 damage (now 0 HP) — DOWN",
+            "Ren marks his kill",
+        ])
+        # queue is drained: next narration has no effects
+        self.run_narrate("Silence falls.")
+        self.assertNotIn("effects", self.feed_lines()[1])
 
 
 class TestNarrateNormalize(unittest.TestCase):
@@ -266,12 +383,36 @@ class TestNarrateNormalize(unittest.TestCase):
         self.assertEqual(n(text), text)
 
     def test_empty_after_normalize_fails(self):
-        proc = subprocess.run(
-            [sys.executable, str(TOOLS / "narrate.py"), "> "],
-            env={**os.environ, "DND_ROOT": "/nonexistent"},
-            capture_output=True,
-        )
-        self.assertNotEqual(proc.returncode, 0)
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = subprocess.run(
+                [sys.executable, str(TOOLS / "narrate.py"), "> "],
+                env={**os.environ, "DND_ROOT": tmp},
+                capture_output=True,
+            )
+            self.assertNotEqual(proc.returncode, 0)
+
+
+class TestNewCampaign(unittest.TestCase):
+    def test_creates_from_starter_and_sets_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "campaign"
+            subprocess.run(
+                [sys.executable, str(TOOLS / "new_campaign.py"),
+                 "--name", "Test Vale", "--dest", str(dest)],
+                check=True, capture_output=True,
+            )
+            current = json.loads((dest / "state" / "current.json").read_text())
+            self.assertEqual(current["campaign"], "Test Vale")
+            self.assertTrue((dest / "house-rules.md").exists())
+            self.assertTrue(list((dest / "characters").glob("*.json")))
+
+            # refuses to clobber without --force
+            proc = subprocess.run(
+                [sys.executable, str(TOOLS / "new_campaign.py"),
+                 "--name", "Again", "--dest", str(dest)],
+                capture_output=True,
+            )
+            self.assertNotEqual(proc.returncode, 0)
 
 
 class TestBudgetRecap(unittest.TestCase):

@@ -7,7 +7,7 @@ description: Resolve a spell cast — slot consumption, attack/save mechanics, c
 
 ## Steps for any cast
 
-1. **Confirm the slot.** The caster expends a spell slot of the spell's level or higher (cantrips: no slot). Bookkeeper decrements `characters/<id>.json:spells.slots`.
+1. **Confirm the slot.** The caster expends a spell slot of the spell's level or higher (cantrips: no slot). Bookkeeper decrements `campaign/characters/<id>.json:spells.slots`.
 2. **Check the casting time.**
    - Action: takes the action. Done normally.
    - Bonus action: takes the bonus action. **You cannot cast a leveled spell with your action that turn** — only a cantrip.
@@ -22,11 +22,11 @@ description: Resolve a spell cast — slot consumption, attack/save mechanics, c
      ```
    - **Saving throw**: target rolls vs spell save DC.
      ```bash
-     python tools/check_resolver.py --char characters/pc-friend.json --save wis --dc 14
+     python tools/check_resolver.py --char campaign/characters/<id>.json --save wis --dc 14
      ```
    - **Auto-effect**: applies as written, no roll.
 6. **Damage / effect.** Roll damage dice. Halve on save unless spell says otherwise.
-7. **Concentration.** If the spell requires concentration, set `active_effects` on the caster in `state/current.json` (or in `combat.json` during combat).
+7. **Concentration.** If the spell requires concentration, set `active_effects` on the caster in `campaign/state/current.json` (or in `combat.json` during combat).
 
 ## Concentration
 

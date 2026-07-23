@@ -14,12 +14,13 @@
 
   <header id="header">
     <span class="header-campaign" id="header-campaign"></span>
-    <span class="header-divider">·</span>
+    <span class="header-divider" id="header-div-1">·</span>
     <span id="header-date"></span>
-    <span class="header-divider">·</span>
+    <span class="header-divider" id="header-div-2">·</span>
     <span id="header-location"></span>
-    <span class="header-divider">·</span>
+    <span class="header-divider" id="header-div-3">·</span>
     <span id="header-weather"></span>
+    <button id="settings-btn" title="Table settings" aria-label="Table settings">⚙</button>
   </header>
 
   <main id="main-grid">
@@ -65,6 +66,69 @@
     <span id="combat-round"></span>
     <div id="initiative-track"></div>
   </footer>
+
+  <!-- Character full-sheet modal -->
+  <div id="char-modal" class="modal-backdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" data-close="char-modal" aria-label="Close">✕</button>
+      <div id="char-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Table settings modal -->
+  <div id="settings-modal" class="modal-backdrop hidden">
+    <div class="modal modal-narrow" role="dialog" aria-modal="true">
+      <button class="modal-close" data-close="settings-modal" aria-label="Close">✕</button>
+      <h2 class="modal-title">Table Settings</h2>
+      <p class="settings-hint">How the DM runs the table. Changes reach the DM on their next narration.</p>
+
+      <label class="setting-row">
+        <span class="setting-label">Rules strictness</span>
+        <select id="set-rules-strictness">
+          <option value="strict">Strict — rules as written, dice fall where they fall</option>
+          <option value="flexible">Flexible — DM may soften outcomes (hand of god)</option>
+        </select>
+      </label>
+
+      <label class="setting-row setting-check">
+        <input type="checkbox" id="set-beginner-mode">
+        <span><span class="setting-label">Beginner mode</span>
+        <span class="setting-desc">DM suggests options and reminds you of your abilities</span></span>
+      </label>
+
+      <label class="setting-row setting-check">
+        <input type="checkbox" id="set-show-rolls">
+        <span><span class="setting-label">Public dice rolls</span>
+        <span class="setting-desc">Roll results appear in the chronicle</span></span>
+      </label>
+
+      <label class="setting-row setting-check">
+        <input type="checkbox" id="set-kid-friendly">
+        <span><span class="setting-label">Kid-friendly</span>
+        <span class="setting-desc">Keep violence and horror gentle</span></span>
+      </label>
+
+      <label class="setting-row">
+        <span class="setting-label">Narration style</span>
+        <select id="set-narration-style">
+          <option value="brief">Brief — outcomes and a scene beat</option>
+          <option value="standard">Standard</option>
+          <option value="cinematic">Cinematic — rich, longer scenes</option>
+        </select>
+      </label>
+
+      <label class="setting-row">
+        <span class="setting-label">House rules</span>
+        <textarea id="set-custom-rules" rows="4"
+          placeholder="Free text — the DM treats these as active house rules."></textarea>
+      </label>
+
+      <div class="settings-actions">
+        <span id="settings-status"></span>
+        <button id="settings-save">Save</button>
+      </div>
+    </div>
+  </div>
 
   <script src="/static/app.js"></script>
 </body>

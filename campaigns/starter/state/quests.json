@@ -1,0 +1,21 @@
+{
+  "_description": "Live quest state. known_to_party=false quests and all secret_truth/obstacles fields are hidden from the web companion.",
+  "active": [
+    {
+      "id": "quest-cold-lantern",
+      "title": "The Cold Lantern",
+      "given_by": "Maera Thistle, keeper of the Waylight Inn",
+      "summary": "Emberwick's lamplighter, old Piven, hasn't come down from the hill shrine in three nights — and the shrine's lantern, which has burned as long as anyone remembers, has gone dark. Maera is offering 25 gp and free board to anyone who'll climb up and find out why.",
+      "objectives": [
+        "Climb to the hill shrine and find Piven",
+        "Find out why the ever-burning lantern went dark"
+      ],
+      "obstacles": "The path up is washed out; something has been taking sheep from the hillside pens at night.",
+      "secret_truth": "Piven is alive but trapped: he cracked the lantern's housing while cleaning it, and the thing the light was keeping asleep under the shrine — a nest of giant centipedes around an old warding stone — woke hungry. Piven is holed up in the shrine cellar with a sprained ankle. Fixing the lantern (or clearing the nest) solves both mysteries. Scale and reskin freely.",
+      "rewards": "25 gp, free board at the Waylight, Emberwick's gratitude",
+      "known_to_party": true
+    }
+  ],
+  "completed": [],
+  "rumored": []
+}

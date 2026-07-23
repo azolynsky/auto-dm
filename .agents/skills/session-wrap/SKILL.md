@@ -10,13 +10,13 @@ description: End-of-session procedure — write the session log, update the roll
 Before writing prose, make sure live state is current.
 
 - Sync combat.json final HP to character sheets if combat ended without a `combat_tracker.py end`.
-- Confirm `state/current.json` — location, in-game date, time of day.
-- Confirm `state/quests.json` — anything new, completed, or progressed.
-- Add any new `state/world-flags.json` flags the party flipped.
+- Confirm `campaign/state/current.json` — location, in-game date, time of day.
+- Confirm `campaign/state/quests.json` — anything new, completed, or progressed.
+- Add any new `campaign/state/world-flags.json` flags the party flipped.
 
 ## 2. Write the session log
 
-Append to `sessions/session-NN.md` (create if new). Structure:
+Append to `campaign/sessions/session-NN.md` (create if new). Structure:
 
 ```markdown
 # Session NN — <short evocative title>
@@ -33,18 +33,18 @@ Append to `sessions/session-NN.md` (create if new). Structure:
 ## Beats
 
 - Party left Phandalin at dawn following the goblin trail north.
-- Ambushed by 4 goblins on the Triboar Trail. Killed all 4. Alex dropped to 0 HP at one point; stabilized.
+- Ambushed by 4 goblins on the Triboar Trail. Killed all 4. Ren dropped to 0 HP at one point; stabilized.
 - Found Cragmaw Hideout. Snuck past the wolves. Captured a goblin (Yeemik).
 - Yeemik offered a deal: kill Klarg the bugbear and Yeemik gives the party Sildar. Party agreed pragmatically.
 
 ## NPCs introduced / changed
 
-- **Yeemik** (goblin): captured, currently allied-of-convenience. Hidden truth: will betray at first opportunity. See npcs/one-shot/yeemik.md.
+- **Yeemik** (goblin): captured, currently allied-of-convenience. Hidden truth: will betray at first opportunity. See campaign/npcs/one-shot/yeemik.md.
 - **Sildar Hallwinter**: located, alive, bound, 6 HP. Knows about Gundren's capture.
 
 ## Loot
 
-- 30 gp, 2 healing potions (now Alex 1, Friend 1)
+- 30 gp, 2 healing potions (now Ren 1, Bel 1)
 - Sildar carries a journal (not yet read)
 
 ## State changes
@@ -58,7 +58,7 @@ Keep beats factual. The Narrator's flourishes were in real time; the log is for 
 
 ## 3. Update the rolling recap
 
-`sessions/recap.md` is the **summary of summaries**. Edit it (don't append) to stay short — aim for under 500 words total covering the campaign so far.
+`campaign/sessions/recap.md` is the **summary of summaries**. Edit it (don't append) to stay short — aim for under 500 words total covering the campaign so far.
 
 Pattern:
 
@@ -87,7 +87,7 @@ The "what the party knows" / "what the party doesn't know yet" split is gold for
 
 Sum CR-based XP from `encounter-building` skill across the session's encounters. Divide by number of PCs. Award equally.
 
-Or skip XP entirely and use milestone leveling. House rule it in `rules/house-rules.md`.
+Or skip XP entirely and use milestone leveling. House rule it in `campaign/house-rules.md`.
 
 Update `xp` on each character sheet.
 
@@ -97,6 +97,6 @@ Invoke `continuity-checker` agent. Fix any flagged errors before they calcify.
 
 ## 6. Note things for prep
 
-Append to `sessions/prep-NNN.md` (one ahead of current) — "the party intends to assault Klarg next session; will probably approach via the central cave."
+Append to `campaign/sessions/prep-NNN.md` (one ahead of current) — "the party intends to assault Klarg next session; will probably approach via the central cave."
 
 Hand off to `session-prep` agent during downtime before next session.

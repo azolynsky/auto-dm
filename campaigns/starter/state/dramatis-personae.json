@@ -1,0 +1,11 @@
+{
+  "_description": "Player-facing 'Who's Who' cheat sheet, shown in the web companion sidebar. Maintained by the Bookkeeper: add a character when the party meets or learns of them; update note/disposition as things change. PLAYER-VISIBLE — never put secrets in name/disposition/note. Entries with known_to_party=false are hidden by the server (use to pre-stage reveals). disposition: friend | enemy | unknown.",
+  "characters": [
+    {
+      "name": "Maera Thistle",
+      "disposition": "friend",
+      "note": "Keeper of the Waylight Inn. Worried about old Piven and the dark lantern on the hill.",
+      "known_to_party": true
+    }
+  ]
+}

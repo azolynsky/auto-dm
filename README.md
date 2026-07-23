@@ -1,70 +1,80 @@
-# D&D campaign — Claude Code DM
+# D&D campaign — LLM DM
 
-A repository for running a Dungeons & Dragons 5e campaign with Claude Code as DM, for Alex and a friend.
+A repository for running a Dungeons & Dragons 5e campaign with an LLM (Claude Code, Codex, …) as Dungeon Master. Fork it, run one command, and start your own table.
 
 ## Why this exists
 
-LLM-as-DM drifts. Improvised state is forgotten between sessions, dice rolls are quietly fudged, NPCs change eye color twice, the town that was "two days east" is suddenly next door. This repo grounds Claude in **real files** for state and **real tools** for randomness, and splits the DM brain into specialized subagents so each one stays focused.
+LLM-as-DM drifts. Improvised state is forgotten between sessions, dice rolls are quietly fudged, NPCs change eye color twice, the town that was "two days east" is suddenly next door. This repo grounds the LLM in **real files** for state and **real tools** for randomness, and splits the DM brain into specialized subagents so each one stays focused.
 
-## How to play
+## Start your own campaign
 
 ```bash
-cd /path/to/dnd
+git clone <your fork>
+cd dnd
+pip install -r webapp/requirements.txt
 claude     # or: codex
 ```
 
-Then: **"Let's continue the campaign."** The LLM reads its entry-point manual (`CLAUDE.md` for Claude, `AGENTS.md` for Codex — they're the same file), the recap, and current state, then picks up where you left off.
+Then say: **"Set me up — run onboarding."** The `onboarding` skill installs anything missing, creates your campaign from the starter template (`python tools/new_campaign.py --name "..."` under the hood), walks a session 0 (characters, tone, table settings), and starts the web companion. The starter campaign — the village of Emberwick and the Cold Lantern mystery, with two pregen PCs — is ready to play or reskin.
 
-You can swap DMs mid-campaign (e.g., run out of Claude credits, switch to Codex). All state lives in plain JSON/MD files in this repo, all tools are plain Python scripts, and the "subagent" and "skill" files in `.claude/` are just role prompts and procedural recipes any LLM can read. See the "Multi-LLM operation" section of `CLAUDE.md` for details.
+To continue an existing campaign, just say: **"Let's continue the campaign."**
 
-For the very first session: **"Let's run session 0 — character creation."** Walk through `characters/SCHEMA.md` to fill in `pc-alex.json` and `pc-friend.json`.
+## Code vs. campaign
 
-## Structure
+The engine and the table are separate. Generic, campaign-agnostic code and reference:
 
 ```
 dnd/
-├── CLAUDE.md                   # DM operating manual — read every session
-├── AGENTS.md                   # symlink → CLAUDE.md (so Codex/other LLMs read the same file)
-├── README.md
-├── rules/                      # SRD reference + house rules (slow-moving canon)
-├── world/                      # Setting, regions, lore (slow-moving canon)
-├── characters/                 # PC sheets in JSON (Bookkeeper writes)
-├── npcs/                       # NPC entity folders (summary/voice/motivations per NPC)
-├── factions/                   # Faction entity folders
-├── monsters/                   # Encountered creature stat blocks
-├── state/                      # Live state (current.json, quests, world-flags, combat)
-├── sessions/                   # Per-session logs + rolling recap
-├── tools/                      # dice.py, check_resolver.py, combat_tracker.py, narrate.py, budget_recap.py
-├── tests/                      # unittest suite for tools + webapp (stdlib only)
-├── webapp/                     # Read-only player web companion (FastAPI + SSE)
-└── .claude/
-    ├── agents/                 # Six subagents
-    └── skills/                 # Six procedural skills
+├── CLAUDE.md          # DM operating manual — read every session
+├── AGENTS.md          # symlink → CLAUDE.md (Codex/other LLMs read the same file)
+├── rules/             # Generic 5e/SRD reference (srd-reference, combat-flow, skill-checks)
+├── docs/              # character-schema.md
+├── tools/             # dice, check_resolver, combat_tracker, narrate, budget_recap, new_campaign
+├── tests/             # unittest suite for tools + webapp (stdlib only)
+├── webapp/            # Player web companion (FastAPI + SSE)
+├── campaigns/starter/ # Forkable template campaign
+└── .claude/           # agents/ (six role prompts) + skills/ (procedures)
 ```
+
+Everything about *your* table lives in one directory, created from the template:
+
+```
+campaign/
+├── house-rules.md     # Your table's rulings and tone agreements
+├── characters/        # PC sheets (JSON) + portraits in images/
+├── state/             # current.json, quests, world-flags, combat, settings, player feed
+├── sessions/          # Per-session logs + rolling recap
+├── npcs/              # NPC entity folders (summary/voice/motivations per NPC)
+├── world/             # Setting overview, lore, location folders
+└── factions/          # Faction entity folders
+```
+
+Tools and webapp find the campaign at `<repo>/campaign`, or wherever `DND_ROOT` points. You can swap DM LLMs mid-campaign — all state is plain JSON/Markdown, all tools are plain Python, and the agent/skill prompts are readable by any LLM (see "Multi-LLM operation" in `CLAUDE.md`).
 
 ## Architecture
 
 **Six subagents** (in `.claude/agents/`):
 - **Rules Lawyer** — what the rules say (read-only)
 - **Bookkeeper** — the only agent that writes state
-- **Director** — what the world does (DM brain)
-- **Narrator** — renders outcomes as prose
+- **Director** — what the world does (DM brain; the only reader of `motivations.md`/`secrets.md`)
+- **Narrator** — renders outcomes as prose (firewalled from secrets)
 - **Continuity Checker** — flags contradictions
 - **Session Prep** — between-session preparation
 
-**Six skills** (in `.claude/skills/`):
-combat-encounter, skill-check, spellcasting, leveling-up, session-wrap, encounter-building.
+**Skills** (in `.claude/skills/`):
+onboarding, combat-encounter, skill-check, spellcasting, leveling-up, session-wrap, encounter-building.
 
-**Five tools** (in `tools/`):
-- `dice.py` — cryptographic-randomness dice roller. Every roll.
-- `check_resolver.py` — pulls modifiers from a character sheet and rolls.
-- `combat_tracker.py` — initiative order, monster HP, conditions.
-- `narrate.py` — pushes player-facing prose to the web companion's live feed.
+**Tools** (in `tools/`) — all emit standardized JSON:
+- `dice.py` — cryptographic-randomness dice roller; batches several rolls per call.
+- `check_resolver.py` — pulls modifiers from a character sheet and rolls against a DC.
+- `combat_tracker.py` — initiative, monster HP, conditions; posts combat banners to the feed.
+- `narrate.py` — pushes player-facing prose to the web companion, attaching queued mechanical effects as subtext (players read the story before the numbers).
 - `budget_recap.py` — keeps the rolling recap within its character budget.
+- `new_campaign.py` — creates `campaign/` from `campaigns/starter/`.
 
 ## Web companion
 
-A read-only webpage the players watch during the session: character cards with live HP, the narration feed (streamed via SSE as the DM calls `narrate.py`), the quest log (party-known quests only — `secret_truth` never leaves the server), and an initiative bar during combat.
+A webpage the players watch during the session: character cards with live HP (click a portrait for the full sheet — saves, skills, spells, full inventory), the narration feed (streamed via SSE as the DM calls `narrate.py`, with mechanical changes as subtext under the prose), the quest log (party-known quests only — `secret_truth` never leaves the server), an initiative bar during combat, and a ⚙ **Settings** tab where the table tunes the DM: rules strictness (strict vs. hand-of-god), beginner guidance, public dice rolls, kid-friendly narration, narration length, and free-text house rules.
 
 ```bash
 pip install -r webapp/requirements.txt   # first time only
@@ -77,20 +87,8 @@ python webapp/server.py                  # then open http://localhost:8765
 python3 -m unittest discover -s tests
 ```
 
-Stdlib-only (no pytest). Covers the dice roller, check resolver, combat tracker, narration feed, and — most importantly — the webapp's secrecy redaction, so a refactor can't accidentally leak GM-only fields to the players' screen. State-writing tools are tested against a temp directory via the `DND_ROOT` env override; the suite never touches live campaign state.
+Stdlib-only (no pytest). Covers the dice roller, check resolver, combat tracker, narration feed + effects queue, and — most importantly — the webapp's secrecy redaction, so a refactor can't accidentally leak GM-only fields to the players' screen. State-writing tools are tested against a temp directory via the `DND_ROOT` env override; the suite never touches live campaign state.
 
 ## The hard rules
 
 Listed in `CLAUDE.md`. The short version: never roll dice mentally, never advance state without updating files, never fudge.
-
-## First-time setup
-
-1. Open this folder in Claude Code.
-2. Run a session-0: character creation. Fill in `characters/pc-alex.json` and `characters/pc-friend.json` per `characters/SCHEMA.md`.
-3. Edit `world/overview.md` "Tone targets" with what you and your friend want.
-4. Edit `rules/house-rules.md` if there are any options you want on.
-5. Start session 1.
-
-## What's already filled in
-
-The setting is the Sword Coast (Forgotten Realms) starting in **Phandalin**. The hook is loosely Lost Mine of Phandelver — Gundren Rockseeker hired the party to escort supplies. Strip or replace freely; nothing here is load-bearing if you want a different campaign.

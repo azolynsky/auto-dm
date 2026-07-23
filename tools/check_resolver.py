@@ -14,10 +14,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import subprocess
 import sys
+from dataclasses import asdict
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import campaign_lib
+import dice
 
 ABILITY_TO_SAVES = {"str", "dex", "con", "int", "wis", "cha"}
 
@@ -106,21 +109,19 @@ def main() -> int:
         bonus = ability_mod(char["abilities"][ab])
         label = f"{name} {ab.upper()} check"
 
-    expr = f"1d20{bonus:+d}"
-    dice_script = Path(__file__).parent / "dice.py"
-    out = subprocess.check_output(
-        [sys.executable, str(dice_script), expr, args.mode, "--label", label]
-    )
-    roll = json.loads(out)
+    roll = dice.do_roll(f"1d20{bonus:+d}", args.mode, label)
     result = {
         "character": name,
         "label": label,
         "dc": args.dc,
         "bonus": bonus,
-        "roll": roll,
-        "success": roll["total"] >= args.dc,
-        "margin": roll["total"] - args.dc,
+        "roll": asdict(roll),
+        "success": roll.total >= args.dc,
+        "margin": roll.total - args.dc,
     }
+    campaign_lib.queue_public_effects([
+        f"🎲 {label}: {roll.total} vs DC {args.dc} — {'success' if result['success'] else 'failure'}"
+    ])
     print(json.dumps(result, indent=2))
     return 0
 

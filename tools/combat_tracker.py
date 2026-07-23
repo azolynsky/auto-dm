@@ -1,97 +1,88 @@
 #!/usr/bin/env python3
 """
-Combat tracker. Stores per-encounter state in state/combat.json.
+Combat tracker. Stores per-encounter state in <campaign>/state/combat.json.
 
 Usage:
-    python combat_tracker.py start --participants "Alex:+3" "Friend:+1" "Goblin1:+2" "Goblin2:+2"
+    python combat_tracker.py start --participants "Ren:+3" "Goblin1:+2:7" "Goblin2:+2:7"
+        # optional third field = starting/max HP — saves a sethp call per monster
     python combat_tracker.py status
     python combat_tracker.py damage --who Goblin1 --amount 7
-    python combat_tracker.py heal --who Alex --amount 4
-    python combat_tracker.py condition --who Friend --add prone
-    python combat_tracker.py condition --who Friend --remove prone
+    python combat_tracker.py heal --who Ren --amount 4
+    python combat_tracker.py condition --who Ren --add prone
+    python combat_tracker.py condition --who Ren --remove prone
     python combat_tracker.py next            # advance turn
     python combat_tracker.py end             # clear encounter
 
+Every command prints one JSON object (status prints the full state).
+
+Feed discipline: start/end post a system banner to the player feed
+immediately. Damage/heal/conditions do NOT — they queue as effects that
+attach to the next narrate.py call, so the players read the story before
+the numbers (no spoilers).
+
 This deliberately stores HP for monsters here, not in characters/. PC HP
-belongs in state/current.json and should be synced by the Bookkeeper at
+belongs on the character sheets and should be synced by the Bookkeeper at
 end-of-encounter, not on every hit (otherwise concurrent edits get messy).
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
-import subprocess
 import sys
 from pathlib import Path
 
-# DND_ROOT overrides the campaign root (used by tests; also lets one clone
-# host multiple campaign directories).
-ROOT = Path(os.environ.get("DND_ROOT") or Path(__file__).resolve().parent.parent)
-STATE = ROOT / "state" / "combat.json"
-DICE = Path(__file__).resolve().parent / "dice.py"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import campaign_lib
+import dice
 
 
-def _feed(text: str) -> None:
-    """Mirror a combat event to the web companion feed. Never blocks combat."""
-    try:
-        import uuid
-        from datetime import datetime, timezone
-        feed = ROOT / "state" / "player-feed.jsonl"
-        current_file = ROOT / "state" / "current.json"
-        try:
-            current = json.loads(current_file.read_text(encoding="utf-8"))
-            loc = current.get("location", {}).get("specific", "unknown")
-        except Exception:
-            loc = "unknown"
-        session_files = sorted((ROOT / "sessions").glob("session-[0-9]*.md"), reverse=True)
-        entry = {
-            "id": uuid.uuid4().hex,
-            "ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "type": "combat",
-            "text": text,
-            "location": loc,
-            "session": session_files[0].stem if session_files else "unknown",
-        }
-        with open(feed, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
+def state_file() -> Path:
+    return campaign_lib.resolve_root() / "state" / "combat.json"
 
 
 def load() -> dict:
-    if not STATE.exists():
+    path = state_file()
+    if not path.exists():
         return {"active": False, "round": 0, "turn_index": 0, "order": [], "log": []}
-    with open(STATE) as f:
+    with open(path) as f:
         return json.load(f)
 
 
 def save(state: dict) -> None:
-    STATE.parent.mkdir(parents=True, exist_ok=True)
-    with open(STATE, "w") as f:
+    path = state_file()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
         json.dump(state, f, indent=2)
 
 
-def roll_init(modifier: int) -> int:
-    out = subprocess.check_output(
-        [sys.executable, str(DICE), f"1d20{modifier:+d}", "normal", "--label", "initiative"]
-    )
-    return json.loads(out)["total"]
+def out(obj: dict) -> None:
+    print(json.dumps(obj, ensure_ascii=False))
+
+
+def parse_participant(spec: str) -> dict:
+    """"Name", "Name:+3", or "Name:+3:7" (init modifier, starting HP)."""
+    name, _, rest = spec.partition(":")
+    mod_s, _, hp_s = rest.partition(":")
+    mod = int(mod_s) if mod_s else 0
+    hp = int(hp_s) if hp_s else None
+    init = dice.do_roll(f"1d20{mod:+d}", "normal", f"{name} initiative").total
+    return {"name": name, "init": init, "mod": mod,
+            "hp": hp, "max_hp": hp, "conditions": []}
 
 
 def cmd_start(args) -> None:
-    order = []
-    for spec in args.participants:
-        name, _, mod_s = spec.partition(":")
-        mod = int(mod_s) if mod_s else 0
-        init = roll_init(mod)
-        order.append({"name": name, "init": init, "mod": mod, "hp": None, "max_hp": None, "conditions": []})
+    order = [parse_participant(spec) for spec in args.participants]
     order.sort(key=lambda x: (-x["init"], -x["mod"]))
     state = {"active": True, "round": 1, "turn_index": 0, "order": order, "log": []}
-    state["log"].append(f"Combat started. Initiative: " + ", ".join(f"{o['name']}({o['init']})" for o in order))
+    state["log"].append("Combat started. Initiative: " + ", ".join(f"{o['name']}({o['init']})" for o in order))
     save(state)
-    _feed("⚔ Combat! Initiative: " + " → ".join(f"{o['name']} ({o['init']})" for o in order))
-    print(json.dumps(state, indent=2))
+    campaign_lib.append_feed(
+        campaign_lib.resolve_root(),
+        "⚔ Combat! Initiative: " + " → ".join(f"{o['name']} ({o['init']})" for o in order),
+        type="system",
+    )
+    out({"action": "start", "round": 1,
+         "turn": order[0]["name"], "order": order})
 
 
 def cmd_status(args) -> None:
@@ -111,13 +102,15 @@ def cmd_damage(args) -> None:
     if p["hp"] is None:
         p["hp"] = (p["max_hp"] or 0)
     p["hp"] -= args.amount
-    line = f"{args.who} takes {args.amount} damage (now {p['hp']} HP)"
-    if p["hp"] <= 0:
+    down = p["hp"] <= 0
+    line = f"{p['name']} takes {args.amount} damage (now {p['hp']} HP)"
+    if down:
         line += " — DOWN"
     s["log"].append(line)
     save(s)
-    _feed(line)
-    print(line)
+    campaign_lib.queue_effect(campaign_lib.resolve_root(), line)
+    out({"action": "damage", "who": p["name"], "amount": args.amount,
+         "hp": p["hp"], "max_hp": p["max_hp"], "down": down})
 
 
 def cmd_heal(args) -> None:
@@ -126,11 +119,12 @@ def cmd_heal(args) -> None:
     p["hp"] = (p["hp"] or 0) + args.amount
     if p["max_hp"] is not None:
         p["hp"] = min(p["hp"], p["max_hp"])
-    line = f"{args.who} healed {args.amount} (now {p['hp']} HP)"
+    line = f"{p['name']} healed {args.amount} (now {p['hp']} HP)"
     s["log"].append(line)
     save(s)
-    _feed(line)
-    print(line)
+    campaign_lib.queue_effect(campaign_lib.resolve_root(), line)
+    out({"action": "heal", "who": p["name"], "amount": args.amount,
+         "hp": p["hp"], "max_hp": p["max_hp"]})
 
 
 def cmd_sethp(args) -> None:
@@ -140,21 +134,24 @@ def cmd_sethp(args) -> None:
     if args.max is not None:
         p["max_hp"] = args.max
     save(s)
-    print(json.dumps(p, indent=2))
+    out({"action": "sethp", "who": p["name"], "hp": p["hp"], "max_hp": p["max_hp"]})
 
 
 def cmd_condition(args) -> None:
     s = load()
     p = find(s, args.who)
+    root = campaign_lib.resolve_root()
     if args.add:
         if args.add not in p["conditions"]:
             p["conditions"].append(args.add)
-        s["log"].append(f"{args.who} gains {args.add}")
+        s["log"].append(f"{p['name']} gains {args.add}")
+        campaign_lib.queue_effect(root, f"{p['name']} is {args.add}")
     if args.remove:
         p["conditions"] = [c for c in p["conditions"] if c != args.remove]
-        s["log"].append(f"{args.who} no longer {args.remove}")
+        s["log"].append(f"{p['name']} no longer {args.remove}")
+        campaign_lib.queue_effect(root, f"{p['name']} is no longer {args.remove}")
     save(s)
-    print(json.dumps(p, indent=2))
+    out({"action": "condition", "who": p["name"], "conditions": p["conditions"]})
 
 
 def cmd_next(args) -> None:
@@ -169,16 +166,17 @@ def cmd_next(args) -> None:
     current = s["order"][s["turn_index"]]
     s["log"].append(f"Turn: {current['name']}")
     save(s)
-    print(f"Round {s['round']} — {current['name']}'s turn")
+    out({"action": "next", "round": s["round"], "turn": current["name"]})
 
 
 def cmd_end(args) -> None:
     s = load()
+    rounds = s.get("round", 0)
     s["active"] = False
     s["log"].append("Combat ended.")
     save(s)
-    _feed("⚔ Combat over.")
-    print("ended")
+    campaign_lib.append_feed(campaign_lib.resolve_root(), "⚔ Combat over.", type="system")
+    out({"action": "end", "rounds": rounds})
 
 
 def main() -> int:

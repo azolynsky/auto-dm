@@ -39,7 +39,7 @@ The Help action grants advantage when an ally could plausibly assist.
 
 ```bash
 python tools/check_resolver.py \
-    --char characters/pc-alex.json \
+    --char campaign/characters/<id>.json \
     --skill stealth \
     --dc 15 \
     --mode advantage

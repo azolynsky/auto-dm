@@ -18,7 +18,7 @@ Don't auto-apply. Walk the player through.
 2. **Update class level and total level.**
 3. **HP gain.** Two options:
    - **Fixed average**: hit die avg + Con mod (rounded up the first time, alternating thereafter). For d8: average 5 → "5 + Con mod each level". Boring but reliable.
-   - **Roll**: `python tools/dice.py 1d8 normal --label "HP for Alex level 3"`. Add Con mod. Minimum gain = 1. Risk a low roll for chance at a higher one.
+   - **Roll**: `python tools/dice.py 1d8 normal --label "HP for Ren level 3"`. Add Con mod. Minimum gain = 1. Risk a low roll for chance at a higher one.
    - Add to `hp.max` AND `hp.current` (you also heal up the new HP if at full).
 4. **Proficiency bonus.** Updates at 5, 9, 13, 17 (+1 each step from 2 → 6). Update `proficiency_bonus`.
 5. **Class features.** Look up the class table. Common at low levels:
@@ -37,7 +37,7 @@ Don't auto-apply. Walk the player through.
    - Spell save DC = 8 + prof + ability mod
    - Spell attack = prof + ability mod
    - Attack bonuses (prof + ability mod for proficient weapons)
-9. **Record in session log.** "Alex levels to 3 (Rogue / Arcane Trickster): HP 12 → 19, gains Mage Hand Legerdemain and 2nd-level spell slots."
+9. **Record in session log.** "Ren levels to 3 (Rogue / Arcane Trickster): HP 12 → 19, gains Mage Hand Legerdemain and 2nd-level spell slots."
 
 ## ASI vs feat (level 4, 8, 12, 16, 19)
 
@@ -56,10 +56,10 @@ Requires 13+ in the relevant ability of both classes (and the original). Use mul
 After applying, summarize:
 
 ```
-Alex is now Level 3 Rogue (Arcane Trickster).
+Ren is now Level 3 Rogue (Arcane Trickster).
 - HP: 12 → 19 (rolled 1d8, got 5; +2 Con)
 - Proficiency bonus: still +2 (next bump at L5)
 - New feature: Arcane Trickster — cast Mage Hand, learn 3 wizard cantrips + 3 1st-level wizard spells, INT-based
 - Spell slots: 2 × 1st-level
-- Saved: characters/pc-alex.json
+- Saved: campaign/characters/<id>.json
 ```

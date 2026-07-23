@@ -1,27 +1,36 @@
 #!/usr/bin/env python3
 """
-Append a Narrator prose entry to state/player-feed.jsonl.
-The FastAPI server watches this file and streams new entries via SSE to the web companion.
+Append a Narrator prose entry to <campaign>/state/player-feed.jsonl.
+The FastAPI server watches this file and streams new entries via SSE to the
+web companion.
 
 Usage:
     python tools/narrate.py "Your prose here."
     python tools/narrate.py "Scene changed." --type scene_change
     python tools/narrate.py "Combat begins." --type system
+    python tools/narrate.py - <<'EOF'          # read prose from stdin —
+    Long prose with "quotes" and $shell chars,  # no escaping headaches
+    multiple paragraphs, anything.
+    EOF
+
+Mechanical changes queued by other tools (combat damage, public rolls) are
+drained from state/pending-effects.jsonl and attached to this entry as
+`effects` — the web companion shows them as subtext under the prose, so
+the story lands before the numbers. Add extra one-off effects inline:
+
+    python tools/narrate.py "The potion works." --effect "Ren regains 7 HP (now 21/28)"
+
+Output: the appended feed entry as JSON, plus the current table settings
+(from the webapp Settings tab) so the DM notices steering changes mid-session.
 """
 import argparse
 import json
-import os
 import re
 import sys
-import uuid
-from datetime import datetime, timezone
 from pathlib import Path
 
-# DND_ROOT overrides the campaign root (used by tests; also lets one clone
-# host multiple campaign directories).
-ROOT = Path(os.environ.get("DND_ROOT") or Path(__file__).resolve().parent.parent)
-FEED = ROOT / "state" / "player-feed.jsonl"
-CURRENT = ROOT / "state" / "current.json"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import campaign_lib
 
 
 def normalize(text: str) -> str:
@@ -48,46 +57,29 @@ def normalize(text: str) -> str:
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Push player-facing narration to the web companion.")
-    p.add_argument("text", help="Prose text (no leading '> ')")
+    p.add_argument("text", help="Prose text (no leading '> '), or '-' to read from stdin")
     p.add_argument(
         "--type",
         default="narration",
         choices=["narration", "scene_change", "system", "player"],
         help="Entry type (default: narration)",
     )
+    p.add_argument("--effect", action="append", default=[],
+                   help="mechanical change to show as subtext; repeatable")
     args = p.parse_args()
 
-    text = normalize(args.text)
+    raw = sys.stdin.read() if args.text == "-" else args.text
+    text = normalize(raw)
     if not text:
         print("narrate.py: text is empty after normalization; nothing pushed", file=sys.stderr)
         return 1
 
-    # Read context — fail gracefully, never block narration
-    try:
-        current = json.loads(CURRENT.read_text(encoding="utf-8"))
-        loc = current.get("location", {}).get("specific", "unknown")
-        session_files = sorted(
-            (ROOT / "sessions").glob("session-[0-9]*.md"), reverse=True
-        )
-        session = session_files[0].stem if session_files else "unknown"
-    except Exception:
-        loc, session = "unknown", "unknown"
+    root = campaign_lib.resolve_root()
+    effects = campaign_lib.drain_effects(root) + args.effect
+    entry = campaign_lib.append_feed(root, text, type=args.type, effects=effects)
 
-    entry = {
-        "id": uuid.uuid4().hex,
-        "ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "type": args.type,
-        "text": text,
-        "location": loc,
-        "session": session,
-    }
-    line = json.dumps(entry, ensure_ascii=False)
-
-    FEED.parent.mkdir(parents=True, exist_ok=True)
-    with open(FEED, "a", encoding="utf-8") as f:
-        f.write(line + "\n")
-
-    print(line)
+    print(json.dumps({"entry": entry, "settings": campaign_lib.load_settings(root)},
+                     ensure_ascii=False))
     return 0
 
 

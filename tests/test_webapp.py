@@ -11,12 +11,20 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+
+# Import the server against a throwaway campaign root so the suite works (and
+# never touches live state) regardless of whether <repo>/campaign exists.
+_ROOT_TMP = tempfile.TemporaryDirectory()
+for sub in ("state", "characters", "sessions"):
+    (Path(_ROOT_TMP.name) / sub).mkdir()
+os.environ["DND_ROOT"] = _ROOT_TMP.name
 
 try:
     spec = importlib.util.spec_from_file_location("webapp_server", REPO / "webapp" / "server.py")
@@ -192,6 +200,67 @@ class TestFeedReading(unittest.TestCase):
         self.assertEqual(len(feed), 50)
         self.assertEqual(feed[0]["id"], "10")
         self.assertEqual(feed[-1]["id"], "59")
+
+
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestCharacterListing(unittest.TestCase):
+    """Any sheet in characters/ shows (guests included), party order first."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        (self.tmp / "characters").mkdir()
+        self._orig = (server.CHARACTERS_DIR, server.CURRENT_FILE)
+        server.CHARACTERS_DIR = self.tmp / "characters"
+        server.CURRENT_FILE = self.tmp / "current.json"
+
+    def tearDown(self):
+        server.CHARACTERS_DIR, server.CURRENT_FILE = self._orig
+        self._tmp.cleanup()
+
+    def write_char(self, cid: str, name: str):
+        (self.tmp / "characters" / f"{cid}.json").write_text(
+            json.dumps({"id": cid, "name": name, "hp": {"current": 1, "max": 1}}))
+
+    def test_guests_included_party_first(self):
+        self.write_char("guest-gundren", "Gundren")
+        self.write_char("pc-b", "Bee")
+        self.write_char("pc-a", "Aye")
+        (self.tmp / "current.json").write_text(json.dumps({"party": ["pc-b", "pc-a"]}))
+        ids = [c["id"] for c in server.load_characters()]
+        self.assertEqual(ids, ["pc-b", "pc-a", "guest-gundren"])
+
+    def test_non_sheet_json_skipped(self):
+        (self.tmp / "characters" / "junk.json").write_text(json.dumps({"whatever": 1}))
+        self.write_char("pc-a", "Aye")
+        self.assertEqual([c["id"] for c in server.load_characters()], ["pc-a"])
+
+
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestFeedTruncation(unittest.TestCase):
+    def test_truncated_feed_resets_cursor(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "player-feed.jsonl"
+            orig = server.FEED_FILE
+            server.FEED_FILE = path
+            try:
+                path.write_text(json.dumps({"id": "a"}) + "\n" + json.dumps({"id": "b"}) + "\n")
+                entries, pos = server.read_new_feed_lines(0)
+                self.assertEqual([e["id"] for e in entries], ["a", "b"])
+                # file rewritten shorter (e.g. feed trimmed) — cursor must reset
+                path.write_text(json.dumps({"id": "c"}) + "\n")
+                entries, pos = server.read_new_feed_lines(pos)
+                self.assertEqual([e["id"] for e in entries], ["c"])
+            finally:
+                server.FEED_FILE = orig
+
+
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestSettings(unittest.TestCase):
+    def test_defaults_when_missing(self):
+        s = server.load_settings()
+        self.assertIn("rules_strictness", s)
+        self.assertIn("custom_rules", s)
 
 
 @unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")

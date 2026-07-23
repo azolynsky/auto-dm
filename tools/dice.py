@@ -4,13 +4,19 @@ Real dice roller. Claude must call this for every die — never roll mentally.
 
 Usage:
     python dice.py 1d20+5
-    python dice.py 1d20+5 advantage
-    python dice.py 1d20-2 disadvantage
-    python dice.py 2d6+3
-    python dice.py 4d6 drop-lowest          # ability score gen
-    python dice.py 1d20+7 advantage --label "Alex stealth check"
+    python dice.py 1d20+5 --mode advantage
+    python dice.py 1d20-2 --mode disadvantage
+    python dice.py 4d6 --mode drop-lowest        # ability score gen
+    python dice.py 1d20+7 --mode advantage --label "Alex stealth check"
 
-Output is a single JSON object on stdout so other tools / agents can parse it.
+Batch several rolls in ONE call (one label per expression, in order):
+    python dice.py 1d20+5 1d8+3 --label "rapier to-hit" --label "rapier damage"
+
+Output: one JSON object for a single expression, a JSON array for a batch.
+The positional mode argument ("python dice.py 1d20 advantage") still works.
+
+If the table setting show_rolls is on, labeled rolls are queued as public
+effects for the next narration (see campaign_lib.queue_effect).
 """
 from __future__ import annotations
 
@@ -18,14 +24,18 @@ import argparse
 import json
 import random
 import re
-import secrets
 import sys
 from dataclasses import dataclass, asdict
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # tools importable from anywhere
+import campaign_lib
 
 # Use secrets-backed RNG so rolls are not reproducible / not LLM-influenceable.
 _rng = random.SystemRandom()
 
 DICE_RE = re.compile(r"^\s*(\d*)d(\d+)\s*([+-]\s*\d+)?\s*$", re.IGNORECASE)
+MODES = ("normal", "advantage", "disadvantage", "drop-lowest")
 
 
 @dataclass
@@ -98,35 +108,59 @@ def do_roll(expr: str, mode: str, label: str | None) -> Roll:
     )
 
 
+def public_roll_text(roll: Roll) -> str:
+    crit_tag = " — NAT 20!" if roll.crit is True else (" — nat 1" if roll.crit is False else "")
+    return f"🎲 {roll.label}: {roll.total}{crit_tag}"
+
+
+def maybe_publish(rolls: list[Roll]) -> None:
+    """Queue labeled rolls as public effects when the table wants open rolls."""
+    campaign_lib.queue_public_effects([public_roll_text(r) for r in rolls if r.label])
+
+
+def pretty_line(roll: Roll) -> str:
+    tag = f"[{roll.label}] " if roll.label else ""
+    crit_tag = ""
+    if roll.crit is True:
+        crit_tag = "  ** NAT 20 **"
+    elif roll.crit is False:
+        crit_tag = "  ** NAT 1 **"
+    return (
+        f"{tag}{roll.expression} ({roll.mode}): "
+        f"rolled {roll.dice} -> kept {roll.kept} "
+        f"{'+' if roll.modifier >= 0 else ''}{roll.modifier} = {roll.total}{crit_tag}"
+    )
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Real dice roller for D&D 5e.")
-    p.add_argument("expression", help="e.g. 1d20+5, 2d6, 8d6")
-    p.add_argument(
-        "mode",
-        nargs="?",
-        default="normal",
-        choices=["normal", "advantage", "disadvantage", "drop-lowest"],
-    )
-    p.add_argument("--label", default=None, help="what this roll is for")
+    p.add_argument("expressions", nargs="+",
+                   help="e.g. 1d20+5, 2d6 — several expressions roll as a batch")
+    p.add_argument("--mode", default="normal", choices=MODES,
+                   help="applies to every expression in the batch")
+    p.add_argument("--label", action="append", default=None,
+                   help="what a roll is for; repeat per expression, in order")
     p.add_argument("--pretty", action="store_true", help="human-readable output")
     args = p.parse_args()
 
-    roll = do_roll(args.expression, args.mode, args.label)
+    # Back-compat: "dice.py 1d20+5 advantage" (positional mode)
+    exprs = list(args.expressions)
+    if len(exprs) > 1 and exprs[-1] in MODES:
+        args.mode = exprs.pop()
+
+    labels = args.label or []
+    rolls = [do_roll(expr, args.mode, labels[i] if i < len(labels) else None)
+             for i, expr in enumerate(exprs)]
+
+    maybe_publish(rolls)
 
     if args.pretty:
-        tag = f"[{roll.label}] " if roll.label else ""
-        crit_tag = ""
-        if roll.crit is True:
-            crit_tag = "  ** NAT 20 **"
-        elif roll.crit is False:
-            crit_tag = "  ** NAT 1 **"
-        print(
-            f"{tag}{roll.expression} ({roll.mode}): "
-            f"rolled {roll.dice} -> kept {roll.kept} "
-            f"{'+' if roll.modifier >= 0 else ''}{roll.modifier} = {roll.total}{crit_tag}"
-        )
+        for roll in rolls:
+            print(pretty_line(roll))
+    elif len(rolls) == 1:
+        print(json.dumps(asdict(rolls[0])))
     else:
-        print(json.dumps(asdict(roll)))
+        print(json.dumps([asdict(r) for r in rolls]))
     return 0
 
 

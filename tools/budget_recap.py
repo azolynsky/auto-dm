@@ -19,8 +19,10 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import campaign_lib
+
 DEFAULT_TARGET = 5000  # characters
-DEFAULT_PATH = "sessions/recap.md"
 
 
 def report(path: Path, target: int) -> dict:
@@ -73,12 +75,13 @@ def pretty(r: dict) -> str:
 
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("--path", default=DEFAULT_PATH)
+    p.add_argument("--path", default=None, help="defaults to <campaign>/sessions/recap.md")
     p.add_argument("--target", type=int, default=DEFAULT_TARGET, help="character budget")
     p.add_argument("--json", action="store_true", help="emit JSON instead of pretty")
     args = p.parse_args()
 
-    r = report(Path(args.path), args.target)
+    path = Path(args.path) if args.path else campaign_lib.resolve_root() / "sessions" / "recap.md"
+    r = report(path, args.target)
     if args.json:
         print(json.dumps(r, indent=2))
     else:
