@@ -198,6 +198,11 @@ body.combat-active #main-grid {
   border-bottom-color: var(--accent);
 }
 
+/* 0 HP — unconscious/dead reads loud from across the strip */
+.char-tab.down, .char-tab.down.active { color: var(--danger); }
+.char-tab.down .char-tab-hp { border-color: var(--danger); }
+.char-tab.down.active { border-bottom-color: var(--danger); }
+
 /* mini HP bar in the tab — same width for every PC so lengths compare;
    hover the tab for the numbers */
 .char-tab-hp {

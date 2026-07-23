@@ -344,7 +344,9 @@ function renderCharTabs() {
   _charOrder.forEach(id => {
     const c = _charData[id];
     const hp = c.hp || {};
-    const btn = el('button', `char-tab${id === _activeCharId ? ' active' : ''}`);
+    const down = hp.max > 0 && (hp.current ?? 0) <= 0;
+    const btn = el('button',
+      `char-tab${id === _activeCharId ? ' active' : ''}${down ? ' down' : ''}`);
     btn.appendChild(el('span', 'char-tab-name', c.name));
     const hpBar = el('span', 'char-tab-hp');
     const fill = el('span', `hp-fill ${hpClass(hp.current, hp.max)}`);
