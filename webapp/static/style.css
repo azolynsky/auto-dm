@@ -16,7 +16,7 @@
   --font-header: 'Cinzel', Georgia, serif;
   --font-body:   'EB Garamond', Georgia, serif;
   --combat-h:    82px;
-  --header-h:    64px;
+  --header-h:    48px;
 }
 
 @media (prefers-color-scheme: light) {
@@ -54,13 +54,12 @@ html, body {
 #header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   height: var(--header-h);
-  padding: 0 20px;
+  padding: 0 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--accent-dim);
   font-family: var(--font-header);
-  font-size: 23px;
   letter-spacing: 0.04em;
   color: var(--parchment-dim);
   position: fixed;
@@ -68,10 +67,12 @@ html, body {
   z-index: 100;
 }
 
+/* Hierarchy: campaign anchors, LOCATION is the headline, date/weather are
+   small flavor on the right. Everything single-line; hover for full text. */
 .header-campaign {
   font-weight: 600;
   color: var(--accent);
-  font-size: 24px;
+  font-size: 17px;
   letter-spacing: 0.06em;
   white-space: nowrap;
   flex-shrink: 0;
@@ -95,25 +96,41 @@ html, body {
   border-color: var(--accent-dim);
 }
 
-/* One line, ellipsized — never overflow the bar. Hover for the full text. */
-#header-date, #header-location, #header-weather {
-  color: var(--parchment-dim);
-  font-size: 22px;
+#header-location {
+  color: var(--parchment);
+  font-size: 19px;
+  flex: 0 1 auto;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-#header-date    { flex: 0 1 auto; min-width: 0; }
-#header-location { flex: 1 1 auto; min-width: 0; }
-#header-weather { flex: 0 2 auto; min-width: 0; max-width: 320px; }
+.header-flavor {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 0 1 auto;
+  font-size: 14px;
+  color: var(--accent-dim);
+  font-style: italic;
+}
+
+#header-date, #header-weather {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
 
 /* ── Main Grid ──────────────────────────────────────────────────── */
 #main-grid {
   display: grid;
   /* two sections: characters | chronicle. The sidebar is a drawer (below).
-     Card row capped so a big party can't starve the chronicle. */
-  grid-template-columns: minmax(520px, 44vw) minmax(420px, 1fr);
+     One sheet shows at a time, so its column never needs more than a card. */
+  grid-template-columns: minmax(520px, 720px) minmax(420px, 1fr);
   height: calc(100vh - var(--header-h));
   margin-top: var(--header-h);
   overflow: hidden;
@@ -124,15 +141,66 @@ body.combat-active #main-grid {
   height: calc(100vh - var(--header-h) - var(--combat-h));
 }
 
+/* Wide monitors: the open sidebar docks (content shifts) instead of overlaying */
+@media (min-width: 1800px) {
+  body.sidebar-open #main-grid { margin-right: min(440px, 90vw); }
+  body.sidebar-open #sidebar-column { box-shadow: none; }
+}
+
+/* Narrow screens: stack — character sheet on top, chronicle below */
+@media (max-width: 980px) {
+  #main-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 45vh) minmax(0, 1fr);
+  }
+  #characters-column { border-right: none; border-bottom: 1px solid var(--border); }
+}
+
 /* ── Characters Column ──────────────────────────────────────────── */
 #characters-column {
   border-right: 1px solid var(--border);
-  overflow-y: auto;
-  overflow-x: auto;
   background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-#characters-inner { padding: 12px 10px; display: flex; flex-direction: row; align-items: stretch; gap: 14px; min-height: 100%; }
+#char-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.char-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  font-family: var(--font-header);
+  font-size: 18px;
+  letter-spacing: 0.05em;
+  color: var(--parchment-dim);
+  padding: 6px 14px 7px;
+  white-space: nowrap;
+}
+
+.char-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.char-tab.hurt:not(.active) { color: var(--danger); }
+
+#characters-inner {
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
 
 .character-card {
   background: var(--surface);
@@ -140,9 +208,9 @@ body.combat-active #main-grid {
   border-radius: 6px;
   padding: 12px;
   position: relative;
-  width: 600px;
-  max-width: 600px;
-  flex: 0 0 600px;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
   overflow-wrap: break-word;
   display: flex;
   flex-direction: column;

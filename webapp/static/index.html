@@ -15,19 +15,21 @@
   <header id="header">
     <span class="header-campaign" id="header-campaign"></span>
     <span class="header-divider" id="header-div-1">·</span>
-    <span id="header-date"></span>
-    <span class="header-divider" id="header-div-2">·</span>
     <span id="header-location"></span>
-    <span class="header-divider" id="header-div-3">·</span>
-    <span id="header-weather"></span>
+    <span class="header-flavor">
+      <span id="header-date"></span>
+      <span class="header-divider" id="header-div-2">·</span>
+      <span id="header-weather"></span>
+    </span>
     <button id="sidebar-toggle" title="Quests & world info" aria-label="Toggle quests and world info">📜</button>
     <button id="settings-btn" title="Table settings" aria-label="Table settings">⚙</button>
   </header>
 
   <main id="main-grid">
 
-    <!-- LEFT: Character Panels -->
+    <!-- LEFT: Character sheet, one at a time — party tabs across the top -->
     <section id="characters-column">
+      <div id="char-tabs"></div>
       <div id="characters-inner"></div>
     </section>
 

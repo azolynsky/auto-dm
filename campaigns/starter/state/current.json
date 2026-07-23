@@ -1,7 +1,7 @@
 {
   "campaign": "New Campaign",
   "campaign_day": 1,
-  "in_game_date": "1st day, year 1 (morning)",
+  "in_game_date": "1st day, year 1",
   "time_of_day": "morning",
   "location": {
     "region": "The Vale",

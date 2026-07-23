@@ -1,12 +1,12 @@
 {
   "campaign": "Lost Mine of Phandelver",
   "campaign_day": 4,
-  "in_game_date": "4th of Mirtul, 1492 DR (dusk)",
+  "in_game_date": "4th of Mirtul, 1492 DR",
   "time_of_day": "dusk",
   "location": {
     "region": "Sword Coast",
     "settlement": "Neverwinter Wood",
-    "specific": "Hidden camp in a hollow off the ravine, south of Cragmaw Castle — interrogation of the bound doppelganger"
+    "specific": "Hidden camp south of Cragmaw Castle"
   },
   "weather": "clear night falling, cold; moonrise late",
   "party": [

@@ -326,25 +326,51 @@ function buildInventoryPane(char, limit = 20) {
   return pane;
 }
 
+// One character shown at a time; party tabs across the top of the section
+let _charOrder = [];
+let _activeCharId = localStorage.getItem('active-char');
+
 function renderCharacters(chars) {
+  _charOrder = chars.map(c => c.id);
+  chars.forEach(char => { _charData[char.id] = char; });
+  if (!_charOrder.includes(_activeCharId)) _activeCharId = _charOrder[0] || null;
+  renderCharTabs();
+  renderActiveCharacter();
+}
+
+function renderCharTabs() {
+  const bar = document.getElementById('char-tabs');
+  bar.innerHTML = '';
+  _charOrder.forEach(id => {
+    const c = _charData[id];
+    const hp = c.hp || {};
+    const btn = el('button', `char-tab${id === _activeCharId ? ' active' : ''}`, c.name);
+    if (hp.max > 0 && hp.current / hp.max <= 0.25) btn.classList.add('hurt');
+    btn.addEventListener('click', () => {
+      _activeCharId = id;
+      localStorage.setItem('active-char', id);
+      renderCharTabs();
+      renderActiveCharacter();
+    });
+    bar.appendChild(btn);
+  });
+}
+
+function renderActiveCharacter() {
   const inner = document.getElementById('characters-inner');
   inner.innerHTML = '';
-  chars.forEach(char => {
-    _charData[char.id] = char;
-    inner.appendChild(buildCharCard(char));
-  });
+  const char = _charData[_activeCharId];
+  if (char) inner.appendChild(buildCharCard(char));
 }
 
 function updateCharacterCard(char) {
   _charData[char.id] = char;
-  const existing = document.querySelector(`.character-card[data-id="${char.id}"]`);
-  if (existing) {
-    // Full rebuild keeps every field honest (AC, level, stats — not just HP);
-    // _selectedTabs preserves the open tab across the swap.
-    existing.replaceWith(buildCharCard(char));
-  } else {
-    document.getElementById('characters-inner').appendChild(buildCharCard(char));
-  }
+  if (!_charOrder.includes(char.id)) _charOrder.push(char.id);
+  if (!_activeCharId) _activeCharId = char.id;
+  renderCharTabs(); // names / hurt states / new arrivals
+  // Full rebuild keeps every field honest (AC, level, stats — not just HP);
+  // _selectedTabs preserves the open detail tab across the swap.
+  if (char.id === _activeCharId) renderActiveCharacter();
   refreshCharModal(char.id);
 }
 
@@ -647,23 +673,24 @@ function renderHeader(current) {
   document.getElementById('header-campaign').textContent = campaign;
   document.title = campaign;
 
-  const date = `${current.in_game_date || ''}${current.time_of_day ? ', ' + current.time_of_day : ''}`;
+  // Don't repeat the time of day if the date string already carries it
+  let date = current.in_game_date || '';
+  const tod = current.time_of_day || '';
+  if (tod && !date.toLowerCase().includes(tod.toLowerCase())) date += `, ${tod}`;
+
   const loc = current.location || {};
   const location = [loc.specific, loc.settlement].filter(Boolean).join(', ');
   const weather = current.weather || '';
 
-  // Hide dangling separators next to empty fields
-  const fields = [
-    ['header-date', date, 'header-div-1'],
-    ['header-location', location, 'header-div-2'],
-    ['header-weather', weather, 'header-div-3'],
-  ];
-  fields.forEach(([id, value, divId]) => {
-    const span = document.getElementById(id);
-    span.textContent = value;
-    span.title = value; // full text on hover — the bar ellipsizes
-    document.getElementById(divId).classList.toggle('hidden', !value);
-  });
+  [['header-location', location], ['header-date', date], ['header-weather', weather]]
+    .forEach(([id, value]) => {
+      const span = document.getElementById(id);
+      span.textContent = value;
+      span.title = value; // full text on hover — the bar ellipsizes
+    });
+  // dividers only between non-empty neighbors
+  document.getElementById('header-div-1').classList.toggle('hidden', !location);
+  document.getElementById('header-div-2').classList.toggle('hidden', !(date && weather));
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
