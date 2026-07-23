@@ -938,7 +938,8 @@ blockquote.feed-entry.feed-type-player {
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--parchment);
+  /* strip is always dark, so the text is always light — independent of theme */
+  color: #f0e6c8;
   background: rgba(0, 0, 0, 0.55);
   opacity: 0;
   transition: opacity 0.15s;
