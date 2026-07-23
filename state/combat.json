@@ -1,79 +1,75 @@
 {
   "active": false,
-  "round": 2,
-  "turn_index": 1,
+  "round": 1,
+  "turn_index": 0,
   "order": [
     {
-      "name": "Yark",
-      "init": 22,
-      "mod": 2,
-      "hp": 7,
-      "max_hp": 7,
-      "conditions": []
-    },
-    {
-      "name": "BlackPearl",
-      "init": 20,
-      "mod": 2,
-      "hp": 11,
-      "max_hp": 11,
-      "conditions": []
-    },
-    {
       "name": "Relthus",
-      "init": 18,
+      "init": 19,
       "mod": 3,
-      "hp": 12,
-      "max_hp": 12,
+      "hp": 10,
+      "max_hp": 28,
       "conditions": []
     },
     {
-      "name": "Goblin3",
-      "init": 18,
+      "name": "Snarl",
+      "init": 17,
       "mod": 2,
-      "hp": -8,
-      "max_hp": 7,
-      "conditions": []
+      "hp": 2,
+      "max_hp": 11,
+      "conditions": [
+        "won over \u2014 allied with Mira"
+      ]
     },
     {
-      "name": "Goblin1",
-      "init": 6,
-      "mod": 2,
-      "hp": 7,
-      "max_hp": 7,
+      "name": "Gundren",
+      "init": 17,
+      "mod": 0,
+      "hp": 9,
+      "max_hp": 31,
       "conditions": []
     },
     {
       "name": "Mira",
-      "init": 5,
+      "init": 15,
       "mod": 3,
-      "hp": 12,
-      "max_hp": 12,
+      "hp": 28,
+      "max_hp": 28,
       "conditions": []
     },
     {
-      "name": "Goblin2",
-      "init": 3,
+      "name": "King Grol",
+      "init": 13,
       "mod": 2,
-      "hp": -1,
-      "max_hp": 7,
+      "hp": 22,
+      "max_hp": 45,
+      "conditions": []
+    },
+    {
+      "name": "Vyerith",
+      "init": 10,
+      "mod": 4,
+      "hp": 14,
+      "max_hp": 52,
       "conditions": []
     }
   ],
   "log": [
-    "Combat started. Initiative: Yark(22), BlackPearl(20), Relthus(18), Goblin3(18), Goblin1(6), Mira(5), Goblin2(3)",
-    "Turn: BlackPearl",
-    "Goblin2 takes 8 damage (now -1 HP) \u2014 DOWN",
-    "Turn: Relthus",
-    "Goblin3 takes 5 damage (now 2 HP)",
-    "Turn: Goblin3",
-    "Turn: Goblin1",
-    "Turn: Mira",
-    "Turn: Goblin2",
-    "--- Round 2 ---",
-    "Turn: Yark",
-    "Turn: BlackPearl",
-    "Goblin3 takes 10 damage (now -8 HP) \u2014 DOWN",
+    "Combat started. Initiative: Relthus(19), Snarl(17), Gundren(17), Mira(15), King Grol(13), Vyerith(10)",
+    "Gundren gains bound to chair",
+    "King Grol takes 6 damage (now 39 HP)",
+    "Gundren no longer bound to chair",
+    "Relthus takes 9 damage (now 10 HP)",
+    "Snarl takes 9 damage (now 2 HP)",
+    "Gundren takes 10 damage (now 8 HP)",
+    "Snarl gains won over \u2014 allied with Mira",
+    "Vyerith takes 11 damage (now 41 HP)",
+    "Gundren takes 7 damage (now 1 HP)",
+    "Vyerith takes 14 damage (now 27 HP)",
+    "Vyerith takes 13 damage (now 14 HP)",
+    "King Grol takes 17 damage (now 22 HP)",
+    "Gundren healed 8 (now 9 HP)",
+    "Combat ended.",
     "Combat ended."
   ]
 }

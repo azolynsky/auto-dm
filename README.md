@@ -29,11 +29,14 @@ dnd/
 ├── rules/                      # SRD reference + house rules (slow-moving canon)
 ├── world/                      # Setting, regions, lore (slow-moving canon)
 ├── characters/                 # PC sheets in JSON (Bookkeeper writes)
-├── npcs/                       # NPC stats and notes
+├── npcs/                       # NPC entity folders (summary/voice/motivations per NPC)
+├── factions/                   # Faction entity folders
 ├── monsters/                   # Encountered creature stat blocks
 ├── state/                      # Live state (current.json, quests, world-flags, combat)
 ├── sessions/                   # Per-session logs + rolling recap
-├── tools/                      # dice.py, check_resolver.py, combat_tracker.py
+├── tools/                      # dice.py, check_resolver.py, combat_tracker.py, narrate.py, budget_recap.py
+├── tests/                      # unittest suite for tools + webapp (stdlib only)
+├── webapp/                     # Read-only player web companion (FastAPI + SSE)
 └── .claude/
     ├── agents/                 # Six subagents
     └── skills/                 # Six procedural skills
@@ -52,10 +55,29 @@ dnd/
 **Six skills** (in `.claude/skills/`):
 combat-encounter, skill-check, spellcasting, leveling-up, session-wrap, encounter-building.
 
-**Three tools** (in `tools/`):
+**Five tools** (in `tools/`):
 - `dice.py` — cryptographic-randomness dice roller. Every roll.
 - `check_resolver.py` — pulls modifiers from a character sheet and rolls.
 - `combat_tracker.py` — initiative order, monster HP, conditions.
+- `narrate.py` — pushes player-facing prose to the web companion's live feed.
+- `budget_recap.py` — keeps the rolling recap within its character budget.
+
+## Web companion
+
+A read-only webpage the players watch during the session: character cards with live HP, the narration feed (streamed via SSE as the DM calls `narrate.py`), the quest log (party-known quests only — `secret_truth` never leaves the server), and an initiative bar during combat.
+
+```bash
+pip install -r webapp/requirements.txt   # first time only
+python webapp/server.py                  # then open http://localhost:8765
+```
+
+## Tests
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+Stdlib-only (no pytest). Covers the dice roller, check resolver, combat tracker, narration feed, and — most importantly — the webapp's secrecy redaction, so a refactor can't accidentally leak GM-only fields to the players' screen. State-writing tools are tested against a temp directory via the `DND_ROOT` env override; the suite never touches live campaign state.
 
 ## The hard rules
 

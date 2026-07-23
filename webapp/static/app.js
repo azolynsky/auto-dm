@@ -244,21 +244,28 @@ function buildSpellsPane(char) {
   const spells = char.spells || {};
   const slots = spells.slots || {};
   Object.entries(slots).forEach(([lvl, s]) => {
-    // slots stored as {"1": {"total": 2, "used": 1}} or {"1": 2}
-    const total = typeof s === 'object' ? s.total : s;
-    const used = typeof s === 'object' ? (s.used || 0) : 0;
+    // slots stored as {"1": {"max": 2, "remaining": 1}}, {"1": {"total": 2, "used": 1}}, or {"1": 2}
+    const total = typeof s === 'object' ? (s.max ?? s.total ?? 0) : s;
+    const available = typeof s === 'object'
+      ? (s.remaining ?? (total - (s.used || 0)))
+      : s;
     const row = el('div', 'slot-row');
     row.appendChild(el('span', 'slot-label', `Level ${lvl} slots`));
     const pips = el('span', 'slot-pips');
     for (let i = 0; i < total; i++) {
-      pips.appendChild(el('span', `slot-pip${i < total - used ? ' available' : ''}`, '◆'));
+      pips.appendChild(el('span', `slot-pip${i < available ? ' available' : ''}`, '◆'));
     }
+    row.appendChild(el('span', 'slot-count', `${available}/${total}`));
     row.appendChild(pips);
     pane.appendChild(row);
   });
   (spells.known || []).forEach(sp => {
     const name = typeof sp === 'string' ? sp : sp.name;
-    pane.appendChild(el('div', 'spell-known', name));
+    const entry = el('div', 'spell-known', name);
+    if (typeof sp === 'object' && sp.detail) {
+      entry.appendChild(el('div', 'spell-detail', sp.detail));
+    }
+    pane.appendChild(entry);
   });
   if (pane.children.length === 0) return el('div', 'tab-pane tab-empty', 'No spells yet.');
   return pane;
@@ -440,6 +447,9 @@ function renderFeed(entries) {
 // ── Header ────────────────────────────────────────────────────────────────────
 
 function renderHeader(current) {
+  const campaign = current.campaign || 'Campaign Companion';
+  document.getElementById('header-campaign').textContent = campaign;
+  document.title = campaign;
   document.getElementById('header-date').textContent =
     `${current.in_game_date || ''}${current.time_of_day ? ', ' + current.time_of_day : ''}`;
   const loc = current.location || {};

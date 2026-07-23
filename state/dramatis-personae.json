@@ -28,7 +28,7 @@
     {
       "name": "Yark",
       "disposition": "friend",
-      "note": "Goblin who joined your party! Guiding you to Cragmaw Castle in exchange for food and protection.",
+      "note": "Goblin who joined your party! He got you inside Cragmaw Castle and knows the back ways to King Grol's tower.",
       "known_to_party": true
     },
     {
@@ -56,9 +56,21 @@
       "known_to_party": true
     },
     {
-      "name": "Grib",
+      "name": "King Grol",
+      "disposition": "enemy",
+      "note": "The big bugbear who rules Cragmaw Castle. He's holding Gundren and the map in his tower, and he keeps a wolf named Snarl.",
+      "known_to_party": true
+    },
+    {
+      "name": "The dark elf's messenger",
+      "disposition": "enemy",
+      "note": "A mysterious visitor at the feast, here to buy the map for the Black Spider. His riding lizard is packed to leave.",
+      "known_to_party": true
+    },
+    {
+      "name": "Grib \u2620",
       "disposition": "unknown",
-      "note": "Goblin prisoner captured outside Cragmaw Castle. He works inside the castle \u2014 and he talks a LOT when scared.",
+      "note": "Goblin prisoner who told you everything about the castle. Killed by Relthus after the interrogation. Dead.",
       "known_to_party": true
     }
   ]

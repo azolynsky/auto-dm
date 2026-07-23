@@ -4,9 +4,9 @@
   "player": "Alex",
   "race": "Wood Elf",
   "class": "Ranger",
-  "subclass": null,
-  "level": 1,
-  "xp": 325,
+  "subclass": "Hunter",
+  "level": 3,
+  "xp": 1375,
   "alignment": "Neutral Good",
   "background": "Outlander",
   "abilities": {
@@ -32,14 +32,14 @@
   },
   "ac": 14,
   "hp": {
-    "max": 12,
-    "current": 12,
+    "max": 28,
+    "current": 28,
     "temp": 0
   },
   "hit_dice": {
     "size": "d10",
-    "total": 1,
-    "remaining": 1
+    "total": 3,
+    "remaining": 2
   },
   "speed": 35,
   "initiative_bonus": 3,
@@ -108,6 +108,16 @@
       "name": "Fighting Style: Archery",
       "source": "Ranger 1",
       "detail": "+2 bonus to ranged attack rolls"
+    },
+    {
+      "name": "Primeval Awareness",
+      "source": "Ranger 3",
+      "detail": "Expend a spell slot: for 1 min/slot level, sense whether aberrations, celestials, dragons, elementals, fey, fiends, or undead are within 1 mile (6 in favored terrain). No number or location."
+    },
+    {
+      "name": "Hunter's Prey: Colossus Slayer",
+      "source": "Hunter 3",
+      "detail": "Once per turn, +1d8 damage when hitting a creature below its HP maximum"
     }
   ],
   "attacks": [
@@ -134,10 +144,31 @@
   ],
   "spells": {
     "ability": "wis",
-    "save_dc": null,
-    "attack_bonus": null,
-    "slots": {},
-    "known": []
+    "save_dc": 12,
+    "attack_bonus": "+4",
+    "slots": {
+      "1": {
+        "max": 3,
+        "remaining": 3
+      }
+    },
+    "known": [
+      {
+        "name": "Cure Wounds",
+        "level": 1,
+        "detail": "Touch, heal 1d8+2"
+      },
+      {
+        "name": "Ensnaring Strike",
+        "level": 1,
+        "detail": "Bonus action on hit: STR save DC 12 or restrained by thorny vines, 1d6/turn; concentration"
+      },
+      {
+        "name": "Hunter's Mark",
+        "level": 1,
+        "detail": "Bonus action: mark a creature; +1d6 damage on every weapon hit vs it; move mark when it drops; concentration, 1h"
+      }
+    ]
   },
   "inventory": [
     {
@@ -150,7 +181,7 @@
     },
     {
       "item": "Arrows",
-      "qty": 9
+      "qty": 25
     },
     {
       "item": "Shortsword",
@@ -173,7 +204,7 @@
       "qty": 1
     }
   ],
-  "gold": 10,
+  "gold": 9,
   "conditions": [],
   "exhaustion": 0,
   "death_saves": {
@@ -194,5 +225,5 @@
       "Distrusts walls and rooftops. Indoors makes him restless."
     ]
   },
-  "notes": "Wood Elf Ranger. +7 longbow thanks to Archery fighting style. Ranger spells unlock at level 2. Favored terrain: Forest. Ammo: 11 arrows spent through session 2 (20\u21929); recover spent arrows when there's time to police a battlefield."
+  "notes": "Wood Elf Ranger (Hunter). +7 longbow (Archery style). Favored terrain: Forest. Ammo: 25 arrows as of session 5 end (28 - 4 fired; recovered the bridge-ambush arrow while camped). Colossus Slayer: +1d8 once/turn vs wounded targets. Hunter's Mark and Ensnaring Strike are both concentration — pick one."
 }

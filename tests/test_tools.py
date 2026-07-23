@@ -251,6 +251,29 @@ class TestNarrate(unittest.TestCase):
             self.assertNotEqual(entry["id"], json.loads(lines[1])["id"])
 
 
+class TestNarrateNormalize(unittest.TestCase):
+    narrate = load_module("narrate", TOOLS / "narrate.py")
+
+    def test_strips_markdown_artifacts(self):
+        n = self.narrate.normalize
+        self.assertEqual(n("> The goblin **crumples**."), "The goblin crumples.")
+        self.assertEqual(n("## Scene\n\n\n\n*Quiet* falls."), "Scene\n\nQuiet falls.")
+        self.assertEqual(n("_whisper_ and stone"), "whisper and stone")
+
+    def test_preserves_plain_prose(self):
+        n = self.narrate.normalize
+        text = "First paragraph.\n\nSecond paragraph with 2 * 3 math left alone."
+        self.assertEqual(n(text), text)
+
+    def test_empty_after_normalize_fails(self):
+        proc = subprocess.run(
+            [sys.executable, str(TOOLS / "narrate.py"), "> "],
+            env={**os.environ, "DND_ROOT": "/nonexistent"},
+            capture_output=True,
+        )
+        self.assertNotEqual(proc.returncode, 0)
+
+
 class TestBudgetRecap(unittest.TestCase):
     budget = load_module("budget_recap", TOOLS / "budget_recap.py")
 

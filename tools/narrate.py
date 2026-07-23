@@ -11,6 +11,7 @@ Usage:
 import argparse
 import json
 import os
+import re
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -23,6 +24,28 @@ FEED = ROOT / "state" / "player-feed.jsonl"
 CURRENT = ROOT / "state" / "current.json"
 
 
+def normalize(text: str) -> str:
+    """Standardize prose for the chronicle feed.
+
+    The feed renders as plain text (pre-wrap), so markdown syntax shows up
+    literally. Strip the artifacts LLM DMs habitually paste in: leading
+    blockquote '>' markers, **bold**/*italic*/_underscore_ emphasis, and
+    '#' headers. Also tidy whitespace: no trailing spaces, at most one
+    blank line between paragraphs.
+    """
+    lines = []
+    for line in text.splitlines():
+        line = re.sub(r"^\s*>\s?", "", line)          # blockquote marker
+        line = re.sub(r"^\s*#{1,6}\s+", "", line)     # markdown header
+        lines.append(line.rstrip())
+    out = "\n".join(lines)
+    out = re.sub(r"\*\*(.+?)\*\*", r"\1", out)        # **bold**
+    out = re.sub(r"(?<![\w*])\*([^*\n]+)\*(?![\w*])", r"\1", out)  # *italic*
+    out = re.sub(r"(?<!\w)_([^_\n]+)_(?!\w)", r"\1", out)          # _emphasis_
+    out = re.sub(r"\n{3,}", "\n\n", out)              # collapse blank runs
+    return out.strip()
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Push player-facing narration to the web companion.")
     p.add_argument("text", help="Prose text (no leading '> ')")
@@ -33,6 +56,11 @@ def main() -> int:
         help="Entry type (default: narration)",
     )
     args = p.parse_args()
+
+    text = normalize(args.text)
+    if not text:
+        print("narrate.py: text is empty after normalization; nothing pushed", file=sys.stderr)
+        return 1
 
     # Read context — fail gracefully, never block narration
     try:
@@ -49,7 +77,7 @@ def main() -> int:
         "id": uuid.uuid4().hex,
         "ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "type": args.type,
-        "text": args.text,
+        "text": text,
         "location": loc,
         "session": session,
     }

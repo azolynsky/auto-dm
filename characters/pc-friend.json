@@ -4,15 +4,15 @@
   "player": "Olive",
   "race": "Human",
   "class": "Fighter",
-  "subclass": null,
-  "level": 1,
-  "xp": 325,
+  "subclass": "Champion",
+  "level": 3,
+  "xp": 1375,
   "alignment": "Lawful Good",
   "background": "Soldier",
   "appearance": {
-    "eyes": "Amber-gold, narrow and sharp like a cat's \u2014 unsettling and striking in equal measure",
+    "eyes": "Amber-gold, narrow and sharp like a cat's — unsettling and striking in equal measure",
     "hair": "Golden, worn loose so a curtain of it falls across one eye",
-    "build": "Lean and flexible \u2014 gymnast's frame, moves like water",
+    "build": "Lean and flexible — gymnast's frame, moves like water",
     "armor": "Brown leather jacket, worn close-fit, with a custom interior pocket for her rapier",
     "overall": "Exotic and immediately noticeable; carries herself with quiet authority"
   },
@@ -37,14 +37,14 @@
   },
   "ac": 14,
   "hp": {
-    "max": 12,
-    "current": 12,
+    "max": 28,
+    "current": 28,
     "temp": 0
   },
   "hit_dice": {
     "size": "d10",
-    "total": 1,
-    "remaining": 1
+    "total": 3,
+    "remaining": 3
   },
   "speed": 30,
   "initiative_bonus": 3,
@@ -76,10 +76,21 @@
       "detail": "+2 damage when wielding a melee weapon in one hand with no other weapon"
     },
     {
+      "name": "Action Surge",
+      "source": "Fighter 2",
+      "uses": "1/short rest",
+      "detail": "Take one additional action on your turn"
+    },
+    {
       "name": "Second Wind",
       "source": "Fighter 1",
       "uses": "1/short rest",
       "detail": "Bonus action: regain 1d10+1 HP"
+    },
+    {
+      "name": "Improved Critical",
+      "source": "Champion 3",
+      "detail": "Weapon attacks score a critical hit on a roll of 19 or 20"
     }
   ],
   "attacks": [
@@ -123,7 +134,7 @@
       "qty": 1
     }
   ],
-  "gold": 10,
+  "gold": 9,
   "conditions": [],
   "exhaustion": 0,
   "death_saves": {
@@ -133,7 +144,7 @@
   "personality": {
     "traits": [
       "Stands between trouble and the people she's decided to protect.",
-      "Gymnast's body \u2014 fights with unusual flexibility and fluid movement.",
+      "Gymnast's body — fights with unusual flexibility and fluid movement.",
       "Speaks in a calm, low voice even when the room is on fire.",
       "Animals take to her immediately. She doesn't find it strange."
     ],

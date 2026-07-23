@@ -1,11 +1,12 @@
 {
-  "campaign_day": 3,
-  "in_game_date": "3rd of Mirtul, 1492 DR",
+  "campaign": "Lost Mine of Phandelver",
+  "campaign_day": 4,
+  "in_game_date": "4th of Mirtul, 1492 DR (dusk)",
   "time_of_day": "dusk",
   "location": {
     "region": "Sword Coast",
     "settlement": "Neverwinter Wood",
-    "specific": "Hollow beneath a rock shelf, ~half mile south of Cragmaw Castle"
+    "specific": "Hidden camp in a hollow off the ravine, south of Cragmaw Castle — interrogation of the bound doppelganger"
   },
   "weather": "clear night falling, cold; moonrise late",
   "party": [
@@ -14,14 +15,17 @@
   ],
   "party_resources": {
     "gold": 0,
-    "rations": 4,
-    "torches": 0
+    "rations": 3,
+    "torches": 6,
+    "oil_flasks": 1
   },
   "present_entities": [
     "npcs/recurring/yark",
-    "Black Pearl (Mira's wolf companion \u2014 MM wolf stat block)",
-    "Grib (goblin prisoner, one-shot \u2014 see prep-003)"
+    "Black Pearl (11/11 — fully rested)",
+    "Snarl (11/11 — Mira's second wolf now, apparently)",
+    "Gundren Rockseeker (31/31, Mitch's guest PC — has the MAP)",
+    "Vyerith (doppelganger, 1/52 — stabilized at 0, regained 1 HP per RAW after a few hours; bound prisoner)"
   ],
   "active_effects": [],
-  "notes": "END OF SESSION 2. Level 2 pending for both PCs (apply at session 3 start). Prisoner Grib uninterrogated. See sessions/prep-003.md. Convention: party_resources.gold is pooled party gold only; each PC's own gold lives on their sheet."
+  "notes": "SESSION 5. Post-ambush camp: LONG REST taken through the day (all PCs full HP/slots/features; Relthus 28/28 + 3 slots; Mira 28/28; Gundren 31/31; wolves 11/11). MAP TO WAVE ECHO CAVE RECOVERED — in Gundren's keeping. Vyerith captured alive, bound, interrogation at dusk NOW. Grol alive (bargain honored, keeps castle). Spider doesn't yet know his messenger failed. Convention: party_resources.gold is pooled party gold only; each PC's own gold lives on their sheet."
 }

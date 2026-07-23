@@ -408,7 +408,9 @@ html, body {
 .slot-label { font-size: 20px; color: var(--parchment); }
 .slot-pip { color: var(--border); font-size: 17px; margin-left: 3px; }
 .slot-pip.available { color: var(--accent); }
-.spell-known { font-size: 20px; color: var(--parchment); padding-left: 12px; position: relative; }
+.slot-count { font-size: 15px; color: var(--accent); margin-left: auto; margin-right: 6px; }
+.spell-detail { font-size: 15px; color: var(--muted, #9a8f7a); font-style: italic; margin-top: 2px; }
+.spell-known { font-size: 20px; color: var(--parchment); padding-left: 12px;position: relative; }
 .spell-known::before { content: '✦'; position: absolute; left: 0; font-size: 13px; color: var(--accent-dim); top: 4px; }
 
 .bio-idline { font-size: 20px; color: var(--accent); }
@@ -477,49 +479,34 @@ blockquote.feed-entry {
   background: var(--surface);
   border-left: 3px solid var(--accent-dim);
   border-radius: 0 4px 4px 0;
-  font-size: 27px;
+  font-size: 25px;
   line-height: 1.65;
   color: var(--parchment);
-  font-style: italic;
   animation: slide-in 0.35s ease;
   white-space: pre-wrap;
 }
 
+/* All entry types share one font, size, and background — a type is signaled
+   only by its border-left color (and dimmed text for out-of-world entries),
+   so a mislabeled entry never looks jarring in the chronicle. */
 blockquote.feed-entry.feed-type-scene_change {
   border-left-color: var(--accent);
-  background: var(--surface-2);
-  font-style: normal;
-  font-family: var(--font-header);
-  font-size: 23px;
-  letter-spacing: 0.03em;
-  color: var(--accent);
 }
 
 blockquote.feed-entry.feed-type-system {
   border-left-color: var(--danger);
-  background: var(--surface-2);
-  font-style: normal;
   color: var(--parchment-dim);
-  font-size: 23px;
 }
 
 blockquote.feed-entry.feed-type-combat {
   border-left-color: var(--danger);
-  background: transparent;
-  font-style: normal;
-  font-family: var(--font-header);
   color: var(--parchment-dim);
-  font-size: 21px;
-  padding: 5px 14px;
-  margin-bottom: 6px;
 }
 
 blockquote.feed-entry.feed-type-player {
   border-left-color: var(--parchment-dim);
-  background: transparent;
-  font-style: normal;
   color: var(--parchment-dim);
-  font-size: 23px;
+  font-style: italic;
 }
 
 /* DM thinking indicator */

@@ -67,6 +67,8 @@ def do_roll(expr: str, mode: str, label: str | None) -> Roll:
         dice = [a, b]
         kept = [max(a, b)] if mode == "advantage" else [min(a, b)]
     elif mode == "drop-lowest":
+        if count < 2:
+            raise SystemExit("drop-lowest needs at least 2 dice")
         dice = [roll_one(sides) for _ in range(count)]
         kept = sorted(dice)[1:]
     else:

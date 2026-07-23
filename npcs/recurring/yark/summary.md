@@ -2,7 +2,7 @@
 id: yark
 type: npc
 status: alive
-location: with the party
+location: Hidden camp south of Cragmaw Castle, with the full party (reunited session 5)
 tagline: Exiled Cragmaw goblin turned party guide; knows the paths to Cragmaw Castle.
 ---
 
@@ -15,7 +15,7 @@ tagline: Exiled Cragmaw goblin turned party guide; knows the paths to Cragmaw Ca
 **Appearance**: Small even for a goblin; one ear notched. Carries a squirrel-roasting stick like a treasured weapon.
 
 ## Status
-Joined the party Session 2 in exchange for food and protection from Klarg, who blames him for the hideout losses. Guiding them to Cragmaw Castle (~2 days north through Neverwinter Wood; he's been there twice as a porter and knows paths and guard habits).
+Joined the party Session 2 in exchange for food and protection from Klarg, who blames him for the hideout losses. Session 4: guided the party deep into Cragmaw Castle and SAVED TWO LIVES — stabilizing both the dying Relthus and Black Pearl during the owlbear fight (coward-to-lifesaver arc). Session 5: kept Pearl safe through the tower assault, reunited with the party on the way out ("The tall ones LIVE! Yark KNEW it!"), and escaped the castle with them under Grol's safe-passage order. Now at the hidden camp, fully healed, delighted and slightly terrified to be near a tied-up doppelganger. Loyalty deep but fear-laced since watching Relthus execute the prisoner Grib.
 
 ## What he knows
 - The route to Cragmaw Castle, its supply entrance, and rough guard habits
