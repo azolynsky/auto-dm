@@ -482,20 +482,6 @@ body.combat-active #main-grid {
   font-style: italic;
 }
 
-/* AC badge */
-.char-ac-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--surface-2);
-  border: 1px solid var(--accent-dim);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-family: var(--font-header);
-  font-size: 19px;
-  color: var(--accent);
-}
-
 /* Card tabs */
 .card-tabs { margin-top: 10px; }
 

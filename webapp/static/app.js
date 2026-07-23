@@ -53,10 +53,6 @@ function buildCharCard(char) {
   const card = el('div', 'character-card');
   card.dataset.id = char.id;
 
-  // AC badge
-  const acBadge = el('span', 'char-ac-badge', `AC ${char.ac}`);
-  card.appendChild(acBadge);
-
   // Portrait + identity — click for the full sheet
   const portraitWrap = el('div', 'char-portrait-wrap');
   portraitWrap.title = 'Open full character sheet';
@@ -120,6 +116,7 @@ function buildCharCard(char) {
   // Stats row
   const statsRow = el('div', 'stats-row');
   const statsData = [
+    { val: char.ac ?? '—', lbl: 'AC' },
     { val: char.speed ? `${char.speed} ft` : '—', lbl: 'Speed' },
     { val: char.passive_perception ?? '—', lbl: 'Passive Perc' },
     { val: char.initiative_bonus != null ? bonusStr(char.initiative_bonus) : '—', lbl: 'Initiative' },
