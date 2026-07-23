@@ -20,6 +20,7 @@
     <span id="header-location"></span>
     <span class="header-divider" id="header-div-3">·</span>
     <span id="header-weather"></span>
+    <button id="sidebar-toggle" title="Quests & world info" aria-label="Toggle quests and world info">📜</button>
     <button id="settings-btn" title="Table settings" aria-label="Table settings">⚙</button>
   </header>
 
@@ -38,8 +39,10 @@
       <div id="feed-entries"></div>
     </section>
 
-    <!-- RIGHT: Sidebar -->
-    <aside id="sidebar-column">
+  </main>
+
+  <!-- RIGHT: Sidebar drawer — collapsed by default, toggled from the header -->
+  <aside id="sidebar-column">
       <section class="sidebar-section" id="quests-section">
         <h2 class="section-label">Quests</h2>
         <ul id="quests-list"></ul>
@@ -56,9 +59,7 @@
         <h2 class="section-label">Where You Are</h2>
         <div id="location-detail"></div>
       </section>
-    </aside>
-
-  </main>
+  </aside>
 
   <!-- COMBAT BAR — hidden until combat is active -->
   <footer id="combat-bar" class="hidden">

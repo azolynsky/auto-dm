@@ -659,7 +659,9 @@ function renderHeader(current) {
     ['header-weather', weather, 'header-div-3'],
   ];
   fields.forEach(([id, value, divId]) => {
-    document.getElementById(id).textContent = value;
+    const span = document.getElementById(id);
+    span.textContent = value;
+    span.title = value; // full text on hover — the bar ellipsizes
     document.getElementById(divId).classList.toggle('hidden', !value);
   });
 }
@@ -832,6 +834,15 @@ function initModals() {
     document.getElementById('settings-modal').classList.remove('hidden');
   });
   document.getElementById('settings-save').addEventListener('click', saveSettings);
+
+  // Sidebar drawer — collapsed by default, choice remembered per browser
+  if (localStorage.getItem('sidebar') === 'open') {
+    document.body.classList.add('sidebar-open');
+  }
+  document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    const open = document.body.classList.toggle('sidebar-open');
+    localStorage.setItem('sidebar', open ? 'open' : 'closed');
+  });
 }
 
 function closeModal(id) {

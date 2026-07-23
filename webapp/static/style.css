@@ -73,12 +73,13 @@ html, body {
   color: var(--accent);
   font-size: 24px;
   letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.header-divider { color: var(--accent-dim); }
+.header-divider { color: var(--accent-dim); flex-shrink: 0; }
 
 #settings-btn {
-  margin-left: auto;
   background: none;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -94,16 +95,25 @@ html, body {
   border-color: var(--accent-dim);
 }
 
+/* One line, ellipsized — never overflow the bar. Hover for the full text. */
 #header-date, #header-location, #header-weather {
   color: var(--parchment-dim);
   font-size: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+#header-date    { flex: 0 1 auto; min-width: 0; }
+#header-location { flex: 1 1 auto; min-width: 0; }
+#header-weather { flex: 0 2 auto; min-width: 0; max-width: 320px; }
 
 /* ── Main Grid ──────────────────────────────────────────────────── */
 #main-grid {
   display: grid;
-  /* cap the card row so a big party can't starve the chronicle */
-  grid-template-columns: minmax(520px, 44vw) minmax(420px, 1fr) 450px;
+  /* two sections: characters | chronicle. The sidebar is a drawer (below).
+     Card row capped so a big party can't starve the chronicle. */
+  grid-template-columns: minmax(520px, 44vw) minmax(420px, 1fr);
   height: calc(100vh - var(--header-h));
   margin-top: var(--header-h);
   overflow: hidden;
@@ -631,14 +641,49 @@ blockquote.feed-entry.feed-type-player {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Sidebar Column ─────────────────────────────────────────────── */
+/* ── Sidebar Drawer ─────────────────────────────────────────────── */
 #sidebar-column {
+  position: fixed;
+  top: var(--header-h);
+  right: 0;
+  bottom: 0;
+  width: min(440px, 90vw);
+  z-index: 150;
   overflow-y: auto;
-  background: var(--bg);
-  padding: 12px 12px;
+  background: var(--surface);
+  border-left: 1px solid var(--accent-dim);
+  box-shadow: -10px 0 32px rgba(0, 0, 0, 0.35);
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+  visibility: hidden;
+}
+
+body.sidebar-open #sidebar-column {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+body.combat-active #sidebar-column { bottom: var(--combat-h); }
+
+#sidebar-toggle {
+  margin-left: auto;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--parchment-dim);
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+#sidebar-toggle:hover, body.sidebar-open #sidebar-toggle {
+  color: var(--accent);
+  border-color: var(--accent-dim);
 }
 
 .sidebar-section { }
