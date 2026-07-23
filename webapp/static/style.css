@@ -198,9 +198,10 @@ body.combat-active #main-grid {
   border-bottom-color: var(--accent);
 }
 
-/* 0 HP — unconscious/dead reads loud from across the strip */
+/* 0 HP — unconscious/dead reads loud from across the strip:
+   skull + red name, and the bar fills solid red */
 .char-tab.down, .char-tab.down.active { color: var(--danger); }
-.char-tab.down .char-tab-hp { border-color: var(--danger); }
+.char-tab.down .char-tab-hp { border-color: var(--danger); background: var(--danger); }
 .char-tab.down.active { border-bottom-color: var(--danger); }
 
 /* mini HP bar in the tab — same width for every PC so lengths compare;

@@ -347,7 +347,7 @@ function renderCharTabs() {
     const down = hp.max > 0 && (hp.current ?? 0) <= 0;
     const btn = el('button',
       `char-tab${id === _activeCharId ? ' active' : ''}${down ? ' down' : ''}`);
-    btn.appendChild(el('span', 'char-tab-name', c.name));
+    btn.appendChild(el('span', 'char-tab-name', down ? `☠︎ ${c.name}` : c.name));
     const hpBar = el('span', 'char-tab-hp');
     const fill = el('span', `hp-fill ${hpClass(hp.current, hp.max)}`);
     fill.style.width = `${hpPct(hp.current, hp.max)}%`;
