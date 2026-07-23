@@ -65,7 +65,8 @@ function buildCharCard(char) {
   const img = document.createElement('img');
   img.className = 'char-portrait';
   img.alt = char.name;
-  img.src = `/api/portraits/${char.id}`;
+  img.dataset.charId = char.id;
+  img.src = portraitSrc(char.id);
   img.onerror = () => img.classList.add('missing');
   portraitWrap.appendChild(img);
 
@@ -363,6 +364,54 @@ function refreshCharModal(id) {
   body.appendChild(buildFullSheet(char));
 }
 
+// Cache-buster bumped when a portrait is uploaded/changed, so every <img>
+// re-fetches without a full reload.
+let _portraitVersion = 0;
+
+function portraitSrc(id) {
+  return `/api/portraits/${id}${_portraitVersion ? `?v=${_portraitVersion}` : ''}`;
+}
+
+function refreshPortraits() {
+  _portraitVersion = Date.now();
+  document.querySelectorAll('.char-portrait, .sheet-portrait').forEach(img => {
+    img.classList.remove('missing');
+    img.src = portraitSrc(img.dataset.charId);
+  });
+}
+
+async function uploadPortrait(id, file, statusEl) {
+  statusEl.textContent = 'Uploading…';
+  try {
+    const res = await fetch(`/api/portraits/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    statusEl.textContent = '';
+    refreshPortraits();
+  } catch (err) {
+    statusEl.textContent = `Upload failed: ${err.message}`;
+  }
+}
+
+function buildPortraitUploader(id) {
+  const wrap = el('div', 'portrait-upload');
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png,image/jpeg,image/webp';
+  input.hidden = true;
+  const btn = el('button', 'portrait-upload-btn', 'Set portrait…');
+  const status = el('span', 'portrait-upload-status');
+  btn.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    if (input.files[0]) uploadPortrait(id, input.files[0], status);
+  });
+  wrap.append(btn, input, status);
+  return wrap;
+}
+
 function sheetSection(title, node) {
   const sec = el('section', 'sheet-section');
   sec.appendChild(el('h3', 'sheet-section-title', title));
@@ -378,14 +427,16 @@ function buildFullSheet(char) {
   const img = document.createElement('img');
   img.className = 'sheet-portrait';
   img.alt = char.name;
-  img.src = `/api/portraits/${char.id}`;
-  img.onerror = () => img.remove();
+  img.dataset.charId = char.id;
+  img.src = portraitSrc(char.id);
+  img.onerror = () => img.classList.add('missing');
   head.appendChild(img);
   const id = el('div', 'sheet-identity');
   id.appendChild(el('div', 'sheet-name', char.name));
   id.appendChild(el('div', 'sheet-subtitle',
     `${char.race} ${char.class}${char.subclass ? ` (${char.subclass})` : ''} · Level ${char.level}${char.xp != null ? ` · ${char.xp} XP` : ''}`));
   if (char.player) id.appendChild(el('div', 'char-player', `played by ${char.player}`));
+  id.appendChild(buildPortraitUploader(char.id));
   const hp = char.hp || {};
   const vitals = el('div', 'sheet-vitals');
   [
@@ -820,6 +871,10 @@ function connectSSE() {
 
   es.addEventListener('settings_update', e => {
     renderSettings(JSON.parse(e.data));
+  });
+
+  es.addEventListener('portrait_update', () => {
+    refreshPortraits();
   });
 
   es.onerror = () => {

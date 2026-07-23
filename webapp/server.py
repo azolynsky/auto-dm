@@ -245,6 +245,38 @@ async def post_settings(request: Request):
     return JSONResponse(settings)
 
 
+PORTRAIT_TYPES = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}
+PORTRAIT_MAX_BYTES = 10 * 1024 * 1024
+
+
+def save_portrait(pc_id: str, content_type: str, data: bytes) -> Path:
+    """Write a portrait for an existing character. Raises ValueError on bad input."""
+    if not (CHARACTERS_DIR / f"{pc_id}.json").exists():
+        raise ValueError(f"no such character: {pc_id}")  # also blocks path traversal
+    ext = PORTRAIT_TYPES.get(content_type)
+    if not ext:
+        raise ValueError(f"unsupported image type: {content_type or 'unknown'} (png/jpeg/webp)")
+    if not data or len(data) > PORTRAIT_MAX_BYTES:
+        raise ValueError("image is empty or over 10 MB")
+    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    # drop other-extension variants so the old image can't shadow the new one
+    for old_ext in PORTRAIT_TYPES.values():
+        if old_ext != ext:
+            (IMAGES_DIR / f"{pc_id}{old_ext}").unlink(missing_ok=True)
+    path = IMAGES_DIR / f"{pc_id}{ext}"
+    path.write_bytes(data)
+    return path
+
+
+@app.post("/api/portraits/{pc_id}")
+async def upload_portrait(pc_id: str, request: Request):
+    try:
+        save_portrait(pc_id, request.headers.get("content-type", ""), await request.body())
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return JSONResponse({"ok": True, "id": pc_id})
+
+
 @app.get("/api/portraits/{pc_id}")
 async def portrait(pc_id: str):
     # Build list of candidate stems: the id itself, then player-name variants
@@ -285,6 +317,12 @@ async def events(request: Request):
                                 "event": "feed_entry",
                                 "data": json.dumps(entry),
                             }
+
+                    elif path.parent == IMAGES_DIR:
+                        yield {
+                            "event": "portrait_update",
+                            "data": json.dumps({"stem": path.stem}),
+                        }
 
                     elif path.parent == CHARACTERS_DIR and path.suffix == ".json":
                         subset = char_display_subset(path)

@@ -179,6 +179,9 @@ body.combat-active #main-grid {
   background: var(--surface-2);
 }
 
+/* hide the browser's broken-image alt text; the silhouette speaks instead */
+.char-portrait, .sheet-portrait { font-size: 0; color: transparent; }
+
 .char-portrait.missing {
   /* CSS silhouette */
   background: var(--surface-2);
@@ -186,6 +189,11 @@ body.combat-active #main-grid {
   display: flex;
   position: relative;
   overflow: hidden;
+}
+
+.sheet-portrait.missing {
+  background: var(--surface-2);
+  border-color: var(--border);
 }
 
 .char-portrait.missing::after {
@@ -912,6 +920,24 @@ blockquote.feed-entry.feed-type-player {
 }
 
 .sheet-subtitle { font-size: 22px; color: var(--parchment-dim); }
+
+.portrait-upload { margin-top: 6px; display: flex; align-items: baseline; gap: 10px; }
+
+.portrait-upload-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--parchment-dim);
+  font-family: var(--font-header);
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.portrait-upload-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+.portrait-upload-status { font-size: 17px; color: var(--danger); font-style: italic; }
 
 .sheet-vitals {
   display: flex;

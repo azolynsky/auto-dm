@@ -237,6 +237,37 @@ class TestCharacterListing(unittest.TestCase):
 
 
 @unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestPortraitUpload(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        (self.tmp / "characters" / "images").mkdir(parents=True)
+        self._orig = (server.CHARACTERS_DIR, server.IMAGES_DIR)
+        server.CHARACTERS_DIR = self.tmp / "characters"
+        server.IMAGES_DIR = self.tmp / "characters" / "images"
+        (self.tmp / "characters" / "pc-a.json").write_text(json.dumps({"id": "pc-a", "name": "Aye"}))
+
+    def tearDown(self):
+        server.CHARACTERS_DIR, server.IMAGES_DIR = self._orig
+        self._tmp.cleanup()
+
+    def test_saves_and_replaces_other_extensions(self):
+        server.save_portrait("pc-a", "image/png", b"png-bytes")
+        self.assertEqual((server.IMAGES_DIR / "pc-a.png").read_bytes(), b"png-bytes")
+        server.save_portrait("pc-a", "image/jpeg", b"jpg-bytes")
+        self.assertTrue((server.IMAGES_DIR / "pc-a.jpg").exists())
+        self.assertFalse((server.IMAGES_DIR / "pc-a.png").exists())
+
+    def test_rejects_bad_input(self):
+        with self.assertRaises(ValueError):   # unknown character / path traversal
+            server.save_portrait("../../etc/passwd", "image/png", b"x")
+        with self.assertRaises(ValueError):   # unsupported type
+            server.save_portrait("pc-a", "image/gif", b"x")
+        with self.assertRaises(ValueError):   # empty body
+            server.save_portrait("pc-a", "image/png", b"")
+
+
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
 class TestFeedTruncation(unittest.TestCase):
     def test_truncated_feed_resets_cursor(self):
         with tempfile.TemporaryDirectory() as tmp:

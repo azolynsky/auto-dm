@@ -34,8 +34,10 @@ installing dependencies and talking through tone) can run in parallel.
 
 1. **Characters.** For each player: use the pregens as-is (rename them!), or
    build fresh sheets per `docs/character-schema.md`. Write each to
-   `campaign/characters/<id>.json`, and put portraits (png/jpg/webp, named
-   by character id) in `campaign/characters/images/`.
+   `campaign/characters/<id>.json`. Portraits: easiest is the webapp —
+   click a character card → "Set portrait…" in the full sheet uploads a
+   png/jpg/webp into `campaign/characters/images/` (dropping a file named
+   by character id into that folder works too).
 2. **Seat the party.** Add the character ids to `campaign/state/current.json`
    `party[]` — the webapp orders cards by this list.
 3. **Tone.** Talk through lines/veils, lethality, PC death. Record the
