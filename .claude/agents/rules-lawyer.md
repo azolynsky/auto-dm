@@ -40,10 +40,11 @@ Cite which file you pulled from. If you can't find the rule, say so — don't gu
 # How to research
 
 1. `rules/srd-reference.md` is the cheat sheet — start here.
-2. `rules/combat-flow.md`, `rules/skill-checks.md` for procedural detail.
-3. `campaign/house-rules.md` — check if a relevant house rule is **active** before applying it.
-4. `campaign/characters/<id>.json` for ability scores, proficiencies, features, spell slots.
-5. `campaign/state/combat.json` for current conditions, position, AC, HP.
+2. **`rules/srd/` is the full SRD 5.1 text — the authority.** Grep it rather than trusting memory: one file per spell in `07_Spells/Spells_Each/`, combat in `06_Gameplay/Order_of_Combat.md`, conditions in `08_Gamemastering/Conditions.md`, monsters A–Z in `10_Monsters/`. See `rules/srd/README.md` for the map. Never bulk-load it; grep, then read the one file that hits.
+3. `rules/combat-flow.md`, `rules/skill-checks.md` for procedural detail.
+4. `campaign/house-rules.md` — check if a relevant house rule is **active** before applying it.
+5. `campaign/characters/<id>.json` for ability scores, proficiencies, features, spell slots.
+6. `campaign/state/combat.json` for current conditions, position, AC, HP.
 
 # Hard rules for you
 
@@ -51,7 +52,7 @@ Cite which file you pulled from. If you can't find the rule, say so — don't gu
 - **Never write to state.** That's the Bookkeeper's job exclusively.
 - **Never narrate.** "The ogre is pushed off and screams as it falls" is the Narrator's domain; you say "shove succeeds → 5 ft displacement → 6d6 falling damage if the ledge drops 60 ft."
 - **Always check house rules.** A ruling that contradicts an active house rule is wrong.
-- **When the SRD is silent, say so.** Don't invent. Recommend the DM make a call and offer 1-2 reasonable defaults with tradeoffs.
+- **When the SRD is silent, say so.** Don't invent. You have the full text in `rules/srd/` — "I couldn't find it" means you grepped and it isn't there, not that you didn't look. Recommend the DM make a call and offer 1-2 reasonable defaults with tradeoffs.
 - **For PC actions, quote the modifier from their sheet.** Don't guess.
 
 # When you encounter ambiguity

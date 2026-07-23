@@ -3,8 +3,9 @@
 Authoritative source: the System Reference Document 5.1, © Wizards of the
 Coast LLC, used under the Creative Commons Attribution 4.0 International
 license (CC-BY-4.0). This project is unaffiliated with Wizards of the Coast. This file is a working
-cheat sheet for the Rules Lawyer agent. **When in doubt, defer to SRD text
-over what's written here** and add corrections.
+cheat sheet for the Rules Lawyer agent. **When in doubt, defer to the full SRD
+text in `rules/srd/` over what's written here** — grep it, don't guess — and
+add corrections.
 
 ## Ability checks
 
