@@ -49,7 +49,7 @@ ordered by `campaign/state/current.json` `party[]`.
 
   "features": [
     { "name": "Sneak Attack", "source": "Rogue 1", "uses": "1/turn", "detail": "+1d6 once per turn under conditions" },
-    { "name": "Expertise", "source": "Rogue 1" },
+    { "name": "Second Wind", "source": "Fighter 1", "uses": { "max": 1, "remaining": 1, "per": "short rest" } },
     { "name": "Thieves' Cant", "source": "Rogue 1" }
   ],
 
@@ -105,4 +105,5 @@ Rules of the road:
 - **Bookkeeper is the only writer.** Other agents read, but never edit. Concurrent edits cause drift.
 - **Mid-combat HP for PCs lives in `campaign/state/combat.json`**, not here. Sync at end of encounter.
 - **Spell slots tick down** when used, **reset** on long rest. Bookkeeper handles both.
+- **Feature `uses`** is a plain string when it's just a note ("1/turn"), or `{max, remaining, per}` when it's a tracked pool — the Bookkeeper decrements `remaining` on use and resets on the matching rest, and the webapp shows availability pips.
 - **Inventory uses items with `qty`** — never edit prose lists, always structured entries.

@@ -237,6 +237,21 @@ function buildAttacksPane(char) {
   return pane;
 }
 
+// uses is either a plain string ("1/turn" — display only) or a tracked pool
+// {max, remaining, per} the Bookkeeper ticks on use and resets on rests.
+function buildFeatureUses(uses) {
+  if (typeof uses !== 'object') return el('span', 'feature-uses', uses);
+  const spent = (uses.remaining ?? 0) <= 0;
+  const badge = el('span', `feature-uses${spent ? ' spent' : ''}`);
+  const pips = el('span', 'slot-pips');
+  for (let i = 0; i < (uses.max ?? 0); i++) {
+    pips.appendChild(el('span', `slot-pip${i < (uses.remaining ?? 0) ? ' available' : ''}`, '◆'));
+  }
+  badge.appendChild(pips);
+  badge.appendChild(el('span', null, ` ${uses.max}/${uses.per}${spent ? ' · spent' : ''}`));
+  return badge;
+}
+
 function buildFeaturesPane(char) {
   const pane = el('div', 'tab-pane');
   const features = char.features || [];
@@ -245,7 +260,7 @@ function buildFeaturesPane(char) {
     const row = el('div', 'feature-row');
     const head = el('div', 'feature-head');
     head.appendChild(el('span', 'feature-name', f.name));
-    if (f.uses) head.appendChild(el('span', 'feature-uses', f.uses));
+    if (f.uses) head.appendChild(buildFeatureUses(f.uses));
     row.appendChild(head);
     const detail = [f.detail, f.source ? `(${f.source})` : null].filter(Boolean).join(' ');
     if (detail) row.appendChild(el('div', 'feature-detail', detail));

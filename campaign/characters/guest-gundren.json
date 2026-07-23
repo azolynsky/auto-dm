@@ -77,13 +77,21 @@
     {
       "name": "Second Wind",
       "source": "Fighter 1",
-      "uses": "1/short rest",
+      "uses": {
+        "max": 1,
+        "remaining": 1,
+        "per": "short rest"
+      },
       "detail": "Bonus action: regain 1d10+3 HP"
     },
     {
       "name": "Action Surge",
       "source": "Fighter 2",
-      "uses": "1/short rest",
+      "uses": {
+        "max": 1,
+        "remaining": 1,
+        "per": "short rest"
+      },
       "detail": "Take one additional action on your turn"
     },
     {

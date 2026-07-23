@@ -448,6 +448,13 @@ body.combat-active #main-grid {
   white-space: nowrap;
 }
 
+.feature-uses.spent {
+  color: var(--parchment-dim);
+  border-color: var(--border);
+}
+
+.feature-uses .slot-pip { margin-left: 0; margin-right: 2px; }
+
 .attack-detail, .feature-detail { font-size: 19px; color: var(--parchment-dim); }
 
 .slot-row { display: flex; justify-content: space-between; align-items: baseline; }
