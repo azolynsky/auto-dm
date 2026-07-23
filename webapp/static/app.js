@@ -344,8 +344,14 @@ function renderCharTabs() {
   _charOrder.forEach(id => {
     const c = _charData[id];
     const hp = c.hp || {};
-    const btn = el('button', `char-tab${id === _activeCharId ? ' active' : ''}`, c.name);
-    if (hp.max > 0 && hp.current / hp.max <= 0.25) btn.classList.add('hurt');
+    const btn = el('button', `char-tab${id === _activeCharId ? ' active' : ''}`);
+    btn.appendChild(el('span', 'char-tab-name', c.name));
+    const hpBar = el('span', 'char-tab-hp');
+    const fill = el('span', `hp-fill ${hpClass(hp.current, hp.max)}`);
+    fill.style.width = `${hpPct(hp.current, hp.max)}%`;
+    hpBar.appendChild(fill);
+    btn.appendChild(hpBar);
+    btn.title = `${hp.current ?? '?'}/${hp.max ?? '?'} HP`;
     btn.addEventListener('click', () => {
       _activeCharId = id;
       localStorage.setItem('active-char', id);
@@ -862,8 +868,12 @@ function initModals() {
   });
   document.getElementById('settings-save').addEventListener('click', saveSettings);
 
-  // Sidebar drawer — collapsed by default, choice remembered per browser
-  if (localStorage.getItem('sidebar') === 'open') {
+  // Sidebar drawer — open by default on wide screens (it docks there, so the
+  // chronicle keeps full width), collapsed on smaller ones. An explicit
+  // toggle is remembered per browser and beats the default.
+  const stored = localStorage.getItem('sidebar');
+  const wide = window.matchMedia('(min-width: 1800px)').matches;
+  if (stored ? stored === 'open' : wide) {
     document.body.classList.add('sidebar-open');
   }
   document.getElementById('sidebar-toggle').addEventListener('click', () => {
