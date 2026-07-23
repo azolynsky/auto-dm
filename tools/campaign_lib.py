@@ -2,7 +2,7 @@
 Shared plumbing for the campaign tools and webapp server.
 
 Campaign root resolution (in order):
-  1. DND_ROOT env var — used by tests and by anyone hosting multiple campaigns
+  1. CAMPAIGN_ROOT env var — used by tests and by anyone hosting multiple campaigns
   2. <repo>/campaign — the active campaign directory
 
 All campaign state lives under that root: state/, characters/, sessions/,
@@ -47,7 +47,7 @@ DEFAULT_SETTINGS = {
 
 
 def resolve_root() -> Path:
-    env = os.environ.get("DND_ROOT")
+    env = os.environ.get("CAMPAIGN_ROOT")
     if env:
         return Path(env)
     root = REPO / "campaign"
@@ -55,7 +55,7 @@ def resolve_root() -> Path:
         return root
     sys.exit(
         "No active campaign found.\n"
-        f"Expected {root} (or set DND_ROOT).\n"
+        f"Expected {root} (or set CAMPAIGN_ROOT).\n"
         "Start one from the template:  python tools/new_campaign.py --name 'My Campaign'"
     )
 

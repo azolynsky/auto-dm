@@ -1,6 +1,6 @@
-# D&D campaign — LLM DM
+# Auto-DM — an LLM game master
 
-A repository for running a Dungeons & Dragons 5e campaign with an LLM (Claude Code, Codex, …) as Dungeon Master. Fork it, run one command, and start your own table.
+A repository for running a 5e tabletop campaign with an LLM (Claude Code, Codex, …) as the DM. Fork it, run one command, and start your own table.
 
 ## Why this exists
 
@@ -10,7 +10,7 @@ LLM-as-DM drifts. Improvised state is forgotten between sessions, dice rolls are
 
 ```bash
 git clone <your fork>
-cd dnd
+cd auto-dm
 pip install -r webapp/requirements.txt
 claude     # or: codex
 ```
@@ -24,7 +24,7 @@ To continue an existing campaign, just say: **"Let's continue the campaign."**
 The engine and the table are separate. Generic, campaign-agnostic code and reference:
 
 ```
-dnd/
+auto-dm/
 ├── CLAUDE.md          # DM operating manual — read every session
 ├── AGENTS.md          # symlink → CLAUDE.md (Codex/other LLMs read the same file)
 ├── rules/             # Generic 5e/SRD reference (srd-reference, combat-flow, skill-checks)
@@ -49,7 +49,7 @@ campaign/
 └── factions/          # Faction entity folders
 ```
 
-Tools and webapp find the campaign at `<repo>/campaign`, or wherever `DND_ROOT` points. You can swap DM LLMs mid-campaign — all state is plain JSON/Markdown, all tools are plain Python, and the agent/skill prompts are readable by any LLM (see "Multi-LLM operation" in `CLAUDE.md`).
+Tools and webapp find the campaign at `<repo>/campaign`, or wherever `CAMPAIGN_ROOT` points. You can swap DM LLMs mid-campaign — all state is plain JSON/Markdown, all tools are plain Python, and the agent/skill prompts are readable by any LLM (see "Multi-LLM operation" in `CLAUDE.md`).
 
 ## Architecture
 
@@ -87,8 +87,12 @@ python webapp/server.py                  # then open http://localhost:8765
 python3 -m unittest discover -s tests
 ```
 
-Stdlib-only (no pytest). Covers the dice roller, check resolver, combat tracker, narration feed + effects queue, and — most importantly — the webapp's secrecy redaction, so a refactor can't accidentally leak GM-only fields to the players' screen. State-writing tools are tested against a temp directory via the `DND_ROOT` env override; the suite never touches live campaign state.
+Stdlib-only (no pytest). Covers the dice roller, check resolver, combat tracker, narration feed + effects queue, and — most importantly — the webapp's secrecy redaction, so a refactor can't accidentally leak GM-only fields to the players' screen. State-writing tools are tested against a temp directory via the `CAMPAIGN_ROOT` env override; the suite never touches live campaign state.
 
 ## The hard rules
 
 Listed in `CLAUDE.md`. The short version: never roll dice mentally, never advance state without updating files, never fudge.
+
+## Attribution
+
+Game-rules reference content in `rules/` derives from the System Reference Document 5.1, © Wizards of the Coast LLC, used under the Creative Commons Attribution 4.0 International license (CC-BY-4.0). This project is unaffiliated with Wizards of the Coast.

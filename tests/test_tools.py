@@ -4,7 +4,7 @@ Tests for the campaign tools (tools/*.py).
 Run:  python3 -m unittest discover -s tests -v
 
 Stdlib only — no pytest needed. Tools that read/write state run against a
-temp directory via the DND_ROOT env override, so running the suite never
+temp directory via the CAMPAIGN_ROOT env override, so running the suite never
 touches live campaign state.
 """
 from __future__ import annotations
@@ -36,14 +36,14 @@ check_resolver = load_module("check_resolver", TOOLS / "check_resolver.py")
 
 
 class TempRootMixin(unittest.TestCase):
-    """A temp campaign root wired through DND_ROOT for subprocess calls."""
+    """A temp campaign root wired through CAMPAIGN_ROOT for subprocess calls."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         (self.root / "state").mkdir()
         (self.root / "sessions").mkdir()
-        self.env = {**os.environ, "DND_ROOT": str(self.root)}
+        self.env = {**os.environ, "CAMPAIGN_ROOT": str(self.root)}
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -221,7 +221,7 @@ class TestCheckResolver(unittest.TestCase):
             out = subprocess.check_output([
                 sys.executable, str(TOOLS / "check_resolver.py"),
                 "--char", str(char_path), "--skill", "stealth", "--dc", "10",
-            ], env={**os.environ, "DND_ROOT": tmp})
+            ], env={**os.environ, "CAMPAIGN_ROOT": tmp})
             r = json.loads(out)
             self.assertEqual(r["bonus"], 6)
             self.assertEqual(r["success"], r["roll"]["total"] >= 10)
@@ -229,7 +229,7 @@ class TestCheckResolver(unittest.TestCase):
 
 
 class TestCombatTracker(TempRootMixin):
-    """Drive the tracker CLI against a temp DND_ROOT so live state is untouched."""
+    """Drive the tracker CLI against a temp CAMPAIGN_ROOT so live state is untouched."""
 
     def run_cmd(self, *args, check=True):
         proc = subprocess.run(
@@ -386,7 +386,7 @@ class TestNarrateNormalize(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             proc = subprocess.run(
                 [sys.executable, str(TOOLS / "narrate.py"), "> "],
-                env={**os.environ, "DND_ROOT": tmp},
+                env={**os.environ, "CAMPAIGN_ROOT": tmp},
                 capture_output=True,
             )
             self.assertNotEqual(proc.returncode, 0)

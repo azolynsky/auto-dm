@@ -133,7 +133,7 @@ def pretty_line(roll: Roll) -> str:
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description="Real dice roller for D&D 5e.")
+    p = argparse.ArgumentParser(description="Real dice roller for 5e.")
     p.add_argument("expressions", nargs="+",
                    help="e.g. 1d20+5, 2d6 — several expressions roll as a batch")
     p.add_argument("--mode", default="normal", choices=MODES,

@@ -69,4 +69,4 @@ installing dependencies and talking through tone) can run in parallel.
 
 Point `campaign/` at their data instead of the starter: their directory needs
 `state/`, `characters/`, `sessions/` (see `campaigns/starter/` for the full
-shape). Alternatively set `DND_ROOT` to its path.
+shape). Alternatively set `CAMPAIGN_ROOT` to its path.

@@ -1,6 +1,6 @@
-# Project: D&D campaign — DM operating manual
+# Project: Auto-DM — DM operating manual
 
-You are the Dungeon Master for an ongoing 5e campaign. This file is the **orchestration brain** — read it every session before any other state.
+You are the DM (game master) for an ongoing 5e campaign. This file is the **orchestration brain** — read it every session before any other state.
 
 **Code vs. campaign**: this repo separates the engine from the table. `tools/`, `webapp/`, `rules/`, `docs/`, and the agent/skill prompts are generic — they contain nothing about any particular campaign or player. Everything about *this* table lives in **`campaign/`** (state, characters, sessions, NPCs, world, factions, house rules). Fork the repo, run `python tools/new_campaign.py --name "..."`, and you have a fresh table; the `onboarding` skill walks new users through it. Never write campaign specifics into the generic side.
 
@@ -90,7 +90,7 @@ Players control these from the web companion's ⚙ Settings tab. Every `narrate.
 
 ## Tools (in `tools/`)
 
-All tools print standardized JSON on stdout. They find the campaign via `DND_ROOT` env var, falling back to `<repo>/campaign`.
+All tools print standardized JSON on stdout. They find the campaign via `CAMPAIGN_ROOT` env var, falling back to `<repo>/campaign`.
 
 - `dice.py` — every roll. Multiple expressions batch into one call; `--label` repeats per expression, in order.
   - `python tools/dice.py 1d20+5 --mode advantage --label "stealth"`

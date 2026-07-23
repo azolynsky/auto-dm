@@ -1,6 +1,8 @@
-# D&D 5e SRD — quick reference
+# 5e SRD — quick reference
 
-Authoritative source: the official SRD 5.1 (CC-BY). This file is a working
+Authoritative source: the System Reference Document 5.1, © Wizards of the
+Coast LLC, used under the Creative Commons Attribution 4.0 International
+license (CC-BY-4.0). This project is unaffiliated with Wizards of the Coast. This file is a working
 cheat sheet for the Rules Lawyer agent. **When in doubt, defer to SRD text
 over what's written here** and add corrections.
 

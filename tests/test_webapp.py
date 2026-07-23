@@ -24,7 +24,7 @@ REPO = Path(__file__).resolve().parent.parent
 _ROOT_TMP = tempfile.TemporaryDirectory()
 for sub in ("state", "characters", "sessions"):
     (Path(_ROOT_TMP.name) / sub).mkdir()
-os.environ["DND_ROOT"] = _ROOT_TMP.name
+os.environ["CAMPAIGN_ROOT"] = _ROOT_TMP.name
 
 try:
     spec = importlib.util.spec_from_file_location("webapp_server", REPO / "webapp" / "server.py")

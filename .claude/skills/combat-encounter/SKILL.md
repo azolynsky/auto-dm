@@ -5,7 +5,7 @@ description: Run a combat encounter from initiative through end-of-fight. Use wh
 
 # Running combat
 
-Combat is the highest-state-density part of D&D. Use this skill as the procedure spine.
+Combat is the highest-state-density part of the game. Use this skill as the procedure spine.
 
 ## Starting
 

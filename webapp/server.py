@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-D&D Campaign Web Companion — FastAPI server.
+Campaign Web Companion — FastAPI server.
 
 Serves a player-facing view of the active campaign (resolved by
-tools/campaign_lib.py: DND_ROOT env var, else <repo>/campaign):
+tools/campaign_lib.py: CAMPAIGN_ROOT env var, else <repo>/campaign):
   - Character sheets (every JSON sheet in characters/)
   - Live narration feed (state/player-feed.jsonl, written by tools/narrate.py)
   - Quest log (known_to_party=True only, secret_truth stripped)
@@ -60,7 +60,7 @@ DISPLAY_KEYS = {
     "background", "alignment", "personality", "appearance",
 }
 
-app = FastAPI(title="D&D Companion")
+app = FastAPI(title="Campaign Companion")
 app.mount("/static", StaticFiles(directory=str(STATIC)), name="static")
 
 
