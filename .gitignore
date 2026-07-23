@@ -6,3 +6,6 @@ campaign/
 __pycache__/
 *.pyc
 .DS_Store
+
+# local tool debug logs
+.gstack/
