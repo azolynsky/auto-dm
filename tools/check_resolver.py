@@ -3,9 +3,9 @@
 Resolve a skill check or saving throw against a DC, using a real dice roll.
 
 Usage:
-    python check_resolver.py --char characters/pc-alex.json \\
+    python check_resolver.py --char campaign/characters/<id>.json \\
         --skill stealth --dc 15
-    python check_resolver.py --char characters/pc-friend.json \\
+    python check_resolver.py --char campaign/characters/<id>.json \\
         --save dex --dc 14 --mode advantage
 
 Picks the right modifier from the character sheet, calls dice.py, prints JSON.
