@@ -1,0 +1,13 @@
+{
+  "id": "ENTITY_ID",
+  "block": "Commoner (MM 345)",
+  "ac": 10,
+  "hp": { "max": 4, "current": 4 },
+  "speed": 30,
+  "abilities": { "str": 10, "dex": 10, "con": 10, "int": 10, "wis": 10, "cha": 10 },
+  "save_proficiencies": [],
+  "skills": {},
+  "languages": ["Common"],
+  "attacks": [],
+  "notes": "Replace with the actual stat block. Delete this file if the NPC will never be in combat."
+}

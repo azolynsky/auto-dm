@@ -1,0 +1,24 @@
+{
+  "campaign": "New Campaign",
+  "campaign_day": 1,
+  "in_game_date": "1st day, year 1",
+  "time_of_day": "morning",
+  "location": {
+    "region": "The Vale",
+    "settlement": "Emberwick",
+    "specific": "The Waylight Inn, common room"
+  },
+  "weather": "clear, cool morning",
+  "party": [],
+  "party_resources": {
+    "gold": 0,
+    "rations": 0,
+    "torches": 0
+  },
+  "present_entities": [
+    "npcs/recurring/maera-thistle",
+    "world/locations/emberwick"
+  ],
+  "active_effects": [],
+  "notes": "Fresh campaign. Run session 0 first: create characters (docs/character-schema.md), add their ids to party[], set an in-game calendar you like, then open at the Waylight Inn — Maera has a problem she'll pay to solve."
+}

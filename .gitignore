@@ -1,0 +1,11 @@
+# The active campaign is your table's private data — it never belongs in
+# this (potentially public) engine repo. Version it separately: it works
+# as its own git repo (campaign/.git is ignored by this one automatically).
+campaign/
+
+__pycache__/
+*.pyc
+.DS_Store
+
+# local tool debug logs
+.gstack/

@@ -1,0 +1,155 @@
+{
+  "id": "pc-fighter",
+  "name": "Torva Grell",
+  "player": "",
+  "race": "Human",
+  "class": "Fighter",
+  "subclass": null,
+  "level": 1,
+  "xp": 0,
+  "alignment": "Lawful Neutral",
+  "background": "Soldier",
+  "abilities": {
+    "str": 16,
+    "dex": 13,
+    "con": 14,
+    "int": 10,
+    "wis": 12,
+    "cha": 8
+  },
+  "proficiency_bonus": 2,
+  "save_proficiencies": [
+    "str",
+    "con"
+  ],
+  "skills": {
+    "athletics": "proficient",
+    "intimidation": "proficient",
+    "perception": "proficient",
+    "survival": "proficient"
+  },
+  "ac": 16,
+  "hp": {
+    "max": 12,
+    "current": 12,
+    "temp": 0
+  },
+  "hit_dice": {
+    "size": "d10",
+    "total": 1,
+    "remaining": 1
+  },
+  "speed": 30,
+  "initiative_bonus": 1,
+  "passive_perception": 13,
+  "languages": [
+    "Common",
+    "Dwarvish"
+  ],
+  "proficiencies": {
+    "armor": [
+      "light",
+      "medium",
+      "heavy",
+      "shields"
+    ],
+    "weapons": [
+      "simple",
+      "martial"
+    ],
+    "tools": [
+      "dice set",
+      "vehicles (land)"
+    ]
+  },
+  "features": [
+    {
+      "name": "Fighting Style: Defense",
+      "source": "Fighter 1",
+      "detail": "+1 AC while wearing armor (included)"
+    },
+    {
+      "name": "Second Wind",
+      "source": "Fighter 1",
+      "uses": {
+        "max": 1,
+        "remaining": 1,
+        "per": "short rest"
+      },
+      "detail": "Bonus action: regain 1d10+1 HP"
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Longsword",
+      "type": "melee",
+      "to_hit": "+5",
+      "damage": "1d8+3 slashing",
+      "properties": [
+        "versatile (1d10)"
+      ]
+    },
+    {
+      "name": "Handaxe (thrown)",
+      "type": "ranged",
+      "to_hit": "+5",
+      "damage": "1d6+3 slashing",
+      "range": "20/60",
+      "properties": [
+        "light",
+        "thrown"
+      ]
+    }
+  ],
+  "spells": {
+    "ability": null,
+    "save_dc": null,
+    "attack_bonus": null,
+    "slots": {},
+    "known": []
+  },
+  "inventory": [
+    {
+      "item": "Chain mail",
+      "qty": 1
+    },
+    {
+      "item": "Longsword",
+      "qty": 1
+    },
+    {
+      "item": "Handaxe",
+      "qty": 2
+    },
+    {
+      "item": "Explorer's pack",
+      "qty": 1
+    },
+    {
+      "item": "Old regimental insignia",
+      "qty": 1
+    }
+  ],
+  "gold": 10,
+  "conditions": [],
+  "exhaustion": 0,
+  "death_saves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "personality": {
+    "traits": [
+      "Checks the exits first, talks second."
+    ],
+    "ideals": [
+      "People are safest when someone competent is on watch."
+    ],
+    "bonds": [
+      "Still carries the insignia of a company that no longer exists."
+    ],
+    "flaws": [
+      "Follows orders even when the orders are the problem."
+    ]
+  },
+  "notes": "Starter pregen — rename, reflavor, or replace during session 0. Add this sheet's id to state/current.json party[] to seat them at the table."
+}

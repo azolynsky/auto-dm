@@ -1,0 +1,4 @@
+fastapi>=0.111.0
+uvicorn>=0.29.0
+watchfiles>=0.21.0
+sse-starlette>=1.8.0

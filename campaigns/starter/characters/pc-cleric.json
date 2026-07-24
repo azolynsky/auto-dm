@@ -1,0 +1,97 @@
+{
+  "id": "pc-cleric",
+  "name": "Bennet Underbough",
+  "player": "",
+  "race": "Lightfoot Halfling",
+  "class": "Cleric",
+  "subclass": "Life Domain",
+  "level": 1,
+  "xp": 0,
+  "alignment": "Neutral Good",
+  "background": "Acolyte",
+  "abilities": {
+    "str": 10,
+    "dex": 14,
+    "con": 14,
+    "int": 10,
+    "wis": 16,
+    "cha": 12
+  },
+  "proficiency_bonus": 2,
+  "save_proficiencies": ["wis", "cha"],
+  "skills": {
+    "insight": "proficient",
+    "medicine": "proficient",
+    "persuasion": "proficient",
+    "religion": "proficient"
+  },
+  "ac": 18,
+  "hp": { "max": 10, "current": 10, "temp": 0 },
+  "hit_dice": { "size": "d8", "total": 1, "remaining": 1 },
+  "speed": 25,
+  "initiative_bonus": 2,
+  "passive_perception": 13,
+  "languages": ["Common", "Halfling"],
+  "proficiencies": {
+    "armor": ["light", "medium", "heavy", "shields"],
+    "weapons": ["simple"],
+    "tools": ["herbalism kit"]
+  },
+  "features": [
+    { "name": "Lucky", "source": "Halfling", "detail": "Reroll natural 1s on attacks, checks, saves (keep new roll)" },
+    { "name": "Brave", "source": "Halfling", "detail": "Advantage on saves vs being frightened" },
+    { "name": "Naturally Stealthy", "source": "Lightfoot", "detail": "Can hide behind creatures one size larger" },
+    { "name": "Disciple of Life", "source": "Life Domain 1", "detail": "Healing spells restore +2 + spell level HP" }
+  ],
+  "attacks": [
+    {
+      "name": "Mace",
+      "type": "melee",
+      "to_hit": "+2",
+      "damage": "1d6 bludgeoning"
+    },
+    {
+      "name": "Light crossbow",
+      "type": "ranged",
+      "to_hit": "+4",
+      "damage": "1d8+2 piercing",
+      "range": "80/320",
+      "properties": ["ammunition", "loading", "two-handed"]
+    }
+  ],
+  "spells": {
+    "ability": "wis",
+    "save_dc": 13,
+    "attack_bonus": "+5",
+    "slots": { "1": { "max": 2, "remaining": 2 } },
+    "known": [
+      { "name": "Sacred Flame", "level": 0, "detail": "DEX save DC 13 or 1d8 radiant; no cover benefit" },
+      { "name": "Guidance", "level": 0, "detail": "Touch, concentration: +1d4 to one ability check" },
+      { "name": "Spare the Dying", "level": 0, "detail": "Touch: stabilize a creature at 0 HP" },
+      { "name": "Cure Wounds", "level": 1, "detail": "Touch, heal 1d8+3 (+3 Disciple of Life)" },
+      { "name": "Bless", "level": 1, "detail": "3 creatures +1d4 on attacks and saves; concentration 1 min" },
+      { "name": "Guiding Bolt", "level": 1, "detail": "+5 vs AC, 4d6 radiant; next attack vs target has advantage" },
+      { "name": "Shield of Faith", "level": 1, "detail": "Bonus action, +2 AC; concentration 10 min" }
+    ]
+  },
+  "inventory": [
+    { "item": "Chain mail", "qty": 1 },
+    { "item": "Shield (holy symbol inlaid)", "qty": 1 },
+    { "item": "Mace", "qty": 1 },
+    { "item": "Light crossbow", "qty": 1 },
+    { "item": "Crossbow bolts", "qty": 20 },
+    { "item": "Priest's pack", "qty": 1 },
+    { "item": "Herbalism kit", "qty": 1 }
+  ],
+  "gold": 15,
+  "conditions": [],
+  "exhaustion": 0,
+  "death_saves": { "successes": 0, "failures": 0 },
+  "personality": {
+    "traits": ["Hums old hymns while working; can't help patching people up."],
+    "ideals": ["Nobody should die cold and unremembered."],
+    "bonds": ["The little shrine that raised them was shuttered for lack of a keeper."],
+    "flaws": ["Trusts a sad story far too easily."]
+  },
+  "notes": "Starter pregen — rename, reflavor, or replace during session 0. Add this sheet's id to state/current.json party[] to seat them at the table. Life Domain per SRD; domain spells (Bless, Cure Wounds) always prepared."
+}
