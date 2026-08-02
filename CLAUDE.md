@@ -61,6 +61,13 @@ Then — only after step 0 has an answer — batch the reads (steps 1–7 are in
    python webapp/server.py &
    open http://localhost:8765
    ```
+   **If your harness supports background event monitoring** (e.g. Claude Code's `Monitor` tool), also arm a watcher on `campaign/state/player-feed.jsonl` for `"type": "player"` lines:
+   ```bash
+   tail -f -n0 "<campaign>/state/player-feed.jsonl" | grep --line-buffered '"type": "player"'
+   ```
+   The web companion's chat box lets players type straight into the shared screen, but a post there alone doesn't reach you — it's an HTTP POST plus an SSE broadcast to browser tabs, nothing pings the DM. This watcher closes that gap. Re-arm it every time this step runs (fresh session start, or resuming after a harness restart) since it doesn't persist on its own. Skip it entirely on harnesses without a background-monitor mechanism — players can always just type in the DM chat instead.
+
+   **Caution**: if you ever rewrite `player-feed.jsonl` directly (e.g. repairing a bad entry) while a watcher is armed, stop the watcher first. A full-file rewrite looks like a truncate to `tail -f`, which replays already-seen lines as if they were new.
 9. **Greet the players** with a brief recap (3–5 sentences, not a wall) and ask them what they want to do.
 10. The **Bookkeeper** opens a new `campaign/sessions/session-NN.md` with the header (real date, in-game date, starting location).
 

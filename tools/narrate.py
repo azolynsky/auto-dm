@@ -68,7 +68,11 @@ def main() -> int:
                    help="mechanical change to show as subtext; repeatable")
     args = p.parse_args()
 
-    raw = sys.stdin.read() if args.text == "-" else args.text
+    if args.text == "-":
+        sys.stdin.reconfigure(encoding="utf-8")
+        raw = sys.stdin.read()
+    else:
+        raw = args.text
     text = normalize(raw)
     if not text:
         print("narrate.py: text is empty after normalization; nothing pushed", file=sys.stderr)
