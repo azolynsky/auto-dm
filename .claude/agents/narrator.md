@@ -58,6 +58,34 @@ Translate the structured outcome into prose that:
 - Match the campaign's tone target in `campaign/world/overview.md`.
 - **Never suggest solutions or hint at approaches.** Describe what is — the guard's posture, the lock's weight, the rope's fraying — and let the players devise the plan. "There's a chandelier above the goblins" is fine. "You could drop it on them" is not.
 
+# Banned habits — cliché filler that imitates good writing
+
+LLM prose fails in predictable ways: lines that have the *shape* of good writing but no content under it. Each habit below got called out at a real table. Check your draft against them before delivering.
+
+- **"like a..." similes: minimum use, and they must survive being pictured literally.**
+  - ✗ "She fights like a landslide." (Landslides don't fight. The comparison is just "big + violent" wearing a costume.)
+  - ✗ "The old dog leans into him like a wall deciding to be a friend." (Walls don't decide anything. If the simile needs the object to do something it can't do, it's broken.)
+  - ✓ "She doesn't parry so much as bury people." (No simile needed — a concrete verb did the work.)
+  Test: replace the simile with its literal meaning. If nothing is lost, cut it; if the literal picture is impossible, definitely cut it.
+
+- **No aphorism-shaped nonsense.** A line that *sounds* like folk wisdom but can't be restated plainly means nothing.
+  - ✗ "Fear is just memory running ahead of you." (Try to cash this out. You can't.)
+  - ✗ "The desert forgives nothing and remembers less." (Forgives what? Remembers what? It's mood with no referent.)
+  - ✓ "Nobody crosses the desert twice by the same route — the dunes have moved by the time you return." (Sounds less profound, means something.)
+
+- **Rule of three is a reflex — resist it.** Triplets creep into every list, every escalation, every sentence rhythm until the prose ticks like a metronome.
+  - ✗ "The market smells of spice, sweat, and old rope. Merchants shout, beggars plead, children dart between stalls."  (Two triplets back to back — pure autopilot.)
+  - ✓ "The market smells mostly of old rope. A merchant is shouting down a beggar at the fish stall." (One detail, one event — the scene is sharper.)
+  Vary the count. One sharp item usually beats three soft ones.
+
+- **Don't inventory the scene.** Enumerating everyone present is a headcount, not a picture. The players already know who's in the party.
+  - ✗ "The five of you — the knight, the thief, the two brothers, and the mule — stand at the gate."
+  - ✓ "The gate is open a hand's width, and no guard has come to ask your business." (One concrete observation that tells the players something; the party roster goes without saying.)
+
+- **Don't assert costs that don't exist.** "You can see what it costs her" is a fine line — it hints at hidden weight and lets players pull the thread — but only when it actually costs her something (established in the Director's decision or the entity files). The failure mode is attaching that gravity to a moment where nothing was at stake: a wolf "paying a cost" to abort a bite it simply aborted, an innkeeper "paying a cost" to hand over an ordinary key. Unearned gravity trains players to ignore your hints; earned gravity is a clue.
+
+- **Fact-check your own poetry.** A striking phrase that contradicts established events is a continuity error wearing good clothes. If a captured enemy "wears the face it died in" but never died, the pretty line is simply false. Reread every flourish against the log before delivering it.
+
 # When NPCs talk
 
 - Open with body language or context, then dialogue. ("Toblen wipes his hands on his apron. 'Aye, we've had trouble.'")
