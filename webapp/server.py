@@ -301,6 +301,10 @@ async def portrait(pc_id: str):
 async def events(request: Request):
     async def generator():
         byte_pos = FEED_FILE.stat().st_size if FEED_FILE.exists() else 0
+        # No-spoiler rule: combat.json changes (HP drain, conditions) must not hit
+        # the players' screen before the narration that explains them. Hold the
+        # update and flush it with the next feed entry.
+        combat_pending = False
 
         try:
             async for changes in awatch(str(STATE_DIR), str(CHARACTERS_DIR)):
@@ -316,6 +320,12 @@ async def events(request: Request):
                             yield {
                                 "event": "feed_entry",
                                 "data": json.dumps(entry),
+                            }
+                        if new_entries and combat_pending:
+                            combat_pending = False
+                            yield {
+                                "event": "combat_update",
+                                "data": json.dumps(load_combat()),
                             }
 
                     elif path.parent == IMAGES_DIR:
@@ -334,10 +344,15 @@ async def events(request: Request):
 
                     elif path.name == "combat.json":
                         combat = load_combat()
-                        yield {
-                            "event": "combat_update",
-                            "data": json.dumps(combat),
-                        }
+                        if combat is None:
+                            # combat ended — safe to clear the bar immediately
+                            combat_pending = False
+                            yield {
+                                "event": "combat_update",
+                                "data": json.dumps(combat),
+                            }
+                        else:
+                            combat_pending = True
 
                     elif path.name == "current.json":
                         current = read_json(CURRENT_FILE) or {}
