@@ -1,0 +1,18 @@
+[
+  {
+    "name": "TEMPLATE UNIT",
+    "color": "Red",
+    "level": 1,
+    "tier": "stooge",
+    "type": "Stooge Striker",
+    "move": 6,
+    "hit_threshold": "1✸",
+    "quantity": "1 / 1 / 1",
+    "hits": ["A", "B"],
+    "traits": [],
+    "powers": [
+      { "name": "Basic Attack", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "This is your Basic Attack." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Replace with what happens when a player misses this unit." }
+  }
+]

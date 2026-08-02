@@ -1,0 +1,22 @@
+{
+  "_description": "Live quest state. known_to_party=false quests and all secret_truth/obstacles fields are hidden from the web companion.",
+  "active": [
+    {
+      "id": "quest-signal-at-pier-9",
+      "title": "Signal at Pier 9",
+      "given_by": "Sable Reyes, HQ handler",
+      "summary": "The Aerie's sensors picked up a spike of unlicensed bio-energy from a disused warehouse at Pier 9, right when break-ins and muggings started climbing in the dockside blocks around it. Sable wants eyes on the warehouse and the spike identified before it becomes the city's problem.",
+      "objectives": [
+        "Reach Pier 9 and get eyes inside the warehouse",
+        "Identify the source of the energy spike",
+        "Deal with whoever's guarding it"
+      ],
+      "obstacles": "A small hired crew is squatting in the warehouse (reskin any team from roster/strike/villains/ — the AXEMen or U-Men both scale to a first outing).",
+      "secret_truth": "The crew stole an experimental power-suppression rig from a defunct research lab and are trying to fence it, with no idea what it does. If it's triggered near an active power, it dampens it for the scene — a nasty surprise mid-fight, and a live wire once the party realizes it can be turned on either side.",
+      "rewards": "The Aerie's gratitude, a favor banked with city PD, first claim on the suppression rig (keep it, study it, or hand it off — GM's call what that unlocks)",
+      "known_to_party": true
+    }
+  ],
+  "completed": [],
+  "rumored": []
+}

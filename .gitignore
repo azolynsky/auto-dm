@@ -1,9 +1,12 @@
 # Adventure saves are your table's private data — they never belong in
 # this (potentially public) engine repo. Version them separately: each save
 # works as its own git repo (its .git is ignored by this one automatically).
-# Saves nest two levels (campaigns/<system>/<slug>/); the one-level template
-# campaigns/starter/ stays tracked.
+# Saves nest two levels (campaigns/<system>/<slug>/); starter templates
+# (campaigns/starter/, campaigns/starter-strike/) are explicitly un-ignored
+# below so a new template's nested files don't silently vanish from git.
 campaigns/*/*/
+!campaigns/starter/**
+!campaigns/starter-strike/**
 campaigns/active.json
 campaign/
 

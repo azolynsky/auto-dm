@@ -1,0 +1,21 @@
+{
+  "campaign": "New Campaign",
+  "system": "strike",
+  "campaign_day": 1,
+  "in_game_date": "Day 1",
+  "time_of_day": "morning",
+  "location": {
+    "region": "Meridian City",
+    "settlement": "Meridian City",
+    "specific": "The Aerie, HQ ops floor"
+  },
+  "weather": "clear, cool morning",
+  "party": [],
+  "party_resources": {},
+  "present_entities": [
+    "npcs/recurring/sable-reyes",
+    "world/locations/the-aerie"
+  ],
+  "active_effects": [],
+  "notes": "Fresh campaign. Run session 0 first: pick heroes (roster/strike/characters/ has a ready-made X-Men-style team via `python tools/roster.py import --char <id>`, or build new ones with the strike-character-creation skill), add their ids to party[], set an in-game calendar you like, then open at the Aerie — Sable has a mission that pays."
+}
