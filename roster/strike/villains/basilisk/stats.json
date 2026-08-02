@@ -1,0 +1,44 @@
+[
+  {
+    "name": "The B.A.S.I.L.I.S.K. Virus",
+    "level": 4,
+    "tier": "champion",
+    "type": "\"Double Elite\" Crowd Control + Packmaster",
+    "move": "6, flying",
+    "hp": { "max": 42, "current": 42 },
+    "traits": [
+      { "name": "Not Bloodied", "text": "Succeed all Saves; act on counts 6 / 4." },
+      { "name": "Bloodied", "text": "Act on counts 7 / 5 / 3." },
+      { "name": "Computer Targeting", "text": "You may omit allies from your area attacks." },
+      { "name": "Blanket Fire", "text": "Even on a Miss, apply FX." },
+      { "name": "Deadly", "text": "+1 adjacent enemy to area attacks." },
+      { "name": "Pack Tactics", "text": "At the start of each of your turns, 2 Stooges may move." },
+      { "name": "Infector", "text": "At the start of each turn, Infect two targets, making Huntsmen." }
+    ],
+    "powers": [
+      { "name": "Flechette Cannon", "frequency": "at-will", "range": "R10 / B2", "damage": "3✸", "effect": "Target Immobilized one turn." },
+      { "name": "Electro Pulse", "frequency": "at-will", "range": "B2", "damage": "2✸", "effect": "Target Weakened (½ dmg) one turn." },
+      { "name": "Encephalo Ray", "frequency": "at-will", "range": "HTH / R5", "damage": "3✸", "effect": "Two Taken Out Huntsmen are revived." },
+      { "name": "Viral Bursts", "frequency": "at-will", "range": "HTH / R5", "damage": "3✸", "effect": "Take Out 1–3 Huntsmen in B5; +2✸ per unit consumed." },
+      { "name": "Blast", "frequency": "encounter", "range": "R10 / B3", "damage": "3✸", "effect": "Targets Blinded one turn." },
+      { "name": "Self Repair", "frequency": "encounter", "effect": "Take Out 1 Drone, ignore an attack." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Either: create a 3x3 zone containing your attacker — anyone entering or ending there is Slowed (speed 2), SAVE ENDS. Or: one Drone may attack the triggering enemy or move towards them." }
+  },
+  {
+    "name": "Drones",
+    "level": 1,
+    "tier": "stooge",
+    "type": "Brawlers (manufactured pack)",
+    "move": 6,
+    "hit_threshold": "any hit",
+    "quantity": "fielded by the boss",
+    "hits": ["1 HP each"],
+    "traits": [],
+    "powers": [
+      { "name": "Melee", "frequency": "at-will", "range": "B1", "damage": "2✸", "effect": "+1✸ and Slowed." },
+      { "name": "Cables", "frequency": "at-will", "range": "R5", "damage": "3✸", "effect": "Drag target adjacent." }
+    ],
+    "miss_trigger": null
+  }
+]

@@ -1,5 +1,6 @@
 {
   "campaign": "New Campaign",
+  "system": "dnd5e",
   "campaign_day": 1,
   "in_game_date": "1st day, year 1",
   "time_of_day": "morning",

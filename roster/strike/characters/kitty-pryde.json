@@ -1,0 +1,63 @@
+{
+  "id": "kitty-pryde",
+  "name": "Shadowcat & Lockheed",
+  "player": "",
+  "class": "Buddies",
+  "role": "Striker",
+  "level": 4,
+  "flavor": "Mutation: Phasing",
+  "notes": "Kitty Pryde is the youngest member of the X-Men, and the newest to join the team. She's a precocious kid, already taking college level courses in electronics and computers. She has a special bond with Storm and Wolverine, and feelings for Colossus. Her unskilled rolls of 1–3 also earn Klutz tokens (see kit).",
+  "complications": ["Underage", "Can't abide injustice"],
+  "skills": [
+    { "name": "NYU Student", "skilled": true, "trick": "Electronics" },
+    { "name": "Righteous", "skilled": true },
+    { "name": "Computer Whizz", "skilled": true },
+    { "name": "Ninja training", "skilled": true },
+    { "name": "Phasing", "skilled": true, "trick": "Walk on air" },
+    { "name": "Pet dragon", "skilled": true },
+    { "name": "Disrupts electronics", "skilled": true }
+  ],
+  "kit": {
+    "name": "The Protagonist",
+    "always": [
+      "Earn Klutz tokens on Unskilled rolls of 1–3.",
+      "Spend three Klutz tokens to automatically Succeed an Unskilled roll by luck."
+    ],
+    "powers": [
+      { "name": "Some Nerve", "text": "When you stand up to, face down or trick a superior adversary and succeed, earn an Action Point." },
+      { "name": "Heart of the Team", "text": "When other heroes want to give up, or can't agree on how to proceed, make a rousing speech. Anyone who accedes to you earns 1 Action Point." }
+    ]
+  },
+  "hp": { "max": 8, "current": 8 },
+  "buddy": { "name": "Lockheed", "hp": { "max": 5, "current": 5 }, "notes": "Independent character Kitty's player also controls. Track his HP and statuses separately. All his attacks have Range 5; he may take a Move Action to become Flying. He can be restored from Taken Out as long as Kitty is not Taken Out." },
+  "speed": "Kitty 6, Lockheed 10 (flying)",
+  "resist": 1,
+  "reach": "1",
+  "opportunity": "2✸",
+  "save": "4+",
+  "attack_table_rider": "Ninja skills: +2✸ on 3–5, +4✸ on 6 (Kitty's attacks; Lockheed's when specified)",
+  "action_points": 1,
+  "miss_tokens": 0,
+  "strikes": 0,
+  "conditions": [],
+  "powers": [
+    { "name": "Martial Arts Attack", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Your Basic Attack (Kitty).", "tags": ["basic-attack"] },
+    { "name": "Wolverine Taught Me Ninja Skills (Kitty)", "frequency": "always-on", "effect": "These modifiers apply to all of Kitty's attacks, and to Lockheed's when specified: when you roll a 3–5, +2✸; when you roll a 6, +4✸." },
+    { "name": "Phasing (Kitty)", "frequency": "free", "effect": "Kitty may pass through anything and does not draw Opportunity Attacks when moving." },
+    { "name": "Lockheed the Dragon", "frequency": "special", "effect": "Lockheed is your Buddy — an independent character you also control. Track his HP, statuses, etc. separately from Kitty's. When you Rally, you may give the HP regained to Lockheed or Kitty. Lockheed can be restored from Taken Out as long as Kitty is not Taken Out. All Lockheed's attacks have Range 5. Lockheed may take a Move Action to become Flying. SFX (apply to attacks that say so): Distracted (cannot use Miss Triggers, Role Actions or Opportunity Attacks) or Harried (Disadvantage on all Saves, Escape and Panic rolls; cannot save against Harried until all other Conditions are cleared)." },
+    { "name": "\"Get 'em, Lockheed!\" (Lockheed)", "frequency": "at-will", "range": "HTH or R5", "damage": "2✸", "effect": "Lockheed makes an attack. Add your Ninja Skills bonus and pick one SFX." },
+    { "name": "Team Attack (Kitty)", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Lockheed deals 1✸ OR one SFX to one enemy within R10 of him. If you and he attack the same target he deals both." },
+    { "name": "\"Lockheed, to me!\"", "frequency": "at-will", "effect": "Shift Lockheed to a square adjacent to you and Heal him +2 HP." },
+    { "name": "Staring Deeply Into Each Others' Eyes", "frequency": "at-will", "range": "special", "effect": "Transfer 2 HP from Kitty to Lockheed, or vice versa. Then make a Team Attack." },
+    { "name": "ROAR (Lockheed)", "frequency": "encounter", "range": "HTH or R5", "damage": "3✸", "effect": "Lockheed makes an attack. Add your Ninja Skills bonus and pick one FX: Dazed (target may only attack or move next turn, not both; no Role actions, Miss Triggers or Opportunities) — or the next time you hit them, this target is Panicked on their following turn.", "used": false },
+    { "name": "Dragon on My Shoulder", "frequency": "encounter", "range": "HTH or R5", "damage": "3✸", "effect": "To use this, Lockheed must be adjacent to Kitty. As long as they stay adjacent, all attacks against either of them have Disadvantage.", "used": false },
+    { "name": "Counter Punch (Kitty)", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an enemy attack hits, spend 1 Action Point to attack them back.", "used": false },
+    { "name": "Quick Phasing (Kitty)", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an enemy hits you with an attack, spend 1 Action Point to ignore it.", "used": false },
+    { "name": "Phase Free (both)", "frequency": "at-will", "effect": "Kitty or Lockheed may Shift 1 square. (Shift doesn't draw Opportunity attacks.)" },
+    { "name": "Phasing Attack (Kitty)", "frequency": "encounter", "effect": "Deal 2✸ to all adjacent Enemies and Shift 1 square.", "used": false }
+  ],
+  "role_actions": [
+    { "name": "Rally", "frequency": "encounter", "range": "Free Action", "effect": "Spend 1 Action Point: Heal 4 HP (give it to Lockheed or Kitty). Regain one Encounter power.", "used": false }
+  ],
+  "appearance": ""
+}

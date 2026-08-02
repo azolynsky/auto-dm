@@ -1,0 +1,76 @@
+{
+  "id": "emma-frost",
+  "name": "Emma Frost",
+  "player": "",
+  "class": "Necromancer",
+  "role": "Controller",
+  "level": 4,
+  "flavor": "Mutation: Telepathy",
+  "notes": "Emma comes from, and is estranged from, one of the richest families in America. She used to be a member of the nefarious Hellfire Club but left after the death of students under her care, eventually joining the X-Men. She has strong feelings for Scott Summers and a natural rivalry with Jean Grey.",
+  "complications": ["Poor impulse control", "Can't resist a stinging put down"],
+  "skills": [
+    { "name": "Top Class Breeding, Darling", "skilled": true, "trick": "Cool under pressure" },
+    { "name": "Wealth x 2", "skilled": true },
+    { "name": "Hellfire Club Contacts", "skilled": true },
+    { "name": "Mind Reading", "skilled": true },
+    { "name": "Psychic Illusions", "skilled": true },
+    { "name": "Head Games", "skilled": true, "trick": "Erode Confidence" },
+    { "name": "Headmistress", "skilled": true }
+  ],
+  "kit": {
+    "name": "The Psychic",
+    "always": [
+      "Sense surface emotions",
+      "Know if someone is deceptive",
+      "Sense mental incursion"
+    ],
+    "powers": [
+      {
+        "name": "Mind Control",
+        "bonus": "Control for concentration",
+        "success": "Pick 1 (2 w/ cost): sight only, full attention, they have Disad, they read your mind",
+        "twist": "KOd, faked out, bonded",
+        "cost": "Both are Exhausted"
+      },
+      {
+        "name": "Mind Scan",
+        "bonus": "Ask any 3 questions",
+        "success": "Current thought OR 1 question",
+        "twist": "Reveal secret OR random scan",
+        "cost": "Unsubtle OR Tentative/Flawed"
+      }
+    ]
+  },
+  "hp": { "max": 10, "current": 10 },
+  "speed": 6,
+  "resist": 1,
+  "reach": "1",
+  "opportunity": "2✸",
+  "save": "4+",
+  "attack_table_rider": "Hits add your Boost (B — Befuddle); misses add ∆ (Reliable Psychic)",
+  "action_points": 1,
+  "miss_tokens": 0,
+  "strikes": 0,
+  "conditions": [],
+  "powers": [
+    { "name": "Withering Look", "frequency": "at-will", "range": "HTH or R5", "damage": "2✸", "effect": "This is your Basic Attack.", "tags": ["basic-attack"] },
+    { "name": "Psychic Mark", "frequency": "always-on", "effect": "The first time you hit each non-Stooge enemy, it receives your Psychic Mark. When such an enemy is Taken Out, all enemies within R3 of it, and all enemies with your Psychic Mark, take ✸1 and must Save or become Distracted until the end of their next turn." },
+    { "name": "Telepathic Assault", "frequency": "at-will", "range": "HTH or R5", "damage": "2✸", "effect": "If the target is Taken Out by the start of your next turn, you gain Advantage on your first attack next turn and may ask one Question. The GM answers as the target thinks." },
+    { "name": "Imprint Helplessness", "frequency": "at-will", "range": "HTH or R5", "damage": "2✸", "effect": "The target takes 1✸ ongoing and cannot regain HP (Save ends both effects)." },
+    { "name": "Make Them Cower", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "On their next turn, the target must move away from you, or take 3✸." },
+    { "name": "Command the Weak-minded ∆", "frequency": "encounter", "range": "R10", "effect": "Affects one Standard enemy. They must Save or be Dominated for the encounter.", "used": false },
+    { "name": "Psychic Surge ∆", "frequency": "encounter", "range": "Free Action", "effect": "Trigger: Any one ally within R5 who has been Taken Out or is at or below 0 HP may re-enter the fight with 1 HP.", "used": false },
+    { "name": "Sleeper Agent ∆", "frequency": "encounter", "range": "HTH or R5", "damage": "3✸", "effect": "When this target becomes Taken Out, it falls under your mind control and is Dominated for the rest of the encounter. Reset its HP to 4. When it is taken out again, it triggers your Psychic Mark.", "used": false },
+    { "name": "Psychic Push ∆", "frequency": "encounter", "effect": "Trigger: Make any other green or purple attack. It affects all targets within a 3 x 3 square area. If used with another Encounter power, both are expended. You don't get Befuddle on this attack.", "used": false },
+    { "name": "Befuddle <B>", "frequency": "always-on", "range": "B", "effect": "Boost: When you roll 3+ to attack, either knock the target Prone or slide them 6 squares.", "tags": ["boost"] },
+    { "name": "Reliable Psychic <∆>", "frequency": "always-on", "range": "∆", "effect": "Boost: When you roll an Encounter power attack and miss, the power is not expended. For area attacks, you have to miss all targets for this to count.", "tags": ["boost"] }
+  ],
+  "role_actions": [
+    { "name": "Sap Strength", "frequency": "at-will", "range": "R5", "effect": "Target is Weakened (½ all damage, rounding down), save ends." },
+    { "name": "Oh no you don't!", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an Enemy moves, spend an Action Point to replace them where they started.", "used": false },
+    { "name": "Rally", "frequency": "encounter", "range": "Free Action", "effect": "Spend 1 Action Point: Heal 4 HP. Regain one Encounter power.", "used": false },
+    { "name": "Mass Hypnosis", "frequency": "encounter", "range": "B5", "effect": "Slide each enemy within B5 of you to another square within B5 of you.", "used": false },
+    { "name": "Psychic Static", "frequency": "encounter", "range": "R5", "effect": "Pick a 5 x 5 square, centered in range R5. It becomes Obscured until your next turn.", "used": false }
+  ],
+  "appearance": ""
+}

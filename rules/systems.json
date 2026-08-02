@@ -1,0 +1,36 @@
+{
+  "comment": "Registry of playable rule systems. Each campaign save records its system in state/current.json:system; agents and skills use this file to find the right rules, schema, tools, and skills for the active campaign. To add a system: create rules/<slug>/ (rules reference + character-schema.md), tools/<slug>/ for any system-specific tools, .claude/skills/<slug>-*/ for its procedures (at minimum character-creation and combat), then register it here.",
+  "systems": [
+    {
+      "slug": "dnd5e",
+      "display_name": "Dungeons & Dragons 5e (SRD 5.1)",
+      "rules_dir": "rules/dnd5e",
+      "rules_reference": "rules/dnd5e/srd-reference.md",
+      "full_text": "rules/dnd5e/srd",
+      "character_schema": "rules/dnd5e/character-schema.md",
+      "check_resolver": "tools/dnd5e/check_resolver.py",
+      "starter_template": "campaigns/starter",
+      "skills": [
+        "dnd5e-character-creation",
+        "dnd5e-combat-encounter",
+        "dnd5e-spellcasting",
+        "dnd5e-leveling-up",
+        "dnd5e-encounter-building"
+      ]
+    },
+    {
+      "slug": "strike",
+      "display_name": "Strike! (d6 tactical)",
+      "rules_dir": "rules/strike",
+      "rules_reference": "rules/strike/strike-reference.md",
+      "full_text": null,
+      "character_schema": "rules/strike/character-schema.md",
+      "check_resolver": "tools/strike/check_resolver.py",
+      "starter_template": "campaigns/starter-strike",
+      "skills": [
+        "strike-character-creation",
+        "strike-combat-encounter"
+      ]
+    }
+  ]
+}

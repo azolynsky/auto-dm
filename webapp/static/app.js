@@ -47,9 +47,24 @@ function el(tag, cls, text) {
 // Latest full data for every character, for the full-sheet modal
 const _charData = {};
 
-// ── Character rendering ────────────────────────────────────────────────────────
+// Active save's rule system — set from the /api/state snapshot; picks which
+// character-sheet renderer runs. Everything else (feed, sidebar, combat bar)
+// is system-agnostic.
+let _system = 'dnd5e';
+
+// ── Character rendering (dispatch) ─────────────────────────────────────────────
 
 function buildCharCard(char) {
+  return _system === 'strike' ? buildCharCardStrike(char) : buildCharCardDnd5e(char);
+}
+
+function buildFullSheet(char) {
+  return _system === 'strike' ? buildFullSheetStrike(char) : buildFullSheetDnd5e(char);
+}
+
+// ── Character rendering (dnd5e) ────────────────────────────────────────────────
+
+function buildCharCardDnd5e(char) {
   const card = el('div', 'character-card');
   card.dataset.id = char.id;
 
@@ -338,6 +353,7 @@ function renderCharacters(chars) {
 function renderCharTabs() {
   const bar = document.getElementById('char-tabs');
   bar.innerHTML = '';
+  syncSpeakerOptions();
   _charOrder.forEach(id => {
     const c = _charData[id];
     const hp = c.hp || {};
@@ -467,7 +483,7 @@ function sheetSection(title, node) {
   return sec;
 }
 
-function buildFullSheet(char) {
+function buildFullSheetDnd5e(char) {
   const sheet = el('div', 'full-sheet');
 
   // Header
@@ -561,6 +577,356 @@ function buildFullSheet(char) {
   right.appendChild(sheetSection('Features', buildFeaturesPane(char)));
   right.appendChild(sheetSection('Inventory', buildInventoryPane(char, Infinity)));
   right.appendChild(sheetSection('Bio', buildBioPane(char)));
+  cols.appendChild(right);
+
+  sheet.appendChild(cols);
+  return sheet;
+}
+
+// ── Character rendering (strike) ───────────────────────────────────────────────
+
+// Buckets for grouping powers by frequency in display order.
+const STRIKE_FREQ_GROUPS = [
+  ['At-Will', f => f === 'at-will'],
+  ['Encounter', f => f.includes('encounter')],
+  ['Stances', f => f === 'stance'],
+  ['Always On', f => ['always-on', 'constant', 'special'].includes(f)],
+  ['Other', () => true],
+];
+
+function strikeFreqLabel(f) {
+  const labels = {
+    'at-will': 'At-Will', 'encounter': 'Encounter', '2x-encounter': '2× Encounter',
+    'always-on': 'Always On', 'constant': 'Constant', 'special': 'Special',
+    'stance': 'Stance', 'reaction': 'Reaction', 'free': 'Free',
+  };
+  return labels[f] || f;
+}
+
+function strikeSubtitle(char) {
+  return `${char.class || '?'} | ${char.role || '?'} · Level ${char.level ?? '?'}`;
+}
+
+// Segmented HP track: max … −4, with markers at 0 (Incapacitated) and −5
+// would-be Taken Out. Current value gets the highlight.
+function buildHpTrack(hp) {
+  const max = hp.max ?? 10;
+  const current = hp.current ?? max;
+  const wrap = el('div', 'hp-track-wrap');
+  const track = el('div', 'hp-track');
+  for (let v = max; v >= -4; v--) {
+    const cell = el('span', 'hp-cell', String(v));
+    if (v === 0) cell.classList.add('zero');
+    if (v < 0) cell.classList.add('negative');
+    if (v === current) cell.classList.add('current');
+    if (v > current) cell.classList.add('lost');
+    track.appendChild(cell);
+  }
+  wrap.appendChild(track);
+  const status = current <= -5 ? 'TAKEN OUT' : current <= 0 ? 'Incapacitated' : null;
+  const label = el('div', 'hp-track-label');
+  label.appendChild(el('span', 'hp-text', `${current}/${max} HP`));
+  if (status) label.appendChild(el('span', 'hp-track-status', status));
+  wrap.appendChild(label);
+  return wrap;
+}
+
+function buildStrikeCounters(char) {
+  const row = el('div', 'strike-counters');
+  const strikes = char.strikes ?? 0;
+  const strikeNote = strikes >= 5 ? ' → Injured' : strikes >= 4 ? ' → Exhausted'
+    : strikes >= 2 ? ' → Winded' : '';
+  [
+    ['Action Points', char.action_points ?? 0, ''],
+    ['Miss Tokens', char.miss_tokens ?? 0, ''],
+    ['Strikes', strikes, strikeNote],
+  ].forEach(([lbl, val, note]) => {
+    const item = el('div', 'stat-item');
+    item.appendChild(el('span', 'stat-val', `${val}${note}`));
+    item.appendChild(el('span', 'stat-lbl', lbl));
+    row.appendChild(item);
+  });
+  return row;
+}
+
+function buildStrikeVitals(char) {
+  const row = el('div', 'stats-row');
+  [
+    [char.speed ?? '—', 'Speed'],
+    [char.resist ?? '—', 'Resist'],
+    [char.reach ?? '—', 'Reach'],
+    [char.opportunity ?? '—', 'Opp'],
+    [char.save ?? '—', 'Save'],
+  ].forEach(([val, lbl]) => {
+    const item = el('div', 'stat-item');
+    item.appendChild(el('span', 'stat-val', String(val)));
+    item.appendChild(el('span', 'stat-lbl', lbl));
+    row.appendChild(item);
+  });
+  return row;
+}
+
+function buildStrikePowerRow(p) {
+  const row = el('div', `power-row${p.used === true ? ' spent' : ''}`);
+  const head = el('div', 'power-head');
+  head.appendChild(el('span', 'power-name', p.name));
+  const badges = el('span', 'power-badges');
+  badges.appendChild(el('span', 'power-freq-badge', strikeFreqLabel(p.frequency || '')));
+  if (p.range) badges.appendChild(el('span', 'power-range-badge', String(p.range)));
+  if (p.damage) badges.appendChild(el('span', 'power-dmg-badge', String(p.damage)));
+  if (p.used === true) badges.appendChild(el('span', 'power-used-badge', 'spent'));
+  head.appendChild(badges);
+  row.appendChild(head);
+  if (p.effect) row.appendChild(el('div', 'power-detail', p.effect));
+  if (p.passive) row.appendChild(el('div', 'power-detail power-passive', `Passive: ${p.passive}`));
+  return row;
+}
+
+function buildStrikePowersPane(char, includeRoleActions = true) {
+  const pane = el('div', 'tab-pane');
+  if (char.attack_table_rider) {
+    pane.appendChild(el('div', 'power-rider', `Attack table: ${char.attack_table_rider}`));
+  }
+  const powers = (char.powers || []).slice();
+  const grouped = new Map();
+  powers.forEach(p => {
+    const f = (p.frequency || '').toLowerCase();
+    const group = STRIKE_FREQ_GROUPS.find(([, test]) => test(f))[0];
+    if (!grouped.has(group)) grouped.set(group, []);
+    grouped.get(group).push(p);
+  });
+  STRIKE_FREQ_GROUPS.forEach(([name]) => {
+    const list = grouped.get(name);
+    if (!list || list.length === 0) return;
+    pane.appendChild(el('div', 'power-group-label', name));
+    list.forEach(p => pane.appendChild(buildStrikePowerRow(p)));
+  });
+  if (includeRoleActions && (char.role_actions || []).length > 0) {
+    pane.appendChild(el('div', 'power-group-label', `Role Actions${char.role ? ` (${char.role})` : ''}`));
+    char.role_actions.forEach(p => pane.appendChild(buildStrikePowerRow(p)));
+  }
+  if (pane.children.length === 0) return el('div', 'tab-pane tab-empty', 'No powers listed.');
+  return pane;
+}
+
+function buildStrikeKitPane(char) {
+  const pane = el('div', 'tab-pane');
+  const kit = char.kit || {};
+  if (kit.name) pane.appendChild(el('div', 'kit-name', `KIT: ${kit.name}`));
+  (kit.always || []).forEach(a => {
+    const row = el('div', 'kit-always');
+    row.appendChild(el('span', 'kit-always-dot', '◆ '));
+    row.appendChild(el('span', null, a));
+    pane.appendChild(row);
+  });
+  (kit.powers || []).forEach(p => {
+    const block = el('div', 'kit-block');
+    block.appendChild(el('div', 'power-name', p.name));
+    if (p.text) {
+      block.appendChild(el('div', 'power-detail', p.text));
+    } else {
+      [['BONUS', p.bonus], ['SUCCESS', p.success], ['TWIST', p.twist], ['COST', p.cost]]
+        .forEach(([lbl, val]) => {
+          if (!val) return;
+          const line = el('div', 'kit-outcome');
+          line.appendChild(el('span', 'kit-outcome-label', `${lbl}: `));
+          line.appendChild(el('span', null, val));
+          block.appendChild(line);
+        });
+    }
+    pane.appendChild(block);
+  });
+  if (pane.children.length === 0) return el('div', 'tab-pane tab-empty', 'No kit listed.');
+  return pane;
+}
+
+function buildStrikeSkillsPane(char) {
+  const pane = el('div', 'tab-pane');
+  const skills = char.skills || [];
+  if (skills.length === 0) return el('div', 'tab-pane tab-empty', 'No skills listed.');
+  skills.forEach(s => {
+    const row = el('div', 'sheet-list-row prof');
+    const label = el('span', null, s.name + (s.skilled === false ? ' (unskilled)' : ''));
+    row.appendChild(label);
+    if (s.trick) row.appendChild(el('span', 'skill-trick', `TRICK: ${s.trick}`));
+    pane.appendChild(row);
+  });
+  return pane;
+}
+
+function buildStrikeBioPane(char) {
+  const pane = el('div', 'tab-pane');
+  if (char.flavor) pane.appendChild(el('div', 'bio-idline', char.flavor));
+  if ((char.complications || []).length > 0) {
+    pane.appendChild(el('div', 'bio-label', 'Complications'));
+    char.complications.forEach(c => pane.appendChild(el('div', 'bio-text', c)));
+  }
+  if (char.notes) {
+    pane.appendChild(el('div', 'bio-label', 'Notes'));
+    pane.appendChild(el('div', 'bio-text', char.notes));
+  }
+  if (char.appearance) {
+    pane.appendChild(el('div', 'bio-label', 'Appearance'));
+    pane.appendChild(el('div', 'bio-text', char.appearance));
+  }
+  if (pane.children.length === 0) return el('div', 'tab-pane tab-empty', 'A mysterious stranger.');
+  return pane;
+}
+
+function buildBuddyRow(buddy) {
+  const hp = buddy.hp || {};
+  const row = el('div', 'hp-row buddy-row');
+  row.appendChild(el('span', 'hp-label', buddy.name || 'Buddy'));
+  const barWrap = el('div', 'hp-bar-wrap');
+  const bar = el('div', 'hp-bar');
+  const fill = el('div', `hp-fill ${hpClass(hp.current, hp.max)}`);
+  fill.style.width = `${hpPct(hp.current, hp.max)}%`;
+  bar.appendChild(fill);
+  barWrap.appendChild(bar);
+  row.appendChild(barWrap);
+  row.appendChild(el('span', 'hp-text', `${hp.current ?? '?'}/${hp.max ?? '?'}`));
+  return row;
+}
+
+function buildCharCardStrike(char) {
+  const card = el('div', 'character-card');
+  card.dataset.id = char.id;
+
+  const portraitWrap = el('div', 'char-portrait-wrap');
+  portraitWrap.title = 'Open full character sheet';
+  portraitWrap.addEventListener('click', () => openCharModal(char.id));
+  const img = document.createElement('img');
+  img.className = 'char-portrait';
+  img.alt = char.name;
+  img.dataset.charId = char.id;
+  img.src = portraitSrc(char.id);
+  img.onerror = () => img.classList.add('missing');
+  portraitWrap.appendChild(img);
+
+  const identity = el('div', 'char-identity');
+  identity.appendChild(el('div', 'char-name', char.name));
+  identity.appendChild(el('div', 'char-subtitle', strikeSubtitle(char)));
+  if (char.flavor) identity.appendChild(el('div', 'char-flavor', char.flavor));
+  identity.appendChild(el('div', 'char-player', char.player ? `played by ${char.player}` : ''));
+  identity.appendChild(el('div', 'char-sheet-hint', 'view full sheet ↗'));
+  portraitWrap.appendChild(identity);
+  card.appendChild(portraitWrap);
+
+  card.appendChild(buildHpTrack(char.hp || {}));
+  if (char.buddy) card.appendChild(buildBuddyRow(char.buddy));
+
+  const conditions = char.conditions || [];
+  if (conditions.length > 0) {
+    const condRow = el('div', 'conditions-row');
+    conditions.forEach(c => condRow.appendChild(el('span', 'condition-tag', c)));
+    card.appendChild(condRow);
+  }
+
+  card.appendChild(buildStrikeCounters(char));
+  card.appendChild(buildStrikeVitals(char));
+
+  // Tabs
+  const wrap = el('div', 'card-tabs');
+  const panes = {
+    'Powers': buildStrikePowersPane(char),
+    'Kit': buildStrikeKitPane(char),
+    'Skills': buildStrikeSkillsPane(char),
+    'Bio': buildStrikeBioPane(char),
+  };
+  const bar = el('div', 'tab-bar');
+  const body = el('div', 'tab-body');
+  const names = Object.keys(panes);
+  const selected = _selectedTabs[char.id] && panes[_selectedTabs[char.id]]
+    ? _selectedTabs[char.id] : names[0];
+  names.forEach(name => {
+    const btn = el('button', `tab-btn${name === selected ? ' active' : ''}`, name);
+    btn.addEventListener('click', () => {
+      _selectedTabs[char.id] = name;
+      bar.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent === name));
+      body.innerHTML = '';
+      body.appendChild(panes[name]);
+    });
+    bar.appendChild(btn);
+  });
+  body.appendChild(panes[selected]);
+  wrap.appendChild(bar);
+  wrap.appendChild(body);
+  card.appendChild(wrap);
+
+  return card;
+}
+
+function buildFullSheetStrike(char) {
+  const sheet = el('div', 'full-sheet');
+
+  // Header (same portrait-upload affordance as dnd5e)
+  const head = el('div', 'sheet-head');
+  const img = document.createElement('img');
+  img.className = 'sheet-portrait';
+  img.alt = char.name;
+  img.dataset.charId = char.id;
+  img.src = portraitSrc(char.id);
+  img.onerror = () => img.classList.add('missing');
+  const uploadStatus = el('span', 'portrait-upload-status');
+  head.appendChild(makePortraitClickable(img, char.id, uploadStatus));
+
+  const id = el('div', 'sheet-identity');
+  id.appendChild(el('div', 'sheet-name', char.name));
+  id.appendChild(el('div', 'sheet-subtitle', strikeSubtitle(char)));
+  if (char.flavor) id.appendChild(el('div', 'char-flavor', char.flavor));
+  if (char.player) id.appendChild(el('div', 'char-player', `played by ${char.player}`));
+  id.appendChild(uploadStatus);
+
+  const hp = char.hp || {};
+  const vitals = el('div', 'sheet-vitals');
+  [
+    ['HP', `${hp.current ?? '?'}/${hp.max ?? '?'}`],
+    ['Speed', char.speed ?? '—'],
+    ['Resist', char.resist ?? '—'],
+    ['Reach', char.reach ?? '—'],
+    ['Opportunity', char.opportunity ?? '—'],
+    ['Save', char.save ?? '—'],
+    ['Action Points', char.action_points ?? 0],
+    ['Miss Tokens', char.miss_tokens ?? 0],
+    ['Strikes', char.strikes ?? 0],
+  ].forEach(([lbl, val]) => {
+    const v = el('div', 'sheet-vital');
+    v.appendChild(el('span', 'stat-val', String(val)));
+    v.appendChild(el('span', 'stat-lbl', lbl));
+    vitals.appendChild(v);
+  });
+  id.appendChild(vitals);
+  head.appendChild(id);
+  sheet.appendChild(head);
+
+  sheet.appendChild(buildHpTrack(hp));
+  if (char.buddy) {
+    sheet.appendChild(buildBuddyRow(char.buddy));
+    if (char.buddy.notes) sheet.appendChild(el('div', 'sheet-text buddy-notes', char.buddy.notes));
+  }
+
+  const conditions = char.conditions || [];
+  if (conditions.length > 0) {
+    const condRow = el('div', 'conditions-row');
+    conditions.forEach(c => condRow.appendChild(el('span', 'condition-tag', c)));
+    sheet.appendChild(condRow);
+  }
+
+  const cols = el('div', 'sheet-columns');
+
+  const left = el('div', 'sheet-col');
+  left.appendChild(sheetSection('Skills', buildStrikeSkillsPane(char)));
+  left.appendChild(sheetSection('Kit', buildStrikeKitPane(char)));
+  left.appendChild(sheetSection('Bio', buildStrikeBioPane(char)));
+  cols.appendChild(left);
+
+  const right = el('div', 'sheet-col');
+  right.appendChild(sheetSection('Powers', buildStrikePowersPane(char, false)));
+  if ((char.role_actions || []).length > 0) {
+    const rolePane = el('div', 'tab-pane');
+    char.role_actions.forEach(p => rolePane.appendChild(buildStrikePowerRow(p)));
+    right.appendChild(sheetSection(`Role Actions${char.role ? ` (${char.role})` : ''}`, rolePane));
+  }
   cols.appendChild(right);
 
   sheet.appendChild(cols);
@@ -669,6 +1035,55 @@ function renderFeed(entries) {
 
   entries.forEach(entry => appendFeedEntry(entry));
   container.scrollTop = container.scrollHeight;
+}
+
+// ── Player input ──────────────────────────────────────────────────────────────
+
+// Rebuilds the "speaking as" dropdown from the known party, preserving the
+// user's choice (falls back to the active character tab, then "Table").
+function syncSpeakerOptions() {
+  const select = document.getElementById('player-input-speaker');
+  const prevValue = select.value || localStorage.getItem('player-input-speaker') || '';
+  select.innerHTML = '';
+  select.appendChild(el('option', null, 'Table')).value = '';
+  _charOrder.forEach(id => {
+    const c = _charData[id];
+    const opt = el('option', null, c.name);
+    opt.value = c.name;
+    select.appendChild(opt);
+  });
+  const activeName = _charData[_activeCharId]?.name || '';
+  const fallback = [prevValue, activeName, ''].find(
+    v => Array.from(select.options).some(o => o.value === v));
+  select.value = fallback ?? '';
+}
+
+async function submitPlayerInput(e) {
+  e.preventDefault();
+  const textEl = document.getElementById('player-input-text');
+  const speakerEl = document.getElementById('player-input-speaker');
+  const button = document.querySelector('#player-input-form button');
+  const text = textEl.value.trim();
+  if (!text) return;
+
+  localStorage.setItem('player-input-speaker', speakerEl.value);
+  textEl.disabled = true;
+  button.disabled = true;
+  try {
+    const res = await fetch('/api/player-input', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, speaker: speakerEl.value }),
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    textEl.value = '';
+  } catch (err) {
+    console.error('failed to send player input:', err);
+  } finally {
+    textEl.disabled = false;
+    button.disabled = false;
+    textEl.focus();
+  }
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
@@ -889,6 +1304,8 @@ function closeModal(id) {
 // ── SSE ───────────────────────────────────────────────────────────────────────
 
 function applySnapshot(data) {
+  if (data.system) _system = data.system;
+  else if (data.current && data.current.system) _system = data.current.system;
   renderCharacters(data.characters || []);
   renderFeed(data.feed || []);
   renderHeader(data.current || {});
@@ -925,6 +1342,10 @@ function connectSSE() {
 
   es.addEventListener('state_update', e => {
     const current = JSON.parse(e.data);
+    if (current.system && current.system !== _system) {
+      _system = current.system;
+      renderActiveCharacter(); // re-render under the new system's renderer
+    }
     renderHeader(current);
     renderLocationDetail(current);
   });
@@ -952,6 +1373,7 @@ function connectSSE() {
 
 async function init() {
   initModals();
+  document.getElementById('player-input-form').addEventListener('submit', submitPlayerInput);
   try {
     applySnapshot(await fetch('/api/state').then(r => r.json()));
     connectSSE();

@@ -1,0 +1,59 @@
+{
+  "id": "wolverine",
+  "name": "Wolverine",
+  "player": "",
+  "class": "Martial Artist",
+  "role": "Defender",
+  "level": 4,
+  "flavor": "Mutation: Animal senses, healing factor, adamantium bones",
+  "notes": "Wolverine is a man of many contradictions — a savage wild-man, with the discipline of a samurai warrior. A man with many lifetimes of experience and severe amnesia which hides his memories from him. The X-Men are his found family and he defends them fiercely.",
+  "complications": ["I can't remember that", "Savage instincts"],
+  "skills": [
+    { "name": "North American Nomad", "skilled": true },
+    { "name": "Spycraft", "skilled": true, "trick": "Shadowing" },
+    { "name": "Claw Fighting", "skilled": true, "trick": "Berserker rage" },
+    { "name": "Animal Senses", "skilled": true },
+    { "name": "Tracking", "skilled": true },
+    { "name": "Healing Factor", "skilled": true },
+    { "name": "Zen Code", "skilled": true }
+  ],
+  "kit": {
+    "name": "Man With Many Pasts",
+    "always": [],
+    "powers": [
+      { "name": "Been Around", "text": "When you return to a place you've been before, or enter a dangerous place, make a skill roll and consult the table." },
+      { "name": "Scout", "text": "When you go ahead to scout, make a skill roll and consult the scout table." },
+      { "name": "Streetwise", "text": "Take Advantage on rolls to make underworld contacts or find resources." }
+    ]
+  },
+  "hp": { "max": 10, "current": 10 },
+  "speed": 6,
+  "resist": 1,
+  "reach": "1⚡",
+  "opportunity": "2✸⚡",
+  "save": "3+",
+  "attack_table_rider": "Heal 1 HP on any roll of 3+; a roll of 2 grants only a Miss Token (no rider)",
+  "action_points": 1,
+  "miss_tokens": 0,
+  "strikes": 0,
+  "conditions": [],
+  "powers": [
+    { "name": "Adamantium Claws", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Your Basic Attack.", "tags": ["basic-attack"] },
+    { "name": "Combat Stances", "frequency": "free", "effect": "You know the three Stances below. Start combat in any one of them. Once/turn you may switch to a different stance. Each stance has an FX added to your Adamantium Claws attack, and a Passive applied while you are in it." },
+    { "name": "Claw Frenzy Stance", "frequency": "stance", "range": "⚡", "effect": "FX: Deal 2✸ to one Enemy adjacent to the target.", "passive": "Enemies who end their turn adjacent to you take 1✸." },
+    { "name": "Weapon X Stance", "frequency": "stance", "range": "⚡", "effect": "FX: Deal Ongoing 1✸ (save ends) to the target.", "passive": "Add +1✸ to your Opportunity attacks." },
+    { "name": "Samurai Stance", "frequency": "stance", "range": "⚡", "effect": "FX: You may slide the target by up to 2 squares.", "passive": "You have Reach 2 (engaged with foes up to 2 squares away)." },
+    { "name": "Focused Attack", "frequency": "encounter", "range": "Free action", "effect": "Until the start of your next turn, +1✸ to your attacks, and your Stances are enhanced — Claw Frenzy: 2✸ to all Enemies adjacent to the target; enemies that begin their turn adjacent to you, or move next to you, take 1✸. Weapon X: +2✸ Ongoing (save ends) to HTH attacks; +1✸ Ongoing (save ends) to your Opportunity attacks. Samurai: slide target up to 4 squares; you have Reach 3.", "used": false },
+    { "name": "Decapitation", "frequency": "encounter", "range": "HTH", "damage": "3✸", "effect": "Primary target must Save or be Taken Out. Other targets (if any) suffer +3✸.", "used": false },
+    { "name": "Healing Factor", "frequency": "constant", "effect": "Resist 1 (reduce all damage from each attack you suffer by one point). When you roll 3+ to attack, heal 1 HP. Make Saves vs Statuses at the start of your turn. Reduce Forced Movement by 1. When Slowed your speed is 3, instead of 2. If knocked Prone, you may Save to resist the FX." },
+    { "name": "Murderer of Many Ninjas", "frequency": "constant", "effect": "Double your base damage for any HTH attack vs Mobs of Enemies. When you Take Out an enemy, apply leftover damage +1✸ to another Enemy in reach." },
+    { "name": "Predator's Instincts", "frequency": "constant", "effect": "Trigger: When an enemy moves adjacent to you, they must stop moving. When an enemy grants you an Opportunity, +1✸." },
+    { "name": "Adamantium Bones", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an enemy hits you with an attack, spend 1 Action Point to ignore the FXs.", "used": false }
+  ],
+  "role_actions": [
+    { "name": "Choose Your Enemies", "frequency": "at-will", "range": "R5", "effect": "Pick up to 2 Enemies in range as your marked targets. If they make an attack that doesn't include you or shift out of your reach, they grant you an Opportunity." },
+    { "name": "\"You're mine!\"", "frequency": "encounter", "range": "R5", "effect": "Target has disadvantage on all attacks that don't target you. Lasts till you're Taken Out.", "used": false },
+    { "name": "Rally", "frequency": "encounter", "range": "Free Action", "effect": "Spend 1 Action Point: Heal 4 HP. Regain one Encounter power.", "used": false }
+  ],
+  "appearance": ""
+}

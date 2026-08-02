@@ -679,6 +679,65 @@ blockquote.feed-entry.feed-type-player {
   50%      { opacity: 1; }
 }
 
+/* Player input */
+#player-input-form {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+#player-input-speaker {
+  background: var(--surface-2);
+  color: var(--parchment-dim);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--font-header);
+  font-size: 17px;
+  padding: 0 6px;
+  flex-shrink: 0;
+  max-width: 140px;
+}
+
+#player-input-text {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-2);
+  color: var(--parchment);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 22px;
+  padding: 6px 10px;
+}
+
+#player-input-text:focus, #player-input-speaker:focus {
+  outline: none;
+  border-color: var(--accent-dim);
+}
+
+#player-input-text:disabled, #player-input-speaker:disabled {
+  opacity: 0.6;
+}
+
+#player-input-form button {
+  background: var(--accent-dim);
+  color: var(--parchment);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-family: var(--font-header);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  padding: 6px 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+#player-input-form button:hover:not(:disabled) { background: var(--accent); color: var(--bg); }
+#player-input-form button:disabled { opacity: 0.5; cursor: default; }
+
 .feed-ts {
   font-size: 18px;
   color: var(--accent-dim);
@@ -1225,3 +1284,169 @@ body.combat-active #sidebar-column { bottom: var(--combat-h); }
 
 /* ── Utility ────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
+
+/* ── Strike! character sheet ─────────────────────────────────────── */
+
+.char-flavor {
+  font-size: 19px;
+  color: var(--accent);
+  font-style: italic;
+}
+
+/* Segmented HP track (max … −4) */
+.hp-track-wrap { margin-bottom: 8px; }
+
+.hp-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.hp-cell {
+  flex: 1;
+  min-width: 26px;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.6;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--safe);
+  color: var(--parchment);
+}
+
+.hp-cell.lost {
+  background: var(--surface-2);
+  color: var(--parchment-dim);
+}
+
+.hp-cell.zero { border-color: var(--danger); }
+
+.hp-cell.negative {
+  background: var(--surface);
+  color: var(--danger);
+  border-color: var(--danger-dim);
+}
+
+.hp-cell.current {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  font-weight: 700;
+  color: var(--parchment);
+  background: var(--accent-dim);
+}
+
+.hp-track-label {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.hp-track-status {
+  font-family: var(--font-header);
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--danger);
+}
+
+.buddy-row { margin-top: 2px; }
+.buddy-notes { font-size: 18px; color: var(--parchment-dim); margin: 4px 0 8px; }
+
+/* Counters row (Action Points / Miss Tokens / Strikes) */
+.strike-counters {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Powers */
+.power-group-label {
+  font-family: var(--font-header);
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-dim);
+  margin: 10px 0 4px;
+}
+
+.power-row { margin-bottom: 8px; }
+.power-row.spent { opacity: 0.55; }
+
+.power-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.power-name { font-size: 21px; color: var(--parchment); font-weight: 600; }
+
+.power-badges { display: flex; gap: 6px; flex-shrink: 0; }
+
+.power-freq-badge, .power-range-badge, .power-dmg-badge, .power-used-badge {
+  font-size: 15px;
+  font-family: var(--font-header);
+  letter-spacing: 0.04em;
+  border-radius: 9px;
+  padding: 0 7px;
+  white-space: nowrap;
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+}
+
+.power-range-badge { border-color: var(--border); color: var(--parchment-dim); }
+.power-dmg-badge   { border-color: var(--danger); color: var(--parchment); background: var(--danger-dim); }
+.power-used-badge  { border-color: var(--border); color: var(--parchment-dim); }
+
+.power-detail { font-size: 19px; color: var(--parchment-dim); }
+.power-passive { font-style: italic; }
+
+.power-rider {
+  font-size: 18px;
+  color: var(--accent);
+  border: 1px dashed var(--accent-dim);
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+}
+
+/* Kit */
+.kit-name {
+  font-family: var(--font-header);
+  font-size: 19px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.kit-always { font-size: 19px; color: var(--parchment); }
+.kit-always-dot { color: var(--accent-dim); font-size: 14px; }
+
+.kit-block {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 9px;
+  margin-top: 8px;
+}
+
+.kit-outcome { font-size: 18px; color: var(--parchment-dim); }
+.kit-outcome-label {
+  font-family: var(--font-header);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: var(--accent-dim);
+}
+
+/* Skills */
+.skill-trick {
+  font-size: 16px;
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  border-radius: 9px;
+  padding: 0 7px;
+  white-space: nowrap;
+}

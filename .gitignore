@@ -1,6 +1,10 @@
-# The active campaign is your table's private data — it never belongs in
-# this (potentially public) engine repo. Version it separately: it works
-# as its own git repo (campaign/.git is ignored by this one automatically).
+# Adventure saves are your table's private data — they never belong in
+# this (potentially public) engine repo. Version them separately: each save
+# works as its own git repo (its .git is ignored by this one automatically).
+# Saves nest two levels (campaigns/<system>/<slug>/); the one-level template
+# campaigns/starter/ stays tracked.
+campaigns/*/*/
+campaigns/active.json
 campaign/
 
 __pycache__/

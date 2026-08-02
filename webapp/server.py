@@ -50,15 +50,35 @@ FLAGS_FILE = STATE_DIR / "world-flags.json"
 DRAMATIS_FILE = STATE_DIR / "dramatis-personae.json"
 SETTINGS_FILE = STATE_DIR / "settings.json"
 
+# Per-system whitelists of character-sheet keys the browser may see.
+# Anything not listed is stripped server-side (GM-only fields stay private).
 DISPLAY_KEYS = {
-    "id", "name", "player", "race", "class", "subclass", "level", "xp",
-    "hp", "ac", "speed", "initiative_bonus", "passive_perception",
-    "conditions", "exhaustion", "death_saves",
-    "abilities", "proficiency_bonus", "languages", "proficiencies",
-    "skills", "save_proficiencies", "hit_dice",
-    "features", "attacks", "spells", "inventory", "gold",
-    "background", "alignment", "personality", "appearance",
+    "dnd5e": {
+        "id", "name", "player", "race", "class", "subclass", "level", "xp",
+        "hp", "ac", "speed", "initiative_bonus", "passive_perception",
+        "conditions", "exhaustion", "death_saves",
+        "abilities", "proficiency_bonus", "languages", "proficiencies",
+        "skills", "save_proficiencies", "hit_dice",
+        "features", "attacks", "spells", "inventory", "gold",
+        "background", "alignment", "personality", "appearance",
+    },
+    "strike": {
+        "id", "name", "player", "class", "role", "level", "flavor", "notes",
+        "complications", "skills", "kit", "hp", "buddy", "speed", "resist",
+        "reach", "opportunity", "save", "attack_table_rider",
+        "action_points", "miss_tokens", "strikes", "conditions",
+        "powers", "role_actions", "appearance",
+    },
 }
+DEFAULT_SYSTEM = "dnd5e"
+
+
+def active_system() -> str:
+    """The active save's rule system (read per call — cheap, always current)."""
+    current = read_json(CURRENT_FILE)
+    if isinstance(current, dict):
+        return current.get("system", DEFAULT_SYSTEM) or DEFAULT_SYSTEM
+    return DEFAULT_SYSTEM
 
 app = FastAPI(title="Campaign Companion")
 app.mount("/static", StaticFiles(directory=str(STATIC)), name="static")
@@ -85,7 +105,8 @@ def char_display_subset(path: Path) -> dict | None:
     raw = read_json(path)
     if not raw or not isinstance(raw, dict) or "name" not in raw:
         return None
-    return {k: v for k, v in raw.items() if k in DISPLAY_KEYS}
+    keys = DISPLAY_KEYS.get(active_system(), DISPLAY_KEYS[DEFAULT_SYSTEM])
+    return {k: v for k, v in raw.items() if k in keys}
 
 
 def load_characters() -> list[dict]:
@@ -165,6 +186,7 @@ def load_settings() -> dict:
 
 def build_state_snapshot() -> dict:
     return {
+        "system": active_system(),
         "characters": load_characters(),
         "current": read_json(CURRENT_FILE) or {},
         "quests": load_quests(),
@@ -243,6 +265,39 @@ async def post_settings(request: Request):
     SETTINGS_FILE.write_text(json.dumps(settings, indent=2, ensure_ascii=False) + "\n",
                              encoding="utf-8")
     return JSONResponse(settings)
+
+
+PLAYER_INPUT_MAX_CHARS = 2000
+
+
+def format_player_input(body: Any) -> str:
+    """Validate a player-input POST body and return the feed-ready text.
+
+    Raises ValueError on bad input (empty, oversized, or wrong shape).
+    """
+    if not isinstance(body, dict):
+        raise ValueError("expected an object")
+    text = str(body.get("text") or "").strip()
+    if not text:
+        raise ValueError("text is required")
+    if len(text) > PLAYER_INPUT_MAX_CHARS:
+        raise ValueError(f"text over {PLAYER_INPUT_MAX_CHARS} characters")
+    speaker = str(body.get("speaker") or "").strip()
+    return f"{speaker}: {text}" if speaker else text
+
+
+@app.post("/api/player-input")
+async def post_player_input(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    try:
+        entry_text = format_player_input(body)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    entry = campaign_lib.append_feed(ROOT, entry_text, type="player")
+    return JSONResponse(entry)
 
 
 PORTRAIT_TYPES = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}

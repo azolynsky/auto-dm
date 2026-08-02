@@ -1,0 +1,61 @@
+{
+  "id": "storm",
+  "name": "Storm",
+  "player": "",
+  "class": "Magician (Blood Magic)",
+  "role": "Leader",
+  "level": 4,
+  "flavor": "Mutation: Weather Control",
+  "notes": "Ororo Munroe grew up in north Africa, where she was worshiped as a goddess. She has a strength of will and self-confidence that sustains her, even in the face of great adversity. She feels a strong sisterhood with Jean Grey and is close to Logan and Kitty.",
+  "complications": ["Sense of duty: Mutantkind", "Claustrophobia"],
+  "skills": [
+    { "name": "Former Goddess [⛆]", "skilled": true },
+    { "name": "Wind Rider [⛆]", "skilled": true, "trick": "Flying" },
+    { "name": "Command the Elements [⛆]", "skilled": true },
+    { "name": "Weather Sense", "skilled": true },
+    { "name": "Iron Willpower", "skilled": true },
+    { "name": "Former Street Thief", "skilled": true, "trick": "Lock picking" },
+    { "name": "Good Judge of Character", "skilled": true }
+  ],
+  "kit": {
+    "name": "Former Goddess",
+    "always": [
+      "Goddess Powers: start with 4 Power Tokens. Spend for Advantage on a [⛆] skill, or to power a special effect.",
+      "Regain 3–4 Power Tokens when you commune with nature."
+    ],
+    "powers": [
+      { "name": "Storm's Attic", "text": "When in a place of natural power (like a storm) regain up to 4 Power Tokens. Your attic at the Xavier School counts as such a place." },
+      { "name": "Puissance", "text": "You may spend a Power Token to affect a large area (size of a US state) with your power." }
+    ]
+  },
+  "hp": { "max": 10, "current": 10 },
+  "speed": "6, flying",
+  "resist": 0,
+  "reach": "1",
+  "opportunity": "2✸",
+  "save": "3+",
+  "attack_table_rider": null,
+  "action_points": 1,
+  "miss_tokens": 0,
+  "strikes": 0,
+  "conditions": [],
+  "powers": [
+    { "name": "Gust of Wind", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Your Basic Attack.", "tags": ["basic-attack"] },
+    { "name": "Sudden Squall", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "The target and each creature adjacent to you are pushed 3 squares." },
+    { "name": "Ice Surface", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "If the target moves next turn, it must Save or fall Prone." },
+    { "name": "Thunder Crack", "frequency": "at-will", "range": "R10", "effect": "Deal 2✸ with no attack roll. Counts as rolling a 5 for triggering abilities, e.g. Tactics." },
+    { "name": "Weather Goddess", "frequency": "constant", "effect": "You may not use your [⛆]-marked Encounter powers until you have taken damage. Before rolling to attack, you may push yourself: take 2✸ and add +2✸ to the attack. For powers like Thunder Crack without a roll, you may push yourself to add a flat +1✸." },
+    { "name": "Flyer", "frequency": "constant", "effect": "You may gain the Flying status as a Move Action. If you become Bloodied while Flying, you fall to the ground Prone." },
+    { "name": "Storm Unleashed [⛆]", "frequency": "encounter", "range": "R10", "effect": "Create a 7x7 zone centered within R10. Each creature within the zone takes 3✸.", "used": false },
+    { "name": "Lightning Bolt [⛆]", "frequency": "encounter", "range": "R10", "damage": "3✸", "effect": "If you roll 4/5, choose 1/2 of these effects. If you roll 6, choose 2 and +3✸: Immobilized (save ends) | 2✸ ongoing (save ends) | Panicked (one turn).", "used": false },
+    { "name": "Strong Willed", "frequency": "constant", "effect": "You may Rally twice per encounter. When you Rally, or are Healed, regain +1 HP. You succeed at Saving Throws on a roll of 3+." }
+  ],
+  "role_actions": [
+    { "name": "Tactics", "frequency": "encounter", "effect": "One ally may Move. When you roll 3+ on attack, gain an additional use of this ability.", "used": false },
+    { "name": "Calming Advice", "frequency": "2x-encounter", "range": "R5", "effect": "Target regains ½ max HP (round down), and may pick one: stand up if Prone; if at max HP gain Advantage on their next attack; enemies have Disadvantage to attack them until the end of their next turn; make a Saving Throw against a Status or attempt to escape a Grab.", "used": false },
+    { "name": "\"Strike now!\"", "frequency": "encounter", "effect": "Target one enemy. All attacks against it have Advantage until the end of its next turn.", "used": false },
+    { "name": "Shrewd Advice", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an ally makes any roll, spend one Action Point. They may reroll.", "used": false },
+    { "name": "Rally", "frequency": "2x-encounter", "range": "Free Action", "effect": "Spend 1 Action Point: Heal 5 HP. Regain one Encounter power.", "used": false }
+  ],
+  "appearance": ""
+}

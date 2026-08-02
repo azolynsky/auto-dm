@@ -1,0 +1,84 @@
+[
+  {
+    "name": "Vile Darkness",
+    "level": 4,
+    "tier": "elite",
+    "type": "Elite Horror",
+    "move": "6, flying",
+    "hp": { "max": 28, "current": 28 },
+    "traits": [
+      { "name": "Not Bloodied", "text": "Succeed all Saves." },
+      { "name": "Bloodied", "text": "Take two consecutive turns." },
+      { "name": "Opportunist", "text": "+2 dmg on Opportunities." },
+      { "name": "Aura of Fear", "text": "Enemies that move adjacent must Save or lose the rest of their turn." },
+      { "name": "Sense Fear", "text": "Advantage to attack Distracted or Harried enemies, or those who Panicked last turn." },
+      { "name": "No Exit", "text": "Add +Harried to all attacks." }
+    ],
+    "powers": [
+      { "name": "Many Claws", "frequency": "at-will", "range": "HTH", "damage": "3✸", "effect": "Target flees & loses next Move." },
+      { "name": "Many Burning Eyes", "frequency": "at-will", "range": "R5", "damage": "3✸", "effect": "Distracted (Save ends)." },
+      { "name": "Psi Scream", "frequency": "encounter", "range": "B5", "damage": "3✸", "effect": "Targets are Panicked next turn." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Enemy must Save before it can attack you again. Lasts until the Save is made." }
+  },
+  {
+    "name": "Deathwing Spellcasters",
+    "level": 4,
+    "tier": "goon",
+    "type": "Goon Controllers",
+    "move": 6,
+    "hit_threshold": "4✸ (or 14 HP)",
+    "hits": ["A", "B", "C", "D", "E", "F"],
+    "traits": [
+      { "name": "No Exit", "text": "Add +Harried to all attacks." },
+      { "name": "Flying", "text": "Until Bloodied." }
+    ],
+    "powers": [
+      { "name": "Entangle", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Immobilized and Harried (save ends)." },
+      { "name": "Reposition", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Slide 3, Slowed and Harried (one turn)." },
+      { "name": "Psi Scream", "frequency": "encounter", "range": "R10", "damage": "3✸", "effect": "Save ? Dazed : Blinded — plus Harried 1 turn." },
+      { "name": "Psi Pressure", "frequency": "encounter", "effect": "Force an enemy to reroll a save." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Attacker Weakened one turn." }
+  },
+  {
+    "name": "Dire Wraiths",
+    "level": 4,
+    "tier": "goon",
+    "type": "Goon Drainers",
+    "move": 6,
+    "hit_threshold": "4✸ (or 14 HP)",
+    "hits": ["A", "B", "C", "D", "E", "F"],
+    "traits": [
+      { "name": "Leech", "text": "When you hit with an attack, heal an amount equal to the ✸ inflicted." },
+      { "name": "Sense Weakness", "text": "Advantage on all attacks against targets you've leeched." }
+    ],
+    "powers": [
+      { "name": "Spell Tether", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Target must move its speed towards you or become Dazed for one turn." },
+      { "name": "Dire Gaze", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Weakened (one turn)." },
+      { "name": "Dominate", "frequency": "encounter", "range": "HTH", "damage": "3✸", "effect": "Save or Dominated one turn. Either way, when taken out the target regains 4 HP and becomes Dominated for the encounter." },
+      { "name": "Dangerous", "frequency": "at-will", "effect": "MISS: Attacker takes a Strike." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "See Dangerous: attacker takes a Strike." }
+  },
+  {
+    "name": "Hellhounds",
+    "level": 4,
+    "tier": "goon",
+    "type": "Goon Chargers",
+    "move": "6 / 10 charging",
+    "hit_threshold": "4✸",
+    "hits": ["A", "B", "C", "D", "E", "F"],
+    "traits": [
+      { "name": "Rabid", "text": "May charge with any attack." },
+      { "name": "Out of Phase", "text": "−1✸ from Opportunity attacks." },
+      { "name": "Phase Through", "text": "Can charge through enemies. They must shift aside or fall Prone." }
+    ],
+    "powers": [
+      { "name": "Rush", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "+(⅓ of squares charged)✸." },
+      { "name": "Plow", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Push (squares charged), max 5, +Prone if more." },
+      { "name": "Vengeful", "frequency": "at-will", "range": "Reaction", "effect": "MISS (ranged): Charge the attacker." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "See Vengeful: on a ranged miss, charge the attacker." }
+  }
+]

@@ -1,0 +1,98 @@
+[
+  {
+    "name": "Mystique",
+    "level": 4,
+    "tier": "elite",
+    "type": "Elite Sneak",
+    "move": 6,
+    "hp": { "max": 24, "current": 24 },
+    "traits": [
+      { "name": "Not Bloodied", "text": "Succeed all Saves." },
+      { "name": "Bloodied", "text": "Take two consecutive turns." },
+      { "name": "Shapechanging", "text": "If moving in a crowd, can become Invisible." },
+      { "name": "Knockout Gas", "text": "When your attack brings a target to 0 HP or below, they are Taken Out." }
+    ],
+    "powers": [
+      { "name": "Sneak Attack", "frequency": "at-will", "range": "HTH / R5", "damage": "3✸", "effect": "+3✸ if you were Hidden before the attack." },
+      { "name": "Slip Away", "frequency": "at-will", "range": "HTH", "damage": "3✸", "effect": "Move for free without granting Opportunities." },
+      { "name": "Who Am I?", "frequency": "encounter", "effect": "Become Invisible until you attack." },
+      { "name": "Feint", "frequency": "at-will", "range": "Reaction", "effect": "When you Miss, take Advantage for one attack against that target on your next turn." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Free Move without triggering Opportunities." }
+  },
+  {
+    "name": "Avalanche",
+    "level": 4,
+    "tier": "elite",
+    "type": "Controller",
+    "move": 6,
+    "hp": { "max": 10, "current": 10 },
+    "traits": [
+      { "name": "Shaped Waves", "text": "May omit friendly targets." },
+      { "name": "Earth Everywhere", "text": "Apply FX even on a miss." }
+    ],
+    "powers": [
+      { "name": "Ground Collapse", "frequency": "at-will", "range": "R10 B2", "damage": "1✸", "effect": "Targets are Immobilized (one turn)." },
+      { "name": "Wave of Earth", "frequency": "at-will", "range": "R10 B2", "damage": "1✸", "effect": "Targets are Pushed 3 and Slowed (one turn)." },
+      { "name": "Little Earthquakes", "frequency": "encounter", "range": "R10 B3", "damage": "1✸", "effect": "Targets are Dazed (only one action, no reactions) for one turn." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Create a 3x3 Slow zone containing the attacker." }
+  },
+  {
+    "name": "Toad",
+    "level": 4,
+    "tier": "elite",
+    "type": "Brawler",
+    "move": "6, leaping",
+    "hp": { "max": 12, "current": 12 },
+    "traits": [
+      { "name": "Opportunist", "text": "+1 dmg on Opportunities." },
+      { "name": "Sticky", "text": "Enemies that move adjacent to you must stop Moving." },
+      { "name": "Rapid Blows", "text": "Enemies that start their turn adjacent to you take 1✸." }
+    ],
+    "powers": [
+      { "name": "Multi Attack", "frequency": "at-will", "range": "B1", "damage": "1✸", "effect": "Targets are Slowed for one turn." },
+      { "name": "Tongue Grab", "frequency": "at-will", "range": "R5", "damage": "2✸", "effect": "Pull target adjacent to you." },
+      { "name": "Sweep Kick", "frequency": "encounter", "range": "B1", "damage": "2✸", "effect": "Targets are knocked Prone." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "For an HTH attack, attacker takes 2✸." }
+  },
+  {
+    "name": "The Blob",
+    "level": 4,
+    "tier": "elite",
+    "type": "Brute",
+    "move": 4,
+    "hp": { "max": 16, "current": 16 },
+    "traits": [
+      { "name": "Strength", "text": "Ignore Slowed and Grabbed. When Immobilized, your speed becomes 2." },
+      { "name": "Massive", "text": "You are Immune to Forced Movement." },
+      { "name": "Protective Flab", "text": "No Advantage from Flanking you." }
+    ],
+    "powers": [
+      { "name": "Bodyslam", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Target is thrown 3 squares." },
+      { "name": "Grab", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Target is Grabbed." },
+      { "name": "Hurl", "frequency": "encounter", "range": "HTH", "damage": "3✸", "effect": "Target thrown up to R5 into an enemy. Both take 2✸. No attack needed on Grabbed target." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Regain 2 HP." }
+  },
+  {
+    "name": "Pyro",
+    "level": 4,
+    "tier": "elite",
+    "type": "Blaster",
+    "move": 6,
+    "hp": { "max": 10, "current": 10 },
+    "traits": [
+      { "name": "Shape Fire", "text": "Omit one ally from area attacks." },
+      { "name": "Singeing", "text": "Deal 1✸ on a missed attack." },
+      { "name": "Shape Fire II", "text": "Add one additional target adjacent to the normal area of effect." }
+    ],
+    "powers": [
+      { "name": "Fire Blast", "frequency": "at-will", "range": "R10 / B1", "damage": "1✸", "effect": "1✸ Ongoing (Save ends)." },
+      { "name": "\"Back Off, Mate!\"", "frequency": "at-will", "range": "B2", "damage": "1✸", "effect": "Targets must be Pushed 3 OR take 3✸." },
+      { "name": "Flame Demon", "frequency": "encounter", "range": "R10 / B3", "damage": "3✸", "effect": "Targets knocked Prone and take 2✸ Ongoing (Save ends)." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Create a 3x3 zone including the attacker. Entering or ending in the zone next turn yields 1✸." }
+  }
+]

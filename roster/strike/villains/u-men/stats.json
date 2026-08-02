@@ -1,0 +1,60 @@
+[
+  {
+    "name": "U-Men Elites",
+    "color": "Black",
+    "level": 4,
+    "tier": "stooge",
+    "type": "Stooge Leaders",
+    "move": 6,
+    "hit_threshold": "4✸",
+    "quantity": "2 / 3 / 4",
+    "hits": ["A", "B", "C", "D"],
+    "traits": [
+      { "name": "Helpful Leader", "text": "Allies have Advantage on all Saving Throws while any U-Men Elites are in play." }
+    ],
+    "powers": [
+      { "name": "Neural Shocker", "frequency": "at-will", "range": "R5", "damage": "2✸", "effect": "One Goon ally recovers." },
+      { "name": "Radio Comms", "frequency": "at-will", "range": "battle", "effect": "One ally takes an action." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "You or one ally may move or save." }
+  },
+  {
+    "name": "U-Men Hammers",
+    "color": "Red",
+    "level": 4,
+    "tier": "goon",
+    "type": "Goon Brutes",
+    "move": 6,
+    "hit_threshold": "1✸",
+    "quantity": "4 / 5 / 6",
+    "hits": ["A", "B", "C", "D", "E", "F"],
+    "traits": [
+      { "name": "Hydraulic Servos", "text": "When Slowed you Move 4. When Immobilized, Move 2. Free when Grabbed." },
+      { "name": "Magnetic Stabilizers", "text": "Cannot be Thrown. Reduce Forced Movement by 1." }
+    ],
+    "powers": [
+      { "name": "Servo Punch", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Target is thrown 3 squares." },
+      { "name": "Grappling Cables", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Target is Grabbed." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "When an enemy misses you, gain a second hit (it takes 2 blows to take you out). Doesn't stack." }
+  },
+  {
+    "name": "U-Men Rangers",
+    "color": "Green",
+    "level": 4,
+    "tier": "goon",
+    "type": "Goon Sniper",
+    "move": 6,
+    "hit_threshold": "1✸",
+    "quantity": "4 / 5 / 6",
+    "hits": ["A", "B", "C", "D", "E", "F"],
+    "traits": [
+      { "name": "Slippery", "text": "Shift +2 squares whenever you Shift." }
+    ],
+    "powers": [
+      { "name": "Flechette Cannon", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "+2✸." },
+      { "name": "Pin Down", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Target takes 3✸ if it moves next turn." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "You have Advantage against your attacker for your next attack within one turn." }
+  }
+]

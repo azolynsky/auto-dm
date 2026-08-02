@@ -1,6 +1,6 @@
 # Auto-DM — an LLM game master
 
-A repository for running a 5e tabletop campaign with an LLM (Claude Code, Codex, …) as the DM. Fork it, run one command, and start your own table.
+A repository for running tabletop RPG campaigns with an LLM (Claude Code, Codex, …) as the DM. Fork it, run one command, and start your own table. Ships with D&D 5e (SRD 5.1); the rule-system layer is pluggable, and multiple adventures live side by side as separate saves.
 
 ## Why this exists
 
@@ -15,9 +15,9 @@ pip install -r webapp/requirements.txt
 claude     # or: codex
 ```
 
-Then say: **"Set me up — run onboarding."** The `onboarding` skill installs anything missing, creates your campaign from the starter template (`python tools/new_campaign.py --name "..."` under the hood), walks a session 0 (characters, tone, table settings), and starts the web companion. The starter campaign — the village of Emberwick and the Cold Lantern mystery, with two pregen PCs — is ready to play or reskin.
+Then just start talking. At the top of every session the DM checks what adventures exist (`python tools/list_campaigns.py` under the hood) and asks: **continue one of your saves, or start a new adventure?** Starting new runs the `onboarding` skill — it asks for a name and a rule system, creates the save from the starter template (`python tools/new_campaign.py --name "..." --system dnd5e`), walks a session 0 (characters, tone, table settings), and starts the web companion. The starter campaign — the village of Emberwick and the Cold Lantern mystery, with two pregen PCs — is ready to play or reskin.
 
-To continue an existing campaign, just say: **"Let's continue the campaign."**
+Each adventure is a separate save at `campaigns/<system>/<slug>/` — as many as you like, fully independent.
 
 ## Code vs. campaign
 
@@ -27,29 +27,32 @@ The engine and the table are separate. Generic, campaign-agnostic code and refer
 auto-dm/
 ├── CLAUDE.md          # DM operating manual — read every session
 ├── AGENTS.md          # symlink → CLAUDE.md (Codex/other LLMs read the same file)
-├── rules/             # Generic 5e/SRD reference (srd-reference, combat-flow, skill-checks)
-├── docs/              # character-schema.md
-├── tools/             # dice, check_resolver, combat_tracker, narrate, budget_recap, new_campaign
+├── rules/             # systems.json registry + one directory per rule system
+│   └── dnd5e/         #   D&D 5e: srd-reference, combat-flow, skill-checks, character-schema, srd/
+├── tools/             # dice, combat_tracker, narrate, budget_recap, new_campaign, list_campaigns
+│   └── dnd5e/         #   system-specific tools (check_resolver)
 ├── tests/             # unittest suite for tools + webapp (stdlib only)
 ├── webapp/            # Player web companion (FastAPI + SSE)
 ├── campaigns/starter/ # Forkable template campaign
 └── .claude/           # agents/ (six role prompts) + skills/ (procedures)
 ```
 
-Everything about *your* table lives in one directory, created from the template:
+Everything about *your* table lives in adventure saves, one directory per adventure, created from the template:
 
 ```
-campaign/
+campaigns/<system>/<slug>/   # e.g. campaigns/dnd5e/emberwick-nights/
 ├── house-rules.md     # Your table's rulings and tone agreements
 ├── characters/        # PC sheets (JSON) + portraits in images/
-├── state/             # current.json, quests, world-flags, combat, settings, player feed
+├── state/             # current.json (incl. which rule system), quests, world-flags, combat, settings, player feed
 ├── sessions/          # Per-session logs + rolling recap
 ├── npcs/              # NPC entity folders (summary/voice/motivations per NPC)
 ├── world/             # Setting overview, lore, location folders
 └── factions/          # Faction entity folders
 ```
 
-Tools and webapp find the campaign at `<repo>/campaign`, or wherever `CAMPAIGN_ROOT` points. You can swap DM LLMs mid-campaign — all state is plain JSON/Markdown, all tools are plain Python, and the agent/skill prompts are readable by any LLM (see "Multi-LLM operation" in `CLAUDE.md`).
+Which adventure is live is stored in `campaigns/active.json` — the DM writes it when you pick an adventure in conversation at session start (`tools/set_campaign.py` under the hood), and every tool plus the webapp read it from then on. No terminal setup needed; a `CAMPAIGN_ROOT` env var still overrides the pointer for tests or unusual setups. You can swap DM LLMs mid-campaign — all state is plain JSON/Markdown, all tools are plain Python, and the agent/skill prompts are readable by any LLM (see "Multi-LLM operation" in `CLAUDE.md`).
+
+**Rule systems** are pluggable: `rules/systems.json` registers each system's rules directory, character schema, tools, and skills. D&D 5e is the one that ships. To add another, mirror the dnd5e layout — `rules/<slug>/` (reference docs + `character-schema.md`), `tools/<slug>/` for any system-specific resolvers, `.claude/skills/<slug>-*/` for its procedures (character creation, combat, advancement) — and register it; the webapp's character cards currently render the 5e schema, so a new system also needs a render pass there.
 
 ## Architecture
 
@@ -62,15 +65,17 @@ Tools and webapp find the campaign at `<repo>/campaign`, or wherever `CAMPAIGN_R
 - **Session Prep** — between-session preparation
 
 **Skills** (in `.claude/skills/`):
-onboarding, combat-encounter, skill-check, spellcasting, leveling-up, session-wrap, encounter-building.
+generic — onboarding, skill-check, session-wrap; per-system (dnd5e) — dnd5e-character-creation, dnd5e-combat-encounter, dnd5e-spellcasting, dnd5e-leveling-up, dnd5e-encounter-building.
 
 **Tools** (in `tools/`) — all emit standardized JSON:
 - `dice.py` — cryptographic-randomness dice roller; batches several rolls per call.
-- `check_resolver.py` — pulls modifiers from a character sheet and rolls against a DC.
+- `dnd5e/check_resolver.py` — pulls modifiers from a character sheet and rolls against a DC (5e math; other systems bring their own).
 - `combat_tracker.py` — initiative, monster HP, conditions; posts combat banners to the feed.
 - `narrate.py` — pushes player-facing prose to the web companion, attaching queued mechanical effects as subtext (players read the story before the numbers).
 - `budget_recap.py` — keeps the rolling recap within its character budget.
-- `new_campaign.py` — creates `campaign/` from `campaigns/starter/`.
+- `new_campaign.py` — creates a save at `campaigns/<system>/<slug>/` from `campaigns/starter/`.
+- `list_campaigns.py` — lists adventure saves (`--system`, `--sort last_played|name|system`) for the session-start picker; marks the active one.
+- `set_campaign.py` — writes the active-adventure pointer (`campaigns/active.json`) that all tools and the webapp resolve.
 
 ## Web companion
 

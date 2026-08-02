@@ -1,0 +1,60 @@
+{
+  "id": "colossus",
+  "name": "Colossus",
+  "player": "",
+  "class": "Shapechanger (Single Form)",
+  "role": "Defender",
+  "level": 4,
+  "flavor": "Mutation: Living Steel Form",
+  "notes": "Piotr Rasputin was born on a farming collective in the former USSR. He left his homeland to join the X-Men. He is soft spoken and mild-mannered, with an artist's temperament. He is slow to anger, but woe to everyone around when he does.",
+  "complications": ["Naive", "Morally Inflexible"],
+  "skills": [
+    { "name": "Painter", "skilled": true },
+    { "name": "Great Strength", "skilled": true },
+    { "name": "Wrestling", "skilled": true },
+    { "name": "Skin of Steel Transformation", "skilled": true },
+    { "name": "Doesn't Breathe", "skilled": true },
+    { "name": "Moral Anchor", "skilled": true },
+    { "name": "Dreamy Hunk", "skilled": true }
+  ],
+  "kit": {
+    "name": "Man of Steel",
+    "always": [
+      "When you roll a Twist on a test of physical athleticism you may become Winded in order to re-roll the Skill check."
+    ],
+    "powers": [
+      { "name": "Brush it Off", "text": "You may spend an Action Point to ignore one Condition for the duration of a conflict." },
+      { "name": "Stoic", "text": "When you put yourself in harm's way and gain a Condition as a result, you earn one Action Point." }
+    ]
+  },
+  "hp": { "max": 13, "current": 13 },
+  "speed": 6,
+  "resist": 1,
+  "reach": "1",
+  "opportunity": "2✸",
+  "save": "3+",
+  "attack_table_rider": "Regain 1 HP on any roll of 3+",
+  "action_points": 1,
+  "miss_tokens": 0,
+  "strikes": 0,
+  "conditions": [],
+  "powers": [
+    { "name": "Fists of Steel", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Your Basic Attack.", "tags": ["basic-attack"] },
+    { "name": "Unstoppable", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Shift 2 squares before or after this attack." },
+    { "name": "Hurled Object", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Slide the target 2 squares after the attack." },
+    { "name": "Hammer Blow", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Throws the target 2 squares. If an obstacle cuts this short, they fall Prone." },
+    { "name": "Earth-shaking Stomp", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "+2 damage if the target is Prone." },
+    { "name": "Fastball Special <R>", "frequency": "encounter", "range": "R6", "effect": "Throw an ally within reach up to R6. Target takes ✸2 and falls Prone.", "used": false },
+    { "name": "Mark Target", "frequency": "at-will", "range": "R5", "effect": "Target becomes Marked. You may have up to two Marked targets at once. Marked targets grant Opportunity when they attack someone else or move away." },
+    { "name": "Living Steel Transformation", "frequency": "encounter", "range": "HTH", "damage": "3✸", "effect": "You transform to Living Steel form. For the rest of the encounter you may use a Move Action to switch back and forth between this form and human form. When you switch, push all adjacent units 1 square. You now occupy a 2x2 space on the grid. Make this attack against one target; as well as damage, that target is knocked Prone.", "used": false },
+    { "name": "Toughness + Resilient + Fortitude", "frequency": "special", "effect": "Triggers: when you roll 3+ on an attack, regain 1 HP; when you take non-attack damage, Resist +1. Passives (already included elsewhere): Resist 1 to all damage; your Saving Throws succeed on 3+; your HP have been increased by 3; you may Rally twice per encounter; regain +1 HP whenever you Rally or are Healed." },
+    { "name": "Skin of Steel", "frequency": "encounter", "range": "Interrupt", "effect": "Trigger: When an enemy hits you with an attack, spend one Action Point to ignore it.", "used": false },
+    { "name": "Skin of Steel (Prone Watch)", "frequency": "free", "range": "Interrupt", "effect": "Trigger: If a Prone enemy within reach attempts to stand, they grant you an Opportunity." }
+  ],
+  "role_actions": [
+    { "name": "Defender", "frequency": "encounter", "range": "Interrupt", "effect": "Trigger: An enemy grants you Opportunity — spend one Action Point to cancel their action.", "used": false },
+    { "name": "Get Behind Me! <R>", "frequency": "encounter", "effect": "One adjacent ally gains cover until they end their turn not adjacent to you.", "used": false },
+    { "name": "Rally", "frequency": "2x-encounter", "range": "Free Action", "effect": "Spend 1 Action Point: Heal 5 HP. Regain one Encounter power. Choose one boost: +1 reach | +4 speed | all HTH attacks become \"HTH or R5\".", "used": false }
+  ],
+  "appearance": ""
+}

@@ -1,0 +1,79 @@
+{
+  "id": "jean-grey",
+  "name": "Phoenix (Jean Grey)",
+  "player": "",
+  "class": "Magician (Star Adept)",
+  "role": "Controller",
+  "level": 4,
+  "flavor": "Mutation: Telepathy + Telekinesis",
+  "notes": "Jean is the current host to the interstellar energy being known as The Phoenix. She is romantically involved with Cyclops and best friends with Storm.",
+  "complications": ["Hot Tempered", "Song of the Phoenix"],
+  "skills": [
+    { "name": "Telepathy", "skilled": true, "trick": "Mind Reading" },
+    { "name": "Telekinesis", "skilled": true },
+    { "name": "Phoenix Host", "skilled": true },
+    { "name": "Psychic Link", "skilled": true, "trick": "with Cyclops" },
+    { "name": "Fashion Modeling", "skilled": true },
+    { "name": "Educator", "skilled": true },
+    { "name": "Operate Cerebro", "skilled": true }
+  ],
+  "kit": {
+    "name": "The Psychic",
+    "always": [
+      "Sense surface emotions",
+      "Know if someone is deceptive",
+      "Sense mental incursion"
+    ],
+    "powers": [
+      {
+        "name": "Suggestion",
+        "bonus": "You change their mind",
+        "success": "Short lasting OR obvious",
+        "twist": "They struggle OR misinterpret",
+        "cost": "As Twist, but worse"
+      },
+      {
+        "name": "Mind Scan",
+        "bonus": "Ask any 3 questions",
+        "success": "Current thought OR 1 question",
+        "twist": "Reveal secret OR random scan",
+        "cost": "Unsubtle OR Tentative/Flawed"
+      }
+    ]
+  },
+  "hp": { "max": 10, "current": 10 },
+  "speed": "6, flying",
+  "resist": 1,
+  "reach": "1",
+  "opportunity": "2✸",
+  "save": "4+",
+  "attack_table_rider": "TK Force applies on any 3+ (knock Prone or slide 0–6 squares)",
+  "action_points": 1,
+  "miss_tokens": 0,
+  "strikes": 0,
+  "conditions": [],
+  "powers": [
+    { "name": "Telekinetic Push", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Your Basic Attack.", "tags": ["basic-attack"] },
+    { "name": "\"Get Away From Me!\"", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "The target and each creature adjacent to you are pushed 3 squares." },
+    { "name": "The Phoenix Burns Away Lies", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "The target takes 1✸ ongoing and loses one point of Resistance, Save Ends. On a failed save, the target is Vulnerable 1✸ for the rest of the encounter." },
+    { "name": "Wings of Fire", "frequency": "at-will", "range": "R10", "effect": "Deal 2✸ with no attack roll. Counts as rolling a 5 for triggering abilities, e.g. TK Force." },
+    { "name": "Flyer", "frequency": "special", "effect": "Become Flying as a Move Action. If Bloodied, you fall to the ground Prone." },
+    { "name": "TK Force", "frequency": "special", "range": "TK", "effect": "When you roll a 3–6 on an attack, either knock your target Prone, or slide them 0–6 squares.", "tags": ["boost"] },
+    { "name": "Force of Nature", "frequency": "special", "effect": "You may use a maximum of two of your Phoenix Encounter Powers (☬) per Encounter." },
+    { "name": "Mental Block [☬]", "frequency": "encounter", "range": "R10", "damage": "3✸", "effect": "Target cannot attack you and one other creature you designate on its next turn.", "used": false },
+    { "name": "\"I am power!\" [☬]", "frequency": "encounter", "range": "R10", "damage": "special", "effect": "Create a 7x7 zone centered within R10. Each creature within the zone takes 3✸.", "used": false },
+    { "name": "Telepathic Push [☬]", "frequency": "encounter", "range": "R10", "damage": "3✸", "effect": "Target immediately makes an At Will attack against a target of your choosing.", "used": false },
+    { "name": "Radiance of the Stars [☬]", "frequency": "encounter", "range": "R10", "damage": "3✸", "effect": "Target is Blinded until the end of its next Turn.", "used": false },
+    { "name": "Enervating Torrent [☬]", "frequency": "encounter", "range": "R10", "damage": "3✸", "effect": "All target's attacks are reduced by 2✸ (save ends).", "used": false },
+    { "name": "Telekinetic Shield [☬]", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When you are the target of an attack, negate all damage from that attack.", "used": false }
+  ],
+  "role_actions": [
+    { "name": "Overawe", "frequency": "at-will", "range": "R5", "effect": "Target is Weakened (deals ½ damage, rounded down), Save Ends." },
+    { "name": "Terrify", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an Enemy moves, spend an Action Point to negate that movement.", "used": false },
+    { "name": "Enrapture", "frequency": "encounter", "range": "R10", "effect": "Save: Distracted / Blinded (see Radiance of the Stars) for one turn.", "used": false },
+    { "name": "Phoenix Flare", "frequency": "encounter", "effect": "Make any green or purple attack, adding Burst 1, targeting all creatures in the zone.", "used": false },
+    { "name": "Reshape Matter", "frequency": "encounter", "range": "R5", "effect": "A 5x5 zone becomes Difficult Terrain (remove any Low Cover), OR Obscured one turn, OR 1 square becomes Full Cover.", "used": false },
+    { "name": "Rally", "frequency": "encounter", "range": "Free Action", "effect": "Spend 1 Action Point: Heal 4 HP. Regain one Encounter power.", "used": false }
+  ],
+  "appearance": ""
+}

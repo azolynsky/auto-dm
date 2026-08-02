@@ -71,9 +71,9 @@ def do_roll(expr: str, mode: str, label: str | None) -> Roll:
     count, sides, mod = parse(expr)
 
     if mode in ("advantage", "disadvantage"):
-        if count != 1 or sides != 20:
-            raise SystemExit("advantage/disadvantage only valid on 1d20")
-        a, b = roll_one(20), roll_one(20)
+        if count != 1:
+            raise SystemExit("advantage/disadvantage only valid on a single die")
+        a, b = roll_one(sides), roll_one(sides)
         dice = [a, b]
         kept = [max(a, b)] if mode == "advantage" else [min(a, b)]
     elif mode == "drop-lowest":

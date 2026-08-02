@@ -63,13 +63,13 @@ Apply it. Use `tools/combat_tracker.py` for combat HP/conditions/initiative, the
 
 - **Atomic edits only.** One change request = one consistent set of writes. If you fail partway, revert.
 - **Never invent state.** If you don't see a value (e.g. "how many torches does the party have?"), report the gap to the DM — don't backfill.
-- **Convert time carefully.** A short rest is 1 hour. A long rest is 8 hours. Travel times are in `campaign/world/locations/regions.md`. Update `campaign/state/current.json.in_game_date` and `time_of_day` accordingly.
+- **Convert time carefully.** For dnd5e: a short rest is 1 hour, a long rest is 8 hours. Travel times are in `campaign/world/locations/regions.md`. Update `campaign/state/current.json.in_game_date` and `time_of_day` accordingly.
 - **Header fields stay short.** `location.specific` is a place *name* shown in the webapp header and feed markers — a noun phrase, ~40 characters max ("Hidden camp south of Cragmaw Castle"), never a scene description; scene detail belongs in `notes`. `in_game_date` is the date only — don't bake the time of day into it; that's what `time_of_day` is for. `weather` is a short phrase, not a forecast.
-- **Spell slots tick on cast, reset on long rest.** Multi-class spell slots are unified (use the multiclass spell slot table) — note this in the character sheet if relevant.
-- **Feature uses tick too.** A feature with `uses: {max, remaining, per}` loses 1 `remaining` when used (never below 0) and resets to `max` on the matching rest — short rest resets `per: "short rest"`; long rest resets everything (`"short rest"`, `"long rest"`, `"day"`). String `uses` (e.g. "1/turn") is display-only; convert it to the object form when a feature becomes a real per-rest resource.
+- **Resources tick per the active system's rules** (`campaign/state/current.json:system` → `rules/systems.json`). For **dnd5e**: spell slots tick on cast, reset on long rest; multi-class spell slots are unified (use the multiclass spell slot table) — note this in the character sheet if relevant.
+- **Feature uses tick too.** A feature with `uses: {max, remaining, per}` loses 1 `remaining` when used (never below 0) and resets to `max` on the matching recovery event — for dnd5e: short rest resets `per: "short rest"`; long rest resets everything (`"short rest"`, `"long rest"`, `"day"`). String `uses` (e.g. "1/turn") is display-only; convert it to the object form when a feature becomes a real tracked resource.
 - **HP never exceeds max.** Healing caps at max. Temp HP is separate.
-- **Death saves clear** when a PC stabilizes or regains any HP.
-- **XP / leveling**: award XP on encounter resolution per `encounter-building` skill; advise the DM when a PC crosses a level threshold but do NOT auto-apply the level (that's a player choice — see `leveling-up` skill).
+- **Death saves clear** (dnd5e) when a PC stabilizes or regains any HP.
+- **XP / leveling**: award XP on encounter resolution per the system's encounter-building skill (dnd5e: `dnd5e-encounter-building`); advise the DM when a PC crosses a level threshold but do NOT auto-apply the level (that's a player choice — see the system's leveling skill, dnd5e: `dnd5e-leveling-up`).
 - **Append, don't rewrite session logs.** Use Edit to add lines or Read-then-Write to extend.
 - **Bookkeeper writes succinct, factual log entries**, not prose. The Narrator does prose; you do facts:
   ```

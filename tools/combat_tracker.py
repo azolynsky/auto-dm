@@ -5,6 +5,8 @@ Combat tracker. Stores per-encounter state in <campaign>/state/combat.json.
 Usage:
     python combat_tracker.py start --participants "Ren:+3" "Goblin1:+2:7" "Goblin2:+2:7"
         # optional third field = starting/max HP — saves a sethp call per monster
+    python combat_tracker.py start --order listed --participants "Wolverine::10" "Hammer1::6"
+        # listed: no initiative rolls, participants act in the given order (strike)
     python combat_tracker.py status
     python combat_tracker.py damage --who Goblin1 --amount 7
     python combat_tracker.py heal --who Ren --amount 4
@@ -44,14 +46,14 @@ def load() -> dict:
     path = state_file()
     if not path.exists():
         return {"active": False, "round": 0, "turn_index": 0, "order": [], "log": []}
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
 def save(state: dict) -> None:
     path = state_file()
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2)
 
 
@@ -59,28 +61,34 @@ def out(obj: dict) -> None:
     print(json.dumps(obj, ensure_ascii=False))
 
 
-def parse_participant(spec: str) -> dict:
+def parse_participant(spec: str, roll_init: bool = True) -> dict:
     """"Name", "Name:+3", or "Name:+3:7" (init modifier, starting HP)."""
     name, _, rest = spec.partition(":")
     mod_s, _, hp_s = rest.partition(":")
     mod = int(mod_s) if mod_s else 0
     hp = int(hp_s) if hp_s else None
-    init = dice.do_roll(f"1d20{mod:+d}", "normal", f"{name} initiative").total
+    init = (dice.do_roll(f"1d20{mod:+d}", "normal", f"{name} initiative").total
+            if roll_init else None)
     return {"name": name, "init": init, "mod": mod,
             "hp": hp, "max_hp": hp, "conditions": []}
 
 
 def cmd_start(args) -> None:
-    order = [parse_participant(spec) for spec in args.participants]
-    order.sort(key=lambda x: (-x["init"], -x["mod"]))
+    rolled = args.order == "rolled"
+    order = [parse_participant(spec, roll_init=rolled) for spec in args.participants]
+    if rolled:
+        order.sort(key=lambda x: (-x["init"], -x["mod"]))
+        names = ", ".join(f"{o['name']}({o['init']})" for o in order)
+        banner = "⚔ Combat! Initiative: " + " → ".join(f"{o['name']} ({o['init']})" for o in order)
+        log_line = f"Combat started. Initiative: {names}"
+    else:
+        # listed: systems without initiative rolls (e.g. strike) keep the given order
+        banner = "⚔ Combat! Turn order: " + " → ".join(o["name"] for o in order)
+        log_line = "Combat started. Turn order: " + ", ".join(o["name"] for o in order)
     state = {"active": True, "round": 1, "turn_index": 0, "order": order, "log": []}
-    state["log"].append("Combat started. Initiative: " + ", ".join(f"{o['name']}({o['init']})" for o in order))
+    state["log"].append(log_line)
     save(state)
-    campaign_lib.append_feed(
-        campaign_lib.resolve_root(),
-        "⚔ Combat! Initiative: " + " → ".join(f"{o['name']} ({o['init']})" for o in order),
-        type="system",
-    )
+    campaign_lib.append_feed(campaign_lib.resolve_root(), banner, type="system")
     out({"action": "start", "round": 1,
          "turn": order[0]["name"], "order": order})
 
@@ -183,7 +191,7 @@ def main() -> int:
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    s = sub.add_parser("start"); s.add_argument("--participants", nargs="+", required=True); s.set_defaults(func=cmd_start)
+    s = sub.add_parser("start"); s.add_argument("--participants", nargs="+", required=True); s.add_argument("--order", default="rolled", choices=["rolled", "listed"], help="rolled: d20 initiative (dnd5e); listed: keep the given order (strike)"); s.set_defaults(func=cmd_start)
     sub.add_parser("status").set_defaults(func=cmd_status)
     s = sub.add_parser("damage"); s.add_argument("--who", required=True); s.add_argument("--amount", type=int, required=True); s.set_defaults(func=cmd_damage)
     s = sub.add_parser("heal"); s.add_argument("--who", required=True); s.add_argument("--amount", type=int, required=True); s.set_defaults(func=cmd_heal)

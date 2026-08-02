@@ -1,0 +1,63 @@
+{
+  "id": "cyclops",
+  "name": "Cyclops",
+  "player": "",
+  "class": "Archer",
+  "role": "Leader",
+  "level": 4,
+  "flavor": "Mutation: Optic Blasts (uncontrollable)",
+  "notes": "Scott Summers grew up in an orphanage in Nebraska, lonely and isolated. At age 12 his optic blast manifested and would not stop. He fled the orphanage and was taken in by Charles Xavier, becoming the first X-Man. Scott has been the leader of the team. He is in love with Jean, has complicated feelings for Emma and frequent friction with Logan — with whom he agrees about ends but not means.",
+  "complications": ["Uncontrollable power (optic blasts)", "Unusual social skills"],
+  "skills": [
+    { "name": "Very Good With the Depressed", "skilled": true },
+    { "name": "Optic Blasts", "skilled": true, "trick": "Perfect Sense of Geometry" },
+    { "name": "Aircraft Pilot", "skilled": true },
+    { "name": "Incredibly Intense", "skilled": true, "trick": "Suppressing His Emotions" },
+    { "name": "Motorcycle Racing", "skilled": true },
+    { "name": "Small Group Tactics", "skilled": true },
+    { "name": "Training Mutants", "skilled": true }
+  ],
+  "kit": {
+    "name": "Xavier's Soldier",
+    "always": [
+      "When you take disadvantage or suffer harm to protect mutants, earn one Determination token.",
+      "Spend three Determination to get a break, inspiration or insight."
+    ],
+    "powers": [
+      { "name": "(Not) Laser Focus", "text": "You may spend two Determination for Advantage or four Determination for an auto-success on rolls with Optic Blast or Very Good With the Depressed." },
+      { "name": "Bottled Up", "text": "When you want to persuade someone, but your emotions prevent you from even trying, earn one Action Point." }
+    ]
+  },
+  "hp": { "max": 10, "current": 10 },
+  "speed": 6,
+  "resist": 1,
+  "reach": "1",
+  "opportunity": "2✸",
+  "save": "4+",
+  "attack_table_rider": null,
+  "action_points": 1,
+  "miss_tokens": 0,
+  "strikes": 0,
+  "conditions": [],
+  "powers": [
+    { "name": "Optic Blast", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Your Basic Attack.", "tags": ["basic-attack"] },
+    { "name": "Blitzer", "frequency": "special", "range": "B", "effect": "Trigger: When you target an enemy within 3 squares add +1 to the attack roll, if you hit. As an Attack Action: move your speed and use Optic Blast at any point on your path.", "tags": ["boost"] },
+    { "name": "Combat Training", "frequency": "special", "effect": "Your ranged attacks do not grant Opportunities to enemies. You may gain Advantage with ranged attacks when you and an ally are Flanking a target." },
+    { "name": "Pin Down", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Target loses Prepared and Marking. If they move more than 1 square next turn they take 3✸." },
+    { "name": "Area Denial", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Create a 5x5 zone, centered on the target. Until the end of your next turn, any enemy who ends their turn in that zone takes 3✸, unless adjacent to your allies the whole time." },
+    { "name": "Aim", "frequency": "at-will", "range": "LoS", "effect": "If your next ranged attack targets this Enemy, ignore range and roll with Advantage. Using this ability grants adjacent enemies an Opportunity, like any Ranged attack." },
+    { "name": "Seeing Red", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "For the rest of this encounter the target may not Hide." },
+    { "name": "Bullseye", "frequency": "encounter", "effect": "You may use Aim and an attack At-Will as a single action.", "used": false },
+    { "name": "Wide Beam Blast", "frequency": "encounter", "range": "R10", "damage": "2✸", "effect": "Make an Optic Blast attack with Burst 1, targeting all creatures in the zone.", "used": false },
+    { "name": "Blast the Scenery", "frequency": "encounter", "range": "R5", "effect": "Use your Optic Blast to reshape the battlefield. Choose one: a 5x5 zone becomes Difficult Terrain (optionally remove any Low Cover in it); a 5x5 zone becomes Obscured until the end of your next turn; a square becomes Full Cover.", "used": false },
+    { "name": "Defensive Blast", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an enemy hits, attack with Optic Blast. On a hit, their attack is deflected.", "used": false }
+  ],
+  "role_actions": [
+    { "name": "\"Again, like we practiced!\"", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an ally makes a roll, spend one Action Point to let them reroll.", "used": false },
+    { "name": "Rally", "frequency": "encounter", "range": "Free Action", "effect": "Spend 1 Action Point: Heal 4 HP. Regain one Encounter power.", "used": false },
+    { "name": "Tactics", "frequency": "encounter", "range": "T", "effect": "One ally may take a Move Action. When you roll 5+ to attack, gain +1 use of this.", "used": false },
+    { "name": "\"Pull yourself together!\"", "frequency": "encounter", "range": "R5", "effect": "Target regains ½ max HP (round down), and may pick one: stand up if Prone; if at max HP gain Advantage on their next attack; enemies have Disadvantage to attack them until the end of their next turn; make a Saving Throw against a Status or attempt to escape a Grab.", "used": false },
+    { "name": "\"To me, my X-Men!\"", "frequency": "encounter", "range": "R10", "effect": "Target a 3x3 zone centered within R10. Each creature in the zone regains 2 HP.", "used": false }
+  ],
+  "appearance": ""
+}

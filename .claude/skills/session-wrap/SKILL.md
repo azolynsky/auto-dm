@@ -85,7 +85,7 @@ The "what the party knows" / "what the party doesn't know yet" split is gold for
 
 ## 4. Award XP (if using XP)
 
-Sum CR-based XP from `encounter-building` skill across the session's encounters. Divide by number of PCs. Award equally.
+Sum XP per the active system's encounter-building skill (dnd5e: `dnd5e-encounter-building`, CR-based) across the session's encounters. Divide by number of PCs. Award equally.
 
 Or skip XP entirely and use milestone leveling. House rule it in `campaign/house-rules.md`.
 

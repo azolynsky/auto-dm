@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Brood Queen",
+    "level": 4,
+    "tier": "elite",
+    "type": "Elite Horror",
+    "move": "6, flying",
+    "hp": { "max": 28, "current": 28 },
+    "traits": [
+      { "name": "Not Bloodied", "text": "Succeed all Saves." },
+      { "name": "Bloodied", "text": "Take two consecutive turns." },
+      { "name": "Opportunist", "text": "+2 dmg on Opportunities." },
+      { "name": "Aura of Fear", "text": "Enemies that move adjacent must Save or lose the rest of their turn." },
+      { "name": "Sense Fear", "text": "Advantage to attack Distracted or Harried enemies, or those who Panicked last turn." },
+      { "name": "No Exit", "text": "Add +Harried to all attacks." }
+    ],
+    "powers": [
+      { "name": "Jeweled Gaze", "frequency": "at-will", "range": "HTH", "damage": "3✸", "effect": "Target flees & loses next Move." },
+      { "name": "Neural Whip", "frequency": "at-will", "range": "R5", "damage": "3✸", "effect": "Distracted (Save ends)." },
+      { "name": "Mind Assault", "frequency": "at-will", "range": "B5", "damage": "3✸", "effect": "Targets are Panicked next turn." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Enemy must Save before it can attack you again. Lasts until the Save is made." }
+  },
+  {
+    "name": "Brood Warriors",
+    "level": 4,
+    "tier": "stooge",
+    "type": "Stooge Grapplers",
+    "move": 6,
+    "hit_threshold": "4✸",
+    "quantity": "fill to taste (pitch: <0.5> each)",
+    "hits": ["A", "B", "C", "D", "E", "F"],
+    "traits": [
+      { "name": "Stable Footing", "text": "Save to ignore being knocked Prone. Reduce Forced Move by 1." },
+      { "name": "Tentacles", "text": "You may move normally while Grabbing enemies, dragging them." },
+      { "name": "Oily Carapace", "text": "Advantage on Escape rolls. Disadvantage to enemy Escape rolls." }
+    ],
+    "powers": [
+      { "name": "Tentacle Grab", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Target is Grabbed." },
+      { "name": "Toothy Bite", "frequency": "at-will", "range": "HTH", "effect": "3✸ to each Grabbed enemy." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "Grab an adjacent enemy or move your Speed towards a ranged enemy." }
+  }
+]

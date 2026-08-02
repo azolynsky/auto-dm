@@ -79,6 +79,20 @@ class TestQuestRedaction(unittest.TestCase):
 
 @unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
 class TestCharacterDisplaySubset(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self._orig_current = server.CURRENT_FILE
+
+    def tearDown(self):
+        server.CURRENT_FILE = self._orig_current
+        self._tmp.cleanup()
+
+    def set_system(self, system: str):
+        path = self.tmp / "current.json"
+        path.write_text(json.dumps({"system": system}), encoding="utf-8")
+        server.CURRENT_FILE = path
+
     def test_non_display_keys_dropped(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "pc-test.json"
@@ -93,7 +107,42 @@ class TestCharacterDisplaySubset(unittest.TestCase):
 
     def test_display_keys_cover_schema_essentials(self):
         for key in ("hp", "ac", "abilities", "conditions", "death_saves", "inventory"):
-            self.assertIn(key, server.DISPLAY_KEYS)
+            self.assertIn(key, server.DISPLAY_KEYS["dnd5e"])
+        for key in ("hp", "powers", "kit", "action_points", "miss_tokens",
+                    "strikes", "role_actions", "buddy"):
+            self.assertIn(key, server.DISPLAY_KEYS["strike"])
+
+    def test_strike_system_keeps_strike_fields(self):
+        self.set_system("strike")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "pc-test.json"
+            path.write_text(json.dumps({
+                "id": "pc-test", "name": "Testa", "hp": {"current": 10, "max": 10},
+                "powers": [{"name": "Zap"}], "kit": {"name": "K"},
+                "action_points": 2, "dm_notes": "secret",
+            }), encoding="utf-8")
+            subset = server.char_display_subset(path)
+            self.assertEqual(subset["powers"], [{"name": "Zap"}])
+            self.assertEqual(subset["action_points"], 2)
+            self.assertNotIn("dm_notes", subset)
+
+    def test_dnd5e_system_strips_strike_fields(self):
+        self.set_system("dnd5e")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "pc-test.json"
+            path.write_text(json.dumps({
+                "id": "pc-test", "name": "Testa", "hp": {"current": 5, "max": 10},
+                "powers": [{"name": "Zap"}], "miss_tokens": 1,
+            }), encoding="utf-8")
+            subset = server.char_display_subset(path)
+            self.assertNotIn("powers", subset)
+            self.assertNotIn("miss_tokens", subset)
+
+    def test_snapshot_carries_system(self):
+        self.set_system("strike")
+        self.assertEqual(server.build_state_snapshot()["system"], "strike")
+        server.CURRENT_FILE = self.tmp / "missing.json"
+        self.assertEqual(server.build_state_snapshot()["system"], "dnd5e")
 
 
 @unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
@@ -292,6 +341,29 @@ class TestSettings(unittest.TestCase):
         s = server.load_settings()
         self.assertIn("rules_strictness", s)
         self.assertIn("custom_rules", s)
+
+
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestPlayerInputValidation(unittest.TestCase):
+    def test_prefixes_speaker(self):
+        text = server.format_player_input({"text": "I open the door.", "speaker": "Torva"})
+        self.assertEqual(text, "Torva: I open the door.")
+
+    def test_no_speaker_leaves_text_bare(self):
+        text = server.format_player_input({"text": "I open the door."})
+        self.assertEqual(text, "I open the door.")
+
+    def test_rejects_empty_text(self):
+        with self.assertRaises(ValueError):
+            server.format_player_input({"text": "   "})
+
+    def test_rejects_oversized_text(self):
+        with self.assertRaises(ValueError):
+            server.format_player_input({"text": "x" * (server.PLAYER_INPUT_MAX_CHARS + 1)})
+
+    def test_rejects_non_object_body(self):
+        with self.assertRaises(ValueError):
+            server.format_player_input(["not", "an", "object"])
 
 
 @unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")

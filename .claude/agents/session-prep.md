@@ -30,7 +30,7 @@ A draft `campaign/sessions/prep-NNN.md` containing:
 
 - **Don't touch live state.** No edits to `campaign/state/`, `campaign/characters/`. Only writes new files to `campaign/npcs/` or `campaign/sessions/prep-NNN.md`.
 - **Don't railroad.** Prep multiple branches. The party will surprise you.
-- **Right-size the encounters.** Use `skills/encounter-building` for CR math. Don't TPK by accident.
+- **Right-size the encounters.** Use the active system's encounter-building skill (dnd5e: `dnd5e-encounter-building`) for the difficulty math. Don't TPK by accident.
 - **Match motivations.** New NPCs should fit factions and locations already established. Don't drop a Red Wizard into Phandalin without justification.
 
 # Stat block template (write to `campaign/npcs/one-shot/<slug>.md`)

@@ -1,0 +1,63 @@
+{
+  "id": "nightcrawler",
+  "name": "Nightcrawler",
+  "player": "",
+  "class": "Duellist",
+  "role": "Striker",
+  "level": 4,
+  "flavor": "Mutation: Teleportation, Wall-Crawling, Shadow Blending",
+  "notes": "Kurt Wagner was raised by Romany travelers in Eastern Europe before joining the X-Men. Despite his \"demonic\" appearance he has a light heart and a buoyant, outgoing persona. He is a devout Christian (you say what that means). He is close to all the other X-Men.",
+  "complications": ["Uncanny appearance", "Naive/trusting of the fairer sex"],
+  "skills": [
+    { "name": "Acrobatics", "skilled": true },
+    { "name": "Pugilism", "skilled": true, "trick": "Fencing" },
+    { "name": "Blend Into Shadows", "skilled": true },
+    { "name": "Wall-Crawling", "skilled": true },
+    { "name": "Charming", "skilled": true },
+    { "name": "Teleporter", "skilled": true },
+    { "name": "Prehensile Tail", "skilled": true, "trick": "Perfect balance" }
+  ],
+  "kit": {
+    "name": "The Daredevil",
+    "always": [
+      "When you take an unnecessary risk for the sheer thrill of it, gain one Daredevil Token.",
+      "You may spend two Daredevil Tokens for Advantage on a daring skill roll."
+    ],
+    "powers": [
+      { "name": "Daredevil's Luck", "text": "You may spend 1–3 Daredevil Tokens (GM sets the cost) to introduce a plot twist that allows a story problem to be solved by Daredevilish means." },
+      { "name": "All Heart", "text": "In combat you may spend 2 Daredevil Tokens to ignore injuries and penalties for one turn." }
+    ]
+  },
+  "hp": { "max": 10, "current": 10 },
+  "speed": "10 / teleport 14",
+  "resist": 0,
+  "reach": "1",
+  "opportunity": "2✸",
+  "save": "4+",
+  "attack_table_rider": "Striker: +2✸ on 3–5, +4✸ on 6",
+  "action_points": 1,
+  "miss_tokens": 0,
+  "strikes": 0,
+  "conditions": [],
+  "powers": [
+    { "name": "Acrobatic Attack", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Your Basic Attack.", "tags": ["basic-attack"] },
+    { "name": "Striker", "frequency": "constant", "effect": "You do extra damage on your attacks. Included in the Attack table rider." },
+    { "name": "Fuzzy Elf", "frequency": "constant", "effect": "Darkvision. You move by Teleporting. Ignore Obstacles and don't grant Opportunities." },
+    { "name": "Teleport Away", "frequency": "special", "range": "Interrupt", "effect": "Trigger: You may save your unused move and use it on someone else's turn once/round." },
+    { "name": "Duel", "frequency": "encounter", "range": "Free action", "effect": "One enemy within R10 becomes your Target. Against them, 2s count as 4s (i.e. hits). Special: This power recharges when your Target is Taken Out.", "used": false },
+    { "name": "Change Target", "frequency": "at-will", "effect": "Trigger: Make a Basic Attack against a creature, then make them the target of Duel." },
+    { "name": "Quick Shift", "frequency": "at-will", "effect": "Shift 1 square." },
+    { "name": "Focused Attack", "frequency": "constant", "effect": "Trigger: At the start of your turn, your Target gains one point of Focus. Then pick Focus-many problems for the Target; to ignore them, they must grant you an Opportunity: Harried (Disadvantage on saves + escape attempts); cannot benefit from their allies' powers; cannot use Opportunities; cannot benefit from their own powers; cannot use Interrupts or Reactions." },
+    { "name": "Strike Back", "frequency": "encounter", "range": "Reaction", "effect": "Trigger: When an enemy attack hits, spend an Action Point to counterattack.", "used": false },
+    { "name": "Teleport Attack", "frequency": "at-will", "range": "R5", "damage": "2✸", "effect": "You move adjacent to your target. This counts as an HTH attack." },
+    { "name": "Flicker Attack", "frequency": "at-will", "range": "HTH / R5", "damage": "2✸", "effect": "If you use this to attack your Target, they gain +1 point of Focus." },
+    { "name": "Exploit Weakness", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "The target of this attack gains Vulnerable 1 to all damage with you as the source." },
+    { "name": "Teleporting Flurry", "frequency": "encounter", "range": "HTH", "damage": "3✸", "effect": "The target of this attack gains Disadvantage to attack you for the rest of the Encounter. Each time it successfully hits you it may Save against this condition.", "used": false },
+    { "name": "Take the Opening", "frequency": "encounter", "range": "HTH", "damage": "3✸", "effect": "+(Focus)✸.", "used": false },
+    { "name": "Bamf! Bamf! Bamf!", "frequency": "encounter", "effect": "Deal 2✸ to each adjacent enemy and shift 1 square.", "used": false }
+  ],
+  "role_actions": [
+    { "name": "Rally", "frequency": "encounter", "range": "Free Action", "effect": "Spend 1 Action Point: Heal 4 HP. Regain one Encounter power.", "used": false }
+  ],
+  "appearance": ""
+}

@@ -1,0 +1,61 @@
+[
+  {
+    "name": "AXEMen Elites",
+    "color": "Black",
+    "level": 4,
+    "tier": "stooge",
+    "type": "Stooge Leaders",
+    "move": 6,
+    "hit_threshold": "4✸",
+    "quantity": "1 / 1 / 2",
+    "hits": ["A", "B", "C", "D"],
+    "traits": [
+      { "name": "Helpful Leader", "text": "Allies have Advantage on all Saving Throws while any AXEMen Elites are in play." }
+    ],
+    "powers": [
+      { "name": "Neural Shocker", "frequency": "at-will", "range": "R5", "damage": "2✸", "effect": "One Goon ally recovers." },
+      { "name": "Radio Comms", "frequency": "at-will", "range": "battle", "effect": "One ally takes an action." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "You or one ally may move or save." }
+  },
+  {
+    "name": "AXEMen",
+    "color": "Red",
+    "level": 4,
+    "tier": "stooge",
+    "type": "Stooge Strikers",
+    "move": 6,
+    "hit_threshold": "4✸",
+    "quantity": "3 / 4 / 4",
+    "hits": ["A", "B", "C", "D", "E"],
+    "traits": [
+      { "name": "Hydraulic Servos", "text": "Shift 3 whenever you shift." },
+      { "name": "Ablative Plating", "text": "When you trigger Opportunities, you may save to negate one of them." },
+      { "name": "Magnetic Stabilizers", "text": "Cannot be Thrown. Reduce Forced Movement by 1." }
+    ],
+    "powers": [
+      { "name": "Neurodisruptor Axe", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "+2✸." },
+      { "name": "Short Range Jets", "frequency": "at-will", "range": "HTH", "damage": "2✸", "effect": "Shift 3 before or after attack." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "When an enemy misses you, shift 3." }
+  },
+  {
+    "name": "AXEMen Rangers",
+    "color": "Green",
+    "level": 4,
+    "tier": "goon",
+    "type": "Goon Sniper",
+    "move": 6,
+    "hit_threshold": "1✸",
+    "quantity": "4 / 6 / 8",
+    "hits": ["A", "B", "C", "D", "E", "F"],
+    "traits": [
+      { "name": "Slippery", "text": "Shift +2 squares whenever you Shift." }
+    ],
+    "powers": [
+      { "name": "Flechette Cannon", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "+2✸." },
+      { "name": "Pin Down", "frequency": "at-will", "range": "R10", "damage": "2✸", "effect": "Target takes 3✸ if it moves next turn." }
+    ],
+    "miss_trigger": { "frequency": "at-will", "text": "You have Advantage against your attacker for your next attack within one turn." }
+  }
+]
