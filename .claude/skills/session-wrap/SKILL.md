@@ -14,6 +14,15 @@ Before writing prose, make sure live state is current.
 - Confirm `campaign/state/quests.json` — anything new, completed, or progressed.
 - Add any new `campaign/state/world-flags.json` flags the party flipped.
 
+### Refresh character bios
+
+Session-by-session edits leave sheets incoherent — a `notes` field full of "as of session N" arithmetic, an `appearance` frozen mid-scene ("one eye swollen shut"), traits that reference a moment instead of the person. At every wrap, re-read each PC's `notes`, `appearance`, and `personality` and:
+
+- **Purge temporary state from prose fields.** Counts, wounds, and current HP live in `inventory`/`hp`/state files — never narrated into `notes`. Replace "Ammo: 25 as of session 5 end (28 - 4 fired...)" with "Ammo tracked in inventory."
+- **Un-freeze appearance.** Descriptions written for a specific scene (fresh wounds, captivity dirt) get rewritten to the character's steady state once the scene is past.
+- **Adapt personality to observed play — additively and conservatively.** If a player has consistently played a pattern across sessions (Mira's mercy, Relthus's cold pragmatism), sharpen or add a trait to match, citing the on-screen evidence. Rules: never delete or contradict a player-written trait; only reinforce what actually happened at the table repeatedly (not once); phrase as observed behavior, not psychoanalysis. When in doubt, mention the proposed change to the player at wrap instead of writing it silently — the sheet is theirs.
+- **Guest sheets** get the same pass, plus a `player`/`notes` line reflecting who plays them and their PC/NPC status going forward.
+
 ## 2. Write the session log
 
 Append to `campaign/sessions/session-NN.md` (create if new). Structure:
