@@ -879,6 +879,14 @@ function initModals() {
     const open = document.body.classList.toggle('sidebar-open');
     localStorage.setItem('sidebar', open ? 'open' : 'closed');
   });
+  // On narrow screens, a click outside the sidebar (and its toggle) closes it.
+  document.addEventListener('click', e => {
+    if (window.matchMedia('(min-width: 1800px)').matches) return;
+    if (!document.body.classList.contains('sidebar-open')) return;
+    if (e.target.closest('#sidebar-column, #sidebar-toggle')) return;
+    document.body.classList.remove('sidebar-open');
+    localStorage.setItem('sidebar', 'closed');
+  });
 }
 
 function closeModal(id) {

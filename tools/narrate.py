@@ -24,6 +24,7 @@ Output: the appended feed entry as JSON, plus the current table settings
 (from the webapp Settings tab) so the DM notices steering changes mid-session.
 """
 import argparse
+import datetime
 import json
 import re
 import sys
@@ -55,6 +56,28 @@ def normalize(text: str) -> str:
     return out.strip()
 
 
+def quests_entries_behind(root: Path) -> int:
+    """How many narration/scene_change entries landed since quests.json was
+    last written. The DM sees this on every narrate call — the players are
+    reading the quests sidebar while the chronicle moves, so drift is loud."""
+    quests = root / "state" / "quests.json"
+    feed = root / "state" / "player-feed.jsonl"
+    if not quests.exists() or not feed.exists():
+        return 0
+    cutoff = datetime.datetime.fromtimestamp(
+        quests.stat().st_mtime, datetime.timezone.utc
+    ).isoformat().replace("+00:00", "Z")
+    n = 0
+    for line in feed.read_text().splitlines():
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if e.get("type") in ("narration", "scene_change") and e.get("ts", "") > cutoff:
+            n += 1
+    return n
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Push player-facing narration to the web companion.")
     p.add_argument("text", help="Prose text (no leading '> '), or '-' to read from stdin")
@@ -78,8 +101,15 @@ def main() -> int:
     effects = campaign_lib.drain_effects(root) + args.effect
     entry = campaign_lib.append_feed(root, text, type=args.type, effects=effects)
 
-    print(json.dumps({"entry": entry, "settings": campaign_lib.load_settings(root)},
-                     ensure_ascii=False))
+    out = {"entry": entry, "settings": campaign_lib.load_settings(root)}
+    behind = quests_entries_behind(root)
+    out["quests_sidebar"] = f"quests.json last written {behind} chronicle entries ago"
+    if behind >= 6:
+        out["DM_WARNING"] = (
+            "quests.json is STALE — the players are looking at an outdated quests "
+            "sidebar. Run the Bookkeeper and sync it before the next narration."
+        )
+    print(json.dumps(out, ensure_ascii=False))
     return 0
 
 

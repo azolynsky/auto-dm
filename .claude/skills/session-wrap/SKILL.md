@@ -13,6 +13,7 @@ Before writing prose, make sure live state is current.
 - Confirm `campaign/state/current.json` — location, in-game date, time of day.
 - Confirm `campaign/state/quests.json` — anything new, completed, or progressed.
 - Add any new `campaign/state/world-flags.json` flags the party flipped.
+- **Sidebar audit**: reconcile everything the web companion's sidebar renders — HP strings inside `present_entities`, `party_resources` counts (torches, rations, potions, ammo vs. character sheets), `active_effects` still true, combat.json reset. Fix drift now; it compounds.
 
 ### Refresh character bios
 

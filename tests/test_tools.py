@@ -15,6 +15,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -299,6 +300,36 @@ class TestCombatTracker(TempRootMixin):
         self.assertFalse(self.state()["active"])
         self.assertEqual(self.feed()[-1]["type"], "system")
 
+    def test_pcs_flag_marks_player_turns(self):
+        self.run_cmd("start", "--participants", "Ren:+3", "Goblin1:+2:7", "--pcs", "Ren")
+        by_name = {o["name"]: o for o in self.state()["order"]}
+        self.assertTrue(by_name["Ren"]["pc"])
+        self.assertFalse(by_name["Goblin1"]["pc"])
+        # advance a full round; Ren's turn carries STOP, the goblin's doesn't
+        for _ in range(2):
+            out = json.loads(self.run_cmd("next").stdout)
+            self.assertEqual(out.get("pc_turn", False) and "STOP" in out,
+                             out["turn"] == "Ren")
+
+    def test_pc_hp_loads_from_sheet_and_syncs_back(self):
+        chars = self.root / "characters"
+        chars.mkdir(parents=True, exist_ok=True)
+        sheet = chars / "pc-ren.json"
+        sheet.write_text(json.dumps({"name": "Ren", "hp": {"max": 28, "current": 25, "temp": 0}}))
+        self.run_cmd("start", "--participants", "Ren:+3", "Goblin1:+2:7", "--pcs", "Ren")
+        ren = next(o for o in self.state()["order"] if o["name"] == "Ren")
+        # HP loaded from the character sheet, not null
+        self.assertEqual((ren["hp"], ren["max_hp"]), (25, 28))
+        # damage writes back to the sheet immediately
+        self.run_cmd("damage", "--who", "Ren", "--amount", "10")
+        self.assertEqual(json.loads(sheet.read_text())["hp"]["current"], 15)
+        # heal writes back too, capped at max
+        self.run_cmd("heal", "--who", "Ren", "--amount", "50")
+        self.assertEqual(json.loads(sheet.read_text())["hp"]["current"], 28)
+        # sheet never goes below 0 even if tracker HP is negative
+        self.run_cmd("damage", "--who", "Ren", "--amount", "99")
+        self.assertEqual(json.loads(sheet.read_text())["hp"]["current"], 0)
+
     def test_sethp_still_works(self):
         self.run_cmd("start", "--participants", "Wolf:+1")
         out = json.loads(self.run_cmd("sethp", "--who", "Wolf", "--current", "11", "--max", "11").stdout)
@@ -366,6 +397,25 @@ class TestNarrate(TempRootMixin):
         # queue is drained: next narration has no effects
         self.run_narrate("Silence falls.")
         self.assertNotIn("effects", self.feed_lines()[1])
+
+    def test_quests_staleness_warning(self):
+        quests = self.root / "state" / "quests.json"
+        quests.write_text("{}")
+        # fresh quests file: counter reports, no warning
+        out = json.loads(self.run_narrate("Beat one.").stdout)
+        self.assertIn("quests_sidebar", out)
+        self.assertNotIn("DM_WARNING", out)
+        # age the quests file behind 6+ narrations -> warning fires
+        old = time.time() - 3600
+        os.utime(quests, (old, old))
+        for i in range(5):
+            self.run_narrate(f"Beat {i + 2}.")
+        out = json.loads(self.run_narrate("Beat seven.").stdout)
+        self.assertIn("DM_WARNING", out)
+        # touching quests.json clears it
+        quests.write_text("{}")
+        out = json.loads(self.run_narrate("Beat eight.").stdout)
+        self.assertNotIn("DM_WARNING", out)
 
 
 class TestNarrateNormalize(unittest.TestCase):

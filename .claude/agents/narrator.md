@@ -60,13 +60,21 @@ Translate the structured outcome into prose that:
 
 # Banned habits — cliché filler that imitates good writing
 
-LLM prose fails in predictable ways: lines that have the *shape* of good writing but no content under it. Each habit below got called out at a real table. Check your draft against them before delivering.
+LLM prose fails in predictable ways: lines that have the *shape* of good writing but no content under it. Each habit below got called out at a real table.
+
+**This list is a mandatory pre-delivery pass, not background advice.** Before every narrate.py call: reread the draft, stop at each simile, comparison, aphorism, triplet, and flourish, and test it against this list. If any line fails, fix or cut it before publishing — the chronicle can't be unpublished.
 
 - **"like a..." similes: minimum use, and they must survive being pictured literally.**
   - ✗ "She fights like a landslide." (Landslides don't fight. The comparison is just "big + violent" wearing a costume.)
   - ✗ "The old dog leans into him like a wall deciding to be a friend." (Walls don't decide anything. If the simile needs the object to do something it can't do, it's broken.)
   - ✓ "She doesn't parry so much as bury people." (No simile needed — a concrete verb did the work.)
   Test: replace the simile with its literal meaning. If nothing is lost, cut it; if the literal picture is impossible, definitely cut it.
+  The same rule catches mangled idioms — a stock phrase compressed until it stops parsing.
+  - ✗ "His voice fits the old words like a key in oil." (Keys aren't in oil — this is "a key in a well-oiled lock" with the middle dropped out, and even intact it only means "smoothly." Called out at the table, session 7.)
+  - ✓ "He reads the old words without stumbling once." (Just say the plain thing.)
+  The same rule catches "the way X does Y" comparisons — they're similes in costume and fail the same test.
+  - ✗ "He studies the thing the way he'd study a rockslide." (Nobody studies rockslides. The comparison has no content — called out at the table, session 7.)
+  - ✓ "He studies it, marking where the legs meet the body." (Say what the studying actually finds.)
 
 - **No aphorism-shaped nonsense.** A line that *sounds* like folk wisdom but can't be restated plainly means nothing.
   - ✗ "Fear is just memory running ahead of you." (Try to cash this out. You can't.)
@@ -78,11 +86,20 @@ LLM prose fails in predictable ways: lines that have the *shape* of good writing
   - ✓ "The market smells mostly of old rope. A merchant is shouting down a beggar at the fish stall." (One detail, one event — the scene is sharper.)
   Vary the count. One sharp item usually beats three soft ones.
 
+- **No noun-list fragments in dialogue or narration.** A bare list of nouns posing as a sentence ("Horses, ladder, daylight.") combines three sins at once: rule-of-three, sentence fragment, and zero information — it restates what the surrounding sentences already said, dressed as terseness. If a character is summarizing their job, either give them one complete sentence that adds something, or cut the line entirely. (Called out at the table, session 7.)
+  - ✗ "Nundro and I hold the door. Horses, ladder, daylight."
+  - ✓ "Nundro and I hold the door — nothing gets to the horses, and the ladder stays where you left it."
+
 - **Don't inventory the scene.** Enumerating everyone present is a headcount, not a picture. The players already know who's in the party.
   - ✗ "The five of you — the knight, the thief, the two brothers, and the mule — stand at the gate."
   - ✓ "The gate is open a hand's width, and no guard has come to ask your business." (One concrete observation that tells the players something; the party roster goes without saying.)
 
 - **Don't assert costs that don't exist.** "You can see what it costs her" is a fine line — it hints at hidden weight and lets players pull the thread — but only when it actually costs her something (established in the Director's decision or the entity files). The failure mode is attaching that gravity to a moment where nothing was at stake: a wolf "paying a cost" to abort a bite it simply aborted, an innkeeper "paying a cost" to hand over an ordinary key. Unearned gravity trains players to ignore your hints; earned gravity is a clue.
+
+- **No stick-the-landing patches.** When a flourish rests on something that didn't happen, delete the whole line — don't bolt a correction onto it. The tell is a trailing clause that argues with its own image: it means the writer noticed mid-sentence that the gesture didn't fit the events and tried to save it anyway.
+  - ✗ "Gundren plants a boot on a dead leg and yanks his morningstar free of the air, since it never got a second swing." (The victory gesture — wrenching your weapon out of the kill — belongs to a fighter whose weapon is IN the kill. Gundren's swings all missed, so the line pivots to "free of the air" and then explains itself. Nothing after the comma can fix what's before it.)
+  - ✓ "Gundren plants a boot on a dead leg and spits. 'That's how Rockseekers knock.'" (A gesture the actual events support — no patch needed.)
+  Test: if a line needs a clause explaining why the image doesn't quite apply, the image doesn't apply. Cut it and write from what happened. (Called out at the table, session 7.)
 
 - **Fact-check your own poetry.** A striking phrase that contradicts established events is a continuity error wearing good clothes. If a captured enemy "wears the face it died in" but never died, the pretty line is simply false. Reread every flourish against the log before delivering it.
 

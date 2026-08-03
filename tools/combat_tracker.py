@@ -3,8 +3,10 @@
 Combat tracker. Stores per-encounter state in <campaign>/state/combat.json.
 
 Usage:
-    python combat_tracker.py start --participants "Ren:+3" "Goblin1:+2:7" "Goblin2:+2:7"
+    python combat_tracker.py start --participants "Ren:+3" "Goblin1:+2:7" "Goblin2:+2:7" --pcs Ren
         # optional third field = starting/max HP — saves a sethp call per monster
+        # --pcs: comma-separated player-controlled names; 'next' marks their
+        # turns with a STOP field so the DM asks the player instead of acting
     python combat_tracker.py status
     python combat_tracker.py damage --who Goblin1 --amount 7
     python combat_tracker.py heal --who Ren --amount 4
@@ -20,9 +22,10 @@ immediately. Damage/heal/conditions do NOT — they queue as effects that
 attach to the next narrate.py call, so the players read the story before
 the numbers (no spoilers).
 
-This deliberately stores HP for monsters here, not in characters/. PC HP
-belongs on the character sheets and should be synced by the Bookkeeper at
-end-of-encounter, not on every hit (otherwise concurrent edits get messy).
+Participants whose name matches a character sheet in <campaign>/characters/
+get their HP loaded from the sheet at start, and every damage/heal/sethp is
+written back to the sheet immediately — the sidebar and combat panel always
+show live HP without a separate sync step.
 """
 from __future__ import annotations
 
@@ -59,19 +62,56 @@ def out(obj: dict) -> None:
     print(json.dumps(obj, ensure_ascii=False))
 
 
+def char_sheet(name: str) -> Path | None:
+    """Character JSON in <campaign>/characters/ whose "name" matches, or None."""
+    chars = campaign_lib.resolve_root() / "characters"
+    for path in sorted(chars.glob("*.json")) if chars.is_dir() else []:
+        try:
+            with open(path) as f:
+                if json.load(f).get("name", "").lower() == name.lower():
+                    return path
+        except (json.JSONDecodeError, OSError):
+            continue
+    return None
+
+
+def sync_sheet(name: str, hp: int) -> bool:
+    """Write live HP back to the matching character sheet, if any."""
+    path = char_sheet(name)
+    if path is None:
+        return False
+    with open(path) as f:
+        data = json.load(f)
+    data["hp"]["current"] = max(0, hp)
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    return True
+
+
 def parse_participant(spec: str) -> dict:
     """"Name", "Name:+3", or "Name:+3:7" (init modifier, starting HP)."""
     name, _, rest = spec.partition(":")
     mod_s, _, hp_s = rest.partition(":")
     mod = int(mod_s) if mod_s else 0
     hp = int(hp_s) if hp_s else None
+    max_hp = hp
+    if hp is None:
+        path = char_sheet(name)
+        if path is not None:
+            with open(path) as f:
+                sheet_hp = json.load(f)["hp"]
+            hp, max_hp = sheet_hp["current"], sheet_hp["max"]
     init = dice.do_roll(f"1d20{mod:+d}", "normal", f"{name} initiative").total
     return {"name": name, "init": init, "mod": mod,
-            "hp": hp, "max_hp": hp, "conditions": []}
+            "hp": hp, "max_hp": max_hp, "conditions": [], "pc": False}
 
 
 def cmd_start(args) -> None:
     order = [parse_participant(spec) for spec in args.participants]
+    pcs = {n.strip().lower() for n in (args.pcs or "").split(",") if n.strip()}
+    for o in order:
+        o["pc"] = o["name"].lower() in pcs
     order.sort(key=lambda x: (-x["init"], -x["mod"]))
     state = {"active": True, "round": 1, "turn_index": 0, "order": order, "log": []}
     state["log"].append("Combat started. Initiative: " + ", ".join(f"{o['name']}({o['init']})" for o in order))
@@ -108,6 +148,7 @@ def cmd_damage(args) -> None:
         line += " — DOWN"
     s["log"].append(line)
     save(s)
+    sync_sheet(p["name"], p["hp"])
     campaign_lib.queue_effect(campaign_lib.resolve_root(), line)
     out({"action": "damage", "who": p["name"], "amount": args.amount,
          "hp": p["hp"], "max_hp": p["max_hp"], "down": down})
@@ -122,6 +163,7 @@ def cmd_heal(args) -> None:
     line = f"{p['name']} healed {args.amount} (now {p['hp']} HP)"
     s["log"].append(line)
     save(s)
+    sync_sheet(p["name"], p["hp"])
     campaign_lib.queue_effect(campaign_lib.resolve_root(), line)
     out({"action": "heal", "who": p["name"], "amount": args.amount,
          "hp": p["hp"], "max_hp": p["max_hp"]})
@@ -134,6 +176,7 @@ def cmd_sethp(args) -> None:
     if args.max is not None:
         p["max_hp"] = args.max
     save(s)
+    sync_sheet(p["name"], p["hp"])
     out({"action": "sethp", "who": p["name"], "hp": p["hp"], "max_hp": p["max_hp"]})
 
 
@@ -166,7 +209,11 @@ def cmd_next(args) -> None:
     current = s["order"][s["turn_index"]]
     s["log"].append(f"Turn: {current['name']}")
     save(s)
-    out({"action": "next", "round": s["round"], "turn": current["name"]})
+    result = {"action": "next", "round": s["round"], "turn": current["name"]}
+    if current.get("pc"):
+        result["pc_turn"] = True
+        result["STOP"] = f"{current['name']} is player-controlled — ask the player what they do. Do not act for them."
+    out(result)
 
 
 def cmd_end(args) -> None:
@@ -183,7 +230,7 @@ def main() -> int:
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    s = sub.add_parser("start"); s.add_argument("--participants", nargs="+", required=True); s.set_defaults(func=cmd_start)
+    s = sub.add_parser("start"); s.add_argument("--participants", nargs="+", required=True); s.add_argument("--pcs", help="comma-separated names that are player-controlled; 'next' flags their turns STOP"); s.set_defaults(func=cmd_start)
     sub.add_parser("status").set_defaults(func=cmd_status)
     s = sub.add_parser("damage"); s.add_argument("--who", required=True); s.add_argument("--amount", type=int, required=True); s.set_defaults(func=cmd_damage)
     s = sub.add_parser("heal"); s.add_argument("--who", required=True); s.add_argument("--amount", type=int, required=True); s.set_defaults(func=cmd_heal)

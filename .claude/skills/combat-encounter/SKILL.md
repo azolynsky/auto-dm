@@ -12,8 +12,9 @@ Combat is the highest-state-density part of the game. Use this skill as the proc
 1. **Establish surprise.** Anyone unaware of the threat is surprised on their first turn. A hidden creature can surprise by Stealth (PCs) vs passive Perception (NPCs), or vice versa.
 2. **Roll initiative — with monster HP inline** (third field). One command starts the whole encounter and posts the "⚔ Combat!" banner to the players' feed:
    ```bash
-   python tools/combat_tracker.py start --participants "Ren:+3" "Bel:+1" "Goblin1:+2:7" "Goblin2:+2:7" "Goblin3:+2:7"
+   python tools/combat_tracker.py start --participants "Ren:+3" "Bel:+1" "Goblin1:+2:7" "Goblin2:+2:7" "Goblin3:+2:7" --pcs Ren,Bel
    ```
+   `--pcs` lists every player-controlled combatant — including guest PCs and any character a player has ever directed (when in doubt, include them). `next` then emits a STOP field on their turns: ask the player, never act for them.
    Modifier = Dex bonus + any feature (Alert = +5; Advantage from a feature → roll twice via dice.py and keep higher manually). Use `sethp` only for HP discovered mid-fight.
 3. **Narrator** establishes the scene (positions, terrain, light, distances).
 
