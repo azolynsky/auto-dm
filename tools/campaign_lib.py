@@ -43,6 +43,7 @@ DEFAULT_SETTINGS = {
     "kid_friendly": False,            # keep descriptions of violence/horror gentle
     "narration_style": "standard",    # "brief" | "standard" | "cinematic"
     "custom_rules": "",               # free-text house rules, read as if part of house-rules.md "Active"
+    "web_input": True,                # webapp-only: show the "Message the DM" bar on desktop (always shown on phones)
 }
 
 

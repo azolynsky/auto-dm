@@ -56,16 +56,17 @@ def normalize(text: str) -> str:
     return out.strip()
 
 
-def quests_entries_behind(root: Path) -> int:
-    """How many narration/scene_change entries landed since quests.json was
-    last written. The DM sees this on every narrate call — the players are
-    reading the quests sidebar while the chronicle moves, so drift is loud."""
-    quests = root / "state" / "quests.json"
+def entries_behind(root: Path, filename: str) -> int:
+    """How many narration/scene_change entries landed since the given state
+    file was last written. The DM sees this on every narrate call — the
+    players are reading the sidebar while the chronicle moves, so drift is
+    loud."""
+    target = root / "state" / filename
     feed = root / "state" / "player-feed.jsonl"
-    if not quests.exists() or not feed.exists():
+    if not target.exists() or not feed.exists():
         return 0
     cutoff = datetime.datetime.fromtimestamp(
-        quests.stat().st_mtime, datetime.timezone.utc
+        target.stat().st_mtime, datetime.timezone.utc
     ).isoformat().replace("+00:00", "Z")
     n = 0
     for line in feed.read_text().splitlines():
@@ -76,6 +77,31 @@ def quests_entries_behind(root: Path) -> int:
         if e.get("type") in ("narration", "scene_change") and e.get("ts", "") > cutoff:
             n += 1
     return n
+
+
+STOPWORDS = {"the", "dark", "black", "king", "lady", "lord", "old", "young"}
+
+
+def sidebar_mentions(root: Path, text: str) -> dict:
+    """Who's Who notes for every character named in this narration. Echoed
+    back so the DM re-reads each note at the exact moment it could have just
+    become wrong — the enforcement behind 'keep the sidebar honest'."""
+    dramatis = root / "state" / "dramatis-personae.json"
+    if not dramatis.exists():
+        return {}
+    try:
+        chars = json.loads(dramatis.read_text()).get("characters", [])
+    except json.JSONDecodeError:
+        return {}
+    low = text.lower()
+    hits = {}
+    for c in chars:
+        name = c.get("name", "")
+        tokens = [w for w in re.findall(r"[A-Za-z']{4,}", name)
+                  if w.lower() not in STOPWORDS] or [name]
+        if any(re.search(r"\b" + re.escape(t.lower()) + r"\b", low) for t in tokens):
+            hits[name] = c.get("note", "")
+    return hits
 
 
 def main() -> int:
@@ -102,12 +128,33 @@ def main() -> int:
     entry = campaign_lib.append_feed(root, text, type=args.type, effects=effects)
 
     out = {"entry": entry, "settings": campaign_lib.load_settings(root)}
-    behind = quests_entries_behind(root)
+    behind = entries_behind(root, "quests.json")
+    cast_behind = entries_behind(root, "dramatis-personae.json")
     out["quests_sidebar"] = f"quests.json last written {behind} chronicle entries ago"
+    out["whos_who_sidebar"] = (
+        f"dramatis-personae.json last written {cast_behind} chronicle entries ago"
+    )
+    mentions = sidebar_mentions(root, text)
+    if mentions:
+        out["sidebar_check"] = mentions
+        out["sidebar_check_hint"] = (
+            "These Who's Who notes are on the players' screen for characters in "
+            "this narration. If this beat made any of them wrong, update "
+            "dramatis-personae.json NOW, before the next narration."
+        )
+    warnings = []
     if behind >= 6:
-        out["DM_WARNING"] = (
-            "quests.json is STALE — the players are looking at an outdated quests "
-            "sidebar. Run the Bookkeeper and sync it before the next narration."
+        warnings.append(
+            "quests.json is STALE — the players are looking at an outdated quests sidebar."
+        )
+    if cast_behind >= 15:
+        warnings.append(
+            "dramatis-personae.json (Who's Who) is STALE — cast notes no longer match "
+            "what the players have seen happen."
+        )
+    if warnings:
+        out["DM_WARNING"] = " ".join(warnings) + (
+            " Run the Bookkeeper and sync before the next narration."
         )
     print(json.dumps(out, ensure_ascii=False))
     return 0

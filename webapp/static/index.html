@@ -21,6 +21,7 @@
       <span class="header-divider" id="header-div-2">·</span>
       <span id="header-weather"></span>
     </span>
+    <button id="chars-toggle" title="Characters" aria-label="Toggle character sheet">🛡</button>
     <button id="sidebar-toggle" title="Quests & world info" aria-label="Toggle quests and world info">📜</button>
     <button id="settings-btn" title="Table settings" aria-label="Table settings">⚙</button>
   </header>
@@ -39,6 +40,10 @@
         <span class="section-label">Chronicle</span>
       </div>
       <div id="feed-entries"></div>
+      <form id="say-form" autocomplete="off">
+        <input id="say-text" placeholder="Message the DM…" maxlength="2000" required>
+        <button id="say-send" type="submit">➤</button>
+      </form>
     </section>
 
   </main>
@@ -109,6 +114,12 @@
         <input type="checkbox" id="set-kid-friendly">
         <span><span class="setting-label">Kid-friendly</span>
         <span class="setting-desc">Keep violence and horror gentle</span></span>
+      </label>
+
+      <label class="setting-row setting-check">
+        <input type="checkbox" id="set-web-input">
+        <span><span class="setting-label">Message the DM from here</span>
+        <span class="setting-desc">Show the chat input on desktop (phones always have it)</span></span>
       </label>
 
       <label class="setting-row">

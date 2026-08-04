@@ -134,7 +134,14 @@ def load_world_flags() -> dict:
     if not data:
         return {}
     flags = data.get("flags", {})
-    return {k: v.get("note", k) for k, v in flags.items() if v.get("value") is True}
+    # Player display is opt-in: only flags with a 'fact' (a self-contained,
+    # in-world sentence) reach the Known Facts panel. 'note' is DM history
+    # shorthand and never shown.
+    return {
+        k: v["fact"]
+        for k, v in flags.items()
+        if v.get("value") is True and v.get("fact")
+    }
 
 
 def load_combat() -> dict | None:
@@ -297,6 +304,63 @@ async def portrait(pc_id: str):
     raise HTTPException(status_code=404, detail="Portrait not found")
 
 
+# ── Player input → headless Claude ────────────────────────────────────────────
+# Phone/browser sends a message; it lands in the feed immediately as a
+# "player" entry, then a single worker feeds it to `claude -p --continue`
+# (resuming the DM's most recent session in this repo) one turn at a time.
+
+SAY_QUEUE: asyncio.Queue = asyncio.Queue()
+
+CLAUDE_CMD = ["claude", "-p", "--continue", "--permission-mode", "acceptEdits"]
+
+
+async def claude_worker():
+    while True:
+        prompt = await SAY_QUEUE.get()
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *CLAUDE_CMD, prompt,
+                cwd=str(campaign_lib.REPO),
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                campaign_lib.append_feed(
+                    ROOT, "The DM didn't hear that — try again in a moment.",
+                    type="system")
+                print(f"claude -p failed ({proc.returncode}): "
+                      f"{stderr.decode(errors='replace')[:500]}", file=sys.stderr)
+        except FileNotFoundError:
+            campaign_lib.append_feed(
+                ROOT, "The DM is away (claude CLI not found on the server).",
+                type="system")
+
+
+@app.on_event("startup")
+async def start_worker():
+    asyncio.create_task(claude_worker())
+
+
+@app.post("/api/say")
+async def say(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    text = str(body.get("text", "")).strip()[:2000]
+    if not text:
+        raise HTTPException(status_code=400, detail="text required")
+    campaign_lib.append_feed(ROOT, text, type="player")
+    await SAY_QUEUE.put(
+        f"[from the web companion] The players say: {text}\n"
+        f"(This message is already in the chronicle — don't repost it. It may be "
+        f"an in-game action, an out-of-character question, or a table request — "
+        f"treat it exactly as if typed at the terminal, and push any player-facing "
+        f"response via narrate.py.)")
+    return JSONResponse({"ok": True, "queued": SAY_QUEUE.qsize()})
+
+
 @app.get("/events")
 async def events(request: Request):
     async def generator():
@@ -381,4 +445,4 @@ async def events(request: Request):
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    uvicorn.run("server:app", host="127.0.0.1", port=8765, reload=False, app_dir=str(Path(__file__).parent))
+    uvicorn.run("server:app", host="0.0.0.0", port=8765, reload=False, app_dir=str(Path(__file__).parent))

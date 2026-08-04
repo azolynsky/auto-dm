@@ -1,4 +1,4 @@
 {
-  "_description": "Persistent world facts the party has changed or learned. Append-only in practice — flipping a flag back should be rare and noted. Only value=true flags show in the web companion.",
+  "_description": "Persistent world facts the party has changed or learned. Append-only in practice — flipping a flag back should be rare and noted. 'note' is DM history and never shown to players. To surface a flag in the web companion's Known Facts panel, give it a 'fact': one self-contained, in-world, present-tense sentence a player can read cold. Flags without a 'fact' (or with value!=true) stay DM-only.",
   "flags": {}
 }

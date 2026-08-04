@@ -14,6 +14,7 @@ Before writing prose, make sure live state is current.
 - Confirm `campaign/state/quests.json` — anything new, completed, or progressed.
 - Add any new `campaign/state/world-flags.json` flags the party flipped.
 - **Sidebar audit**: reconcile everything the web companion's sidebar renders — HP strings inside `present_entities`, `party_resources` counts (torches, rations, potions, ammo vs. character sheets), `active_effects` still true, combat.json reset. Fix drift now; it compounds.
+- **Who's Who audit** (`dramatis-personae.json`): reread every character's `note` against what the players watched happen this session — status (captured/freed/dead/allied), location, and whether "mystery" framing is still true. This panel is the players' memory aid; a note frozen three sessions back is a lie on screen. Update dispositions, merge duplicates (a mystery figure later named gets ONE entry), add newly met characters, drop ones who no longer matter.
 
 ### Refresh character bios
 

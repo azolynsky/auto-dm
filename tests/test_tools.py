@@ -398,6 +398,19 @@ class TestNarrate(TempRootMixin):
         self.run_narrate("Silence falls.")
         self.assertNotIn("effects", self.feed_lines()[1])
 
+    def test_sidebar_check_echoes_mentioned_cast_notes(self):
+        (self.root / "state" / "dramatis-personae.json").write_text(json.dumps({
+            "characters": [
+                {"name": "Nezznar, the Black Spider", "note": "In jail.", "known_to_party": True},
+                {"name": "King Grol", "note": "Truce holds.", "known_to_party": True},
+            ]
+        }))
+        out = json.loads(self.run_narrate("The Black Spider glares from his cell.").stdout)
+        self.assertEqual(out["sidebar_check"], {"Nezznar, the Black Spider": "In jail."})
+        self.assertIn("sidebar_check_hint", out)
+        out = json.loads(self.run_narrate("A quiet night at the inn.").stdout)
+        self.assertNotIn("sidebar_check", out)
+
     def test_quests_staleness_warning(self):
         quests = self.root / "state" / "quests.json"
         quests.write_text("{}")
@@ -416,6 +429,42 @@ class TestNarrate(TempRootMixin):
         quests.write_text("{}")
         out = json.loads(self.run_narrate("Beat eight.").stdout)
         self.assertNotIn("DM_WARNING", out)
+
+    def test_whos_who_staleness_warning(self):
+        cast = self.root / "state" / "dramatis-personae.json"
+        cast.write_text("{}")
+        out = json.loads(self.run_narrate("Beat one.").stdout)
+        self.assertIn("whos_who_sidebar", out)
+        self.assertNotIn("DM_WARNING", out)
+        # age the cast file behind 15+ narrations -> warning fires
+        old = time.time() - 3600
+        os.utime(cast, (old, old))
+        for i in range(14):
+            self.run_narrate(f"Beat {i + 2}.")
+        out = json.loads(self.run_narrate("Beat sixteen.").stdout)
+        self.assertIn("DM_WARNING", out)
+        self.assertIn("Who's Who", out["DM_WARNING"])
+        # rewriting the cast file clears it
+        cast.write_text("{}")
+        out = json.loads(self.run_narrate("Beat seventeen.").stdout)
+        self.assertNotIn("DM_WARNING", out)
+
+    def test_whos_who_mentions_echoed(self):
+        cast = self.root / "state" / "dramatis-personae.json"
+        cast.write_text(json.dumps({"characters": [
+            {"name": "Nezznar, the Black Spider", "note": "Jailed.", "known_to_party": True},
+            {"name": "King Grol", "note": "Truce holds.", "known_to_party": True},
+            {"name": "Yark", "note": "Party goblin.", "known_to_party": True},
+        ]}))
+        out = json.loads(self.run_narrate("Nezznar sits quietly in his cell.").stdout)
+        self.assertEqual(out["sidebar_check"], {"Nezznar, the Black Spider": "Jailed."})
+        self.assertIn("sidebar_check_hint", out)
+        # stopword-only tokens ("King", "Black") never match on their own
+        out = json.loads(self.run_narrate("The king of nothing walks a black road.").stdout)
+        self.assertNotIn("sidebar_check", out)
+        # short names still match on word boundary, not substring
+        out = json.loads(self.run_narrate("Yark grins. No remarkable trouble.").stdout)
+        self.assertEqual(out["sidebar_check"], {"Yark": "Party goblin."})
 
 
 class TestNarrateNormalize(unittest.TestCase):

@@ -72,6 +72,9 @@ LLM prose fails in predictable ways: lines that have the *shape* of good writing
   The same rule catches mangled idioms — a stock phrase compressed until it stops parsing.
   - ✗ "His voice fits the old words like a key in oil." (Keys aren't in oil — this is "a key in a well-oiled lock" with the middle dropped out, and even intact it only means "smoothly." Called out at the table, session 7.)
   - ✓ "He reads the old words without stumbling once." (Just say the plain thing.)
+  The same rule catches **action-vs-action similes** — "he [does X] like a [person] [doing Y]." Comparing a thing to a thing can earn its keep; comparing an action to another hypothetical action almost never does, and the pattern reads as a reflex once you see it twice. (Called out at the table, session 9 — five examples in two sessions: "nods once, like a merchant closing a ledger," "says, like a man finding rain on market day," "goes through the drow's pockets like a man reading a trail," "looking from his brother to the strangers like a man rechecking arithmetic," "clings like a burr made of wet leather.")
+  - ✗ "Nezznar nods once, like a merchant closing a ledger."
+  - ✓ "Nezznar nods once. The deal is closed." (Say the plain thing the simile was gesturing at.)
   The same rule catches "the way X does Y" comparisons — they're similes in costume and fail the same test.
   - ✗ "He studies the thing the way he'd study a rockslide." (Nobody studies rockslides. The comparison has no content — called out at the table, session 7.)
   - ✓ "He studies it, marking where the legs meet the body." (Say what the studying actually finds.)

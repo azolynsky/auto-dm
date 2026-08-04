@@ -107,11 +107,12 @@ class TestWorldFlags(unittest.TestCase):
         server.FLAGS_FILE = self._orig
         self._tmp.cleanup()
 
-    def test_only_true_flags_shown(self):
+    def test_only_true_flags_with_fact_shown_and_note_hidden(self):
         path = self.tmp / "world-flags.json"
         path.write_text(json.dumps({"flags": {
-            "met_sildar": {"value": True, "note": "You met Sildar."},
-            "spider_revealed": {"value": False, "note": "GM: not yet"},
+            "met_sildar": {"value": True, "note": "GM shorthand", "fact": "You met Sildar."},
+            "dm_only": {"value": True, "note": "GM: players never see this"},
+            "spider_revealed": {"value": False, "note": "GM: not yet", "fact": "nope"},
         }}))
         server.FLAGS_FILE = path
         flags = server.load_world_flags()

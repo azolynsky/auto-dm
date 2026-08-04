@@ -742,7 +742,16 @@ function renderQuests(quests) {
     if (q.summary) li.appendChild(el('div', 'quest-summary', q.summary));
     if (q.objectives && q.objectives.length > 0) {
       const ul = el('ul', 'quest-objectives');
-      q.objectives.forEach(obj => ul.appendChild(el('li', null, obj)));
+      q.objectives.forEach(obj => {
+        const m = obj.match(/^DONE(?:\s*\([^)]*\))?:\s*/i);
+        if (m) {
+          const li2 = el('li', 'objective-done');
+          li2.appendChild(el('s', null, obj.slice(m[0].length)));
+          ul.appendChild(li2);
+        } else {
+          ul.appendChild(el('li', null, obj));
+        }
+      });
       li.appendChild(ul);
     }
     list.appendChild(li);
@@ -811,12 +820,14 @@ const SETTING_CONTROLS = {
   kid_friendly: ['set-kid-friendly', 'checked'],
   narration_style: ['set-narration-style', 'value'],
   custom_rules: ['set-custom-rules', 'value'],
+  web_input: ['set-web-input', 'checked'],
 };
 
 function renderSettings(settings) {
   Object.entries(SETTING_CONTROLS).forEach(([key, [id, prop]]) => {
     if (key in settings) document.getElementById(id)[prop] = settings[key];
   });
+  document.body.classList.toggle('no-web-input', settings.web_input === false);
 }
 
 function collectSettings() {
@@ -867,6 +878,26 @@ function initModals() {
   });
   document.getElementById('settings-save').addEventListener('click', saveSettings);
 
+  // Player input → POST /api/say; the entry comes back through the SSE feed.
+  const sayText = document.getElementById('say-text');
+  document.getElementById('say-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = sayText.value.trim();
+    if (!text) return;
+    const btn = document.getElementById('say-send');
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/say', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (res.ok) sayText.value = '';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
   // Sidebar drawer — open by default on wide screens (it docks there, so the
   // chronicle keeps full width), collapsed on smaller ones. An explicit
   // toggle is remembered per browser and beats the default.
@@ -879,6 +910,18 @@ function initModals() {
     const open = document.body.classList.toggle('sidebar-open');
     localStorage.setItem('sidebar', open ? 'open' : 'closed');
   });
+  // Character sheet drawer (phone only — the toggle is hidden on desktop).
+  document.getElementById('chars-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('chars-open');
+  });
+  // pointerdown, not click: tab clicks re-render the tab bar, so by the time
+  // a click bubbles here its target is detached and looks "outside".
+  document.addEventListener('pointerdown', e => {
+    if (!document.body.classList.contains('chars-open')) return;
+    if (e.target.closest('#characters-column, #chars-toggle')) return;
+    document.body.classList.remove('chars-open');
+  });
+
   // On narrow screens, a click outside the sidebar (and its toggle) closes it.
   document.addEventListener('click', e => {
     if (window.matchMedia('(min-width: 1800px)').matches) return;
