@@ -11,6 +11,8 @@ Usage:
 
 Batch several rolls in ONE call (one label per expression, in order):
     python dice.py 1d20+5 1d8+3 --label "rapier to-hit" --label "rapier damage"
+Mixed modes in a batch (repeat --mode per expression, in order; once = all):
+    python dice.py 1d20+5 1d8+3 --mode advantage --mode normal --label to-hit --label dmg
 
 Output: one JSON object for a single expression, a JSON array for a batch.
 The positional mode argument ("python dice.py 1d20 advantage") still works.
@@ -136,8 +138,8 @@ def main() -> int:
     p = argparse.ArgumentParser(description="Real dice roller for 5e.")
     p.add_argument("expressions", nargs="+",
                    help="e.g. 1d20+5, 2d6 — several expressions roll as a batch")
-    p.add_argument("--mode", default="normal", choices=MODES,
-                   help="applies to every expression in the batch")
+    p.add_argument("--mode", action="append", default=None, choices=MODES,
+                   help="once = applies to every expression; repeated = per expression, in order")
     p.add_argument("--label", action="append", default=None,
                    help="what a roll is for; repeat per expression, in order")
     p.add_argument("--pretty", action="store_true", help="human-readable output")
@@ -146,10 +148,16 @@ def main() -> int:
     # Back-compat: "dice.py 1d20+5 advantage" (positional mode)
     exprs = list(args.expressions)
     if len(exprs) > 1 and exprs[-1] in MODES:
-        args.mode = exprs.pop()
+        args.mode = [exprs.pop()]
+
+    modes = args.mode or ["normal"]
+    if len(modes) == 1:
+        modes = modes * len(exprs)
+    elif len(modes) != len(exprs):
+        raise SystemExit("--mode: give one (applies to all) or one per expression")
 
     labels = args.label or []
-    rolls = [do_roll(expr, args.mode, labels[i] if i < len(labels) else None)
+    rolls = [do_roll(expr, modes[i], labels[i] if i < len(labels) else None)
              for i, expr in enumerate(exprs)]
 
     maybe_publish(rolls)
