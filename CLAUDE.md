@@ -92,9 +92,9 @@ Players control these from the web companion's ⚙ Settings tab. Every `narrate.
 
 All tools print standardized JSON on stdout. They find the campaign via `CAMPAIGN_ROOT` env var, falling back to `<repo>/campaign`.
 
-- `dice.py` — every roll. Multiple expressions batch into one call; `--label` repeats per expression, in order.
+- `dice.py` — every roll. Multiple expressions batch into one call; `--label` (and `--mode`) repeat per expression, in order; a single `--mode` applies to all.
   - `python tools/dice.py 1d20+5 --mode advantage --label "stealth"`
-  - `python tools/dice.py 1d20+7 1d8+3 --label "longbow to-hit" --label "longbow damage"`
+  - `python tools/dice.py 1d20+7 1d8+3 --mode advantage --mode normal --label "longbow to-hit" --label "longbow damage"`
 - `check_resolver.py` — pulls modifiers from character JSON and rolls. Use for skill checks and saves.
   - `python tools/check_resolver.py --char campaign/characters/<id>.json --skill stealth --dc 15`
 - `combat_tracker.py` — initiative order, HP, conditions. Authoritative during combat. Participants matching a character sheet by name auto-load HP from the sheet at `start`, and every `damage`/`heal`/`sethp` writes back to the sheet immediately — never start PCs with `hp: null`, and give companions/monsters explicit HP in the spec. Posts start/end banners to the player feed itself; damage/heal/condition changes are **queued as effects**, not posted (see narrate.py).
