@@ -125,8 +125,22 @@ def load_dramatis() -> list[dict]:
     for c in data.get("characters", []):
         if not c.get("known_to_party", False):
             continue
-        visible.append({k: c[k] for k in ("name", "disposition", "note") if k in c})
+        visible.append({k: c[k] for k in ("name", "disposition", "note", "category") if k in c})
     return visible
+
+
+def load_quest_hooks() -> list[dict]:
+    """Not-yet-started adventures. Opt-in like world-flag facts: only hooks
+    with a 'pitch' (player-facing sentence) are shown; drop the pitch when the
+    table abandons or outgrows a hook and it vanishes while staying DM history."""
+    data = read_json(QUESTS_FILE)
+    if not data:
+        return []
+    return [
+        {k: h[k] for k in ("title", "pitch") if k in h}
+        for h in data.get("hooks", [])
+        if h.get("pitch")
+    ]
 
 
 def load_world_flags() -> dict:
@@ -175,6 +189,7 @@ def build_state_snapshot() -> dict:
         "characters": load_characters(),
         "current": read_json(CURRENT_FILE) or {},
         "quests": load_quests(),
+        "quest_hooks": load_quest_hooks(),
         "world_flags": load_world_flags(),
         "dramatis": load_dramatis(),
         "combat": load_combat(),
@@ -210,6 +225,7 @@ def read_new_feed_lines(byte_pos: int) -> tuple[list[dict], int]:
 def build_sidebar_payload() -> dict:
     return {
         "quests": load_quests(),
+        "quest_hooks": load_quest_hooks(),
         "world_flags": load_world_flags(),
         "dramatis": load_dramatis(),
         "current": read_json(CURRENT_FILE) or {},

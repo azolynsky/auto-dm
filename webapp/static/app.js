@@ -700,8 +700,8 @@ function renderHeader(current) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
-function renderSidebar(quests, worldFlags, current, dramatis) {
-  renderQuests(quests);
+function renderSidebar(quests, worldFlags, current, dramatis, questHooks) {
+  renderQuests(quests, questHooks);
   renderWhosWho(dramatis);
   renderWorldFlags(worldFlags);
   renderLocationDetail(current);
@@ -715,7 +715,19 @@ function renderWhosWho(dramatis) {
     return;
   }
   const tagLabels = { friend: 'Friend', enemy: 'Enemy', unknown: '?' };
-  dramatis.forEach(c => {
+  // Group into vertical sections by optional 'category', preserving
+  // first-appearance order; uncategorized entries render first, unheaded.
+  let lastCategory = null;
+  const ordered = [...dramatis].sort((a, b) => {
+    const ka = dramatis.findIndex(x => (x.category || '') === (a.category || ''));
+    const kb = dramatis.findIndex(x => (x.category || '') === (b.category || ''));
+    return ka - kb;
+  });
+  ordered.forEach(c => {
+    if ((c.category || null) !== lastCategory && c.category) {
+      list.appendChild(el('li', 'sidebar-subhead', c.category));
+    }
+    lastCategory = c.category || null;
     const li = document.createElement('li');
     li.className = 'whoswho-item';
     const head = el('div', 'whoswho-head');
@@ -728,14 +740,14 @@ function renderWhosWho(dramatis) {
   });
 }
 
-function renderQuests(quests) {
+function renderQuests(quests, hooks) {
   const list = document.getElementById('quests-list');
   list.innerHTML = '';
-  if (!quests || quests.length === 0) {
+  if ((!quests || quests.length === 0) && (!hooks || hooks.length === 0)) {
     list.appendChild(el('li', null, 'No active quests.'));
     return;
   }
-  quests.forEach(q => {
+  (quests || []).forEach(q => {
     const li = document.createElement('li');
     li.className = 'quest-item';
     li.appendChild(el('div', 'quest-title', q.title));
@@ -756,6 +768,16 @@ function renderQuests(quests) {
     }
     list.appendChild(li);
   });
+  if (hooks && hooks.length > 0) {
+    list.appendChild(el('li', 'sidebar-subhead', 'On the horizon'));
+    hooks.forEach(h => {
+      const li = document.createElement('li');
+      li.className = 'quest-item quest-hook';
+      if (h.title) li.appendChild(el('div', 'quest-title', h.title));
+      if (h.pitch) li.appendChild(el('div', 'quest-summary', h.pitch));
+      list.appendChild(li);
+    });
+  }
 }
 
 function renderWorldFlags(flags) {
@@ -943,7 +965,7 @@ function applySnapshot(data) {
   renderCharacters(data.characters || []);
   renderFeed(data.feed || []);
   renderHeader(data.current || {});
-  renderSidebar(data.quests || [], data.world_flags || {}, data.current || {}, data.dramatis || []);
+  renderSidebar(data.quests || [], data.world_flags || {}, data.current || {}, data.dramatis || [], data.quest_hooks || []);
   renderCombat(data.combat);
   if (data.settings) renderSettings(data.settings);
 }
@@ -982,7 +1004,7 @@ function connectSSE() {
 
   es.addEventListener('sidebar_update', e => {
     const data = JSON.parse(e.data);
-    renderSidebar(data.quests, data.world_flags, data.current, data.dramatis);
+    renderSidebar(data.quests, data.world_flags, data.current, data.dramatis, data.quest_hooks);
   });
 
   es.addEventListener('settings_update', e => {

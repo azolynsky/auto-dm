@@ -76,6 +76,20 @@ class TestQuestRedaction(unittest.TestCase):
         server.QUESTS_FILE = self.tmp / "nope.json"
         self.assertEqual(server.load_quests(), [])
 
+    def test_hooks_pitch_opt_in(self):
+        self.write_quests({"active": [], "hooks": [
+            {"id": "h1", "title": "Shown", "pitch": "Player-facing pitch.",
+             "summary": "GM shorthand", "consequence_if_ignored": "GM ONLY"},
+            {"id": "h2", "title": "No pitch — hidden", "summary": "GM only"},
+        ]})
+        hooks = server.load_quest_hooks()
+        self.assertEqual(len(hooks), 1)
+        self.assertEqual(hooks[0], {"title": "Shown", "pitch": "Player-facing pitch."})
+
+    def test_hooks_missing_file_returns_empty(self):
+        server.QUESTS_FILE = self.tmp / "nope.json"
+        self.assertEqual(server.load_quest_hooks(), [])
+
 
 @unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
 class TestCharacterDisplaySubset(unittest.TestCase):

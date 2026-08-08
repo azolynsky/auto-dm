@@ -831,8 +831,22 @@ body.combat-active #sidebar-column { bottom: var(--combat-h); }
   margin-bottom: 8px;
 }
 
+/* Sidebar sub-section headers (Who's Who categories, "On the horizon") */
+.sidebar-subhead {
+  font-family: var(--font-header);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  color: var(--accent-dim);
+  text-transform: uppercase;
+  border-bottom: 1px dotted var(--border);
+  padding-bottom: 2px;
+  margin-top: 8px;
+}
+
 /* Quests */
 #quests-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+.quest-hook { opacity: 0.85; }
 
 .quest-item { }
 
