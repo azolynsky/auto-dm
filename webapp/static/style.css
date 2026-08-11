@@ -930,6 +930,34 @@ body.combat-active #sidebar-column { bottom: var(--combat-h); }
   line-height: 1.45;
 }
 
+/* Party pack */
+#resources-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+
+.resource-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.resource-name {
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.resource-count {
+  font-size: 21px;
+  color: var(--parchment);
+}
+
+.resource-note {
+  flex-basis: 100%;
+  font-size: 19px;
+  color: var(--parchment-dim);
+  line-height: 1.45;
+}
+
 /* World flags */
 #worldflags-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
 

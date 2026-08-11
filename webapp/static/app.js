@@ -704,7 +704,32 @@ function renderSidebar(quests, worldFlags, current, dramatis, questHooks) {
   renderQuests(quests, questHooks);
   renderWhosWho(dramatis);
   renderWorldFlags(worldFlags);
+  renderResources(current);
   renderLocationDetail(current);
+}
+
+function renderResources(current) {
+  const list = document.getElementById('resources-list');
+  list.innerHTML = '';
+  const res = (current && current.party_resources) || {};
+  const entries = Object.entries(res);
+  if (entries.length === 0) {
+    list.appendChild(el('li', null, 'The pack is empty.'));
+    return;
+  }
+  const label = k => k.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+  entries.forEach(([k, v]) => {
+    const li = el('li', 'resource-item');
+    if (typeof v === 'number') {
+      li.appendChild(el('span', 'resource-name', label(k)));
+      li.appendChild(el('span', 'resource-count', String(v)));
+    } else {
+      // string values: "Name — detail" reads better than raw key + blob
+      li.appendChild(el('span', 'resource-name', label(k)));
+      li.appendChild(el('div', 'resource-note', String(v)));
+    }
+    list.appendChild(li);
+  });
 }
 
 function renderWhosWho(dramatis) {

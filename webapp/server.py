@@ -368,6 +368,12 @@ async def say(request: Request):
     if not text:
         raise HTTPException(status_code=400, detail="text required")
     campaign_lib.append_feed(ROOT, text, type="player")
+    # web_input=false: message still lands in the feed (a live DM session can
+    # watch it), but no headless DM is spawned — two DMs writing state at once
+    # is a conflict.
+    settings = read_json(SETTINGS_FILE) or {}
+    if not settings.get("web_input"):
+        return JSONResponse({"ok": True, "queued": 0})
     await SAY_QUEUE.put(
         f"[from the web companion] The players say: {text}\n"
         f"(This message is already in the chronicle — don't repost it. It may be "
