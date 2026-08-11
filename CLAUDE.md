@@ -116,7 +116,7 @@ The tools have a test suite: `python3 -m unittest discover -s tests`. Run it aft
 - `director` — what does the world do (DM brain, no prose)
 - `narrator` — render the prose
 - `continuity-checker` — flag contradictions (runs periodically and at session end)
-- `session-prep` — between-session prep (read recap/quests, draft encounters/NPCs)
+- `session-prep` — between-session prep (read recap/quests, draft encounters/NPCs). Also has an **arc design mode** (see its .md) for designing whole multi-session arcs with firewalled secrets — use it when a module/arc concludes, and re-run it after each finale so the campaign renews instead of ending.
 - `prose-editor` — checks Narrator prose against the banned-habits list. NOT in the live loop (too slow — table request, session 9): run it in the background over recent beats during natural lulls and at session wrap, and fold anything it catches into the banned list.
 
 ## Skills (in `.claude/skills/`)
@@ -166,7 +166,7 @@ This means players can scan down for the `>` lines and skip the rest. The DM wor
 
 - **Who's Who** (`dramatis-personae.json`): remove characters who no longer matter — dead minor NPCs, one-scene informants, anyone the party hasn't thought about in sessions. Recurring cast stays; footnotes go. Each entry's optional `category` groups the panel into vertical sections (e.g. "Traveling with you", "Friends", "In the town jail", "Enemies still out there") — keep the file sorted by category and reassign as characters move (jailed, befriended, killed).
 - **Known facts** (`world-flags.json`): players see a flag's `fact` field only — one self-contained, in-world, present-tense sentence readable cold (never the `note`, which is DM shorthand). Add a `fact` when players should see the flag; remove it when the situation is resolved or superseded. The flag and its note stay as DM history either way.
-- **Quests** (`quests.json`): already covered above — fold, rewrite, retire. Hooks (not-yet-started adventures) show in the panel under "On the horizon" only when they carry a `title` + `pitch` (one player-facing sentence, table request s10 — players want to see what's next). Grooming rule mirrors world-flag facts: add the pitch when the party should be weighing the hook; REMOVE the pitch (keep the hook as DM history) once the table has abandoned it or outgrown it.
+- **Quests** (`quests.json`): already covered above — fold, rewrite, retire. Hooks (not-yet-started adventures) show in the panel under "On the horizon" only when they carry a `title` + `pitch` (one player-facing sentence, table request s10 — players want to see what's next). Pitch-less hooks may be **trigger-locked**: their unlock conditions live in the GM-only arc bible (`campaign/world/arc-*/secrets.md`), and when a trigger fires in play, add the title + pitch in that same beat so the quest surfaces. Grooming rule mirrors world-flag facts: add the pitch when the party should be weighing the hook; REMOVE the pitch (keep the hook as DM history) once the table has abandoned it or outgrown it.
 
 Test for every entry: "does a player need this to play tonight?" If not, cut it. And no session numbers in player-facing text — "DONE (s5)", "Session 6: …" in a note or objective pulls players out of the story. Session bookkeeping lives in `set_session` and the session logs; the sidebar speaks in-world.
 
