@@ -81,6 +81,32 @@ def entries_behind(root: Path, filename: str) -> int:
 
 STOPWORDS = {"the", "dark", "black", "king", "lady", "lord", "old", "young"}
 
+# Banned-habit reflexes from .claude/agents/narrator.md that recur despite the
+# list. Narrow, high-precision regexes only — this gate blocks publishing, so
+# a false positive costs a rewrite while a miss costs nothing new.
+STYLE_PATTERNS = [
+    (r"\blike (?:a|an|two|some)?\s?(?:man|men|woman|women|boy|boys|girl|girls|"
+     r"child|children|person|people|sailor|soldier|merchant|schoolboy)s?\b",
+     "action-vs-action simile ('like a man ...-ing') — say the plain thing instead"),
+    (r"\bthe way (?:he|she|they|it)\b(?:'d| would)?",
+     "'the way X does Y' comparison — a simile in costume; say what actually happens"),
+    (r"\b(?:landslide|avalanche|rockslide)\b",
+     "landslide-family comparison — banned outright (table, sessions 7 and 11)"),
+    (r"\bcracks? (?:his|her|their) knuckles\b|\brolls? (?:his|her|their) shoulders\b"
+     r"|\bcocks? an eyebrow\b|\b(?:a|the) breath (?:he|she|they|it)\b",
+     "stock body-language tic — give a gesture that's theirs, or none"),
+]
+
+
+def style_violations(text: str) -> list:
+    """Match prose against the recurring banned-habit patterns. Returns
+    [{'match': ..., 'why': ...}] — used to block publishing until rewritten."""
+    hits = []
+    for pattern, why in STYLE_PATTERNS:
+        for m in re.finditer(pattern, text, re.IGNORECASE):
+            hits.append({"match": m.group(0), "why": why})
+    return hits
+
 
 def sidebar_mentions(root: Path, text: str) -> dict:
     """Who's Who notes for every character named in this narration. Echoed
@@ -115,6 +141,8 @@ def main() -> int:
     )
     p.add_argument("--effect", action="append", default=[],
                    help="mechanical change to show as subtext; repeatable")
+    p.add_argument("--force-style", action="store_true",
+                   help="publish despite banned-style matches (deliberate use only)")
     args = p.parse_args()
 
     raw = sys.stdin.read() if args.text == "-" else args.text
@@ -122,6 +150,18 @@ def main() -> int:
     if not text:
         print("narrate.py: text is empty after normalization; nothing pushed", file=sys.stderr)
         return 1
+
+    if args.type in ("narration", "scene_change") and not args.force_style:
+        hits = style_violations(text)
+        if hits:
+            print(json.dumps({
+                "published": False,
+                "STYLE_BLOCK": "Prose matches the Narrator's banned-habits list. "
+                               "Rewrite the flagged lines and push again "
+                               "(--force-style only for a deliberate false positive).",
+                "violations": hits,
+            }, ensure_ascii=False))
+            return 1
 
     root = campaign_lib.resolve_root()
     effects = campaign_lib.drain_effects(root) + args.effect
