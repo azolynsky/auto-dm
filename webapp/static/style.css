@@ -843,6 +843,26 @@ body.combat-active #sidebar-column { bottom: var(--combat-h); }
   margin-top: 8px;
 }
 
+/* Collapsible sidebar groups */
+.sidebar-section summary { cursor: pointer; list-style: none; }
+.sidebar-section summary::-webkit-details-marker { display: none; }
+.sidebar-section summary::after { content: ' ▸'; color: var(--accent-dim); }
+.sidebar-section details[open] > summary::after { content: ' ▾'; }
+
+.objective-done-summary {
+  font-size: 20px;
+  color: var(--parchment-dim);
+  opacity: 0.55;
+}
+
+.whoswho-group {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 9px;
+}
+
 /* Quests */
 #quests-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
 

@@ -703,7 +703,6 @@ function renderHeader(current) {
 function renderSidebar(quests, worldFlags, current, dramatis, questHooks) {
   renderQuests(quests, questHooks);
   renderWhosWho(dramatis);
-  renderWorldFlags(worldFlags);
   renderResources(current);
   renderLocationDetail(current);
 }
@@ -732,6 +731,17 @@ function renderResources(current) {
   });
 }
 
+// Open/closed state of sidebar <details> groups, keyed by group name, so
+// SSE re-renders don't undo what the player expanded or collapsed.
+const sbCollapse = new Map();
+function collapsible(key, summaryText, summaryClass, defaultOpen) {
+  const d = document.createElement('details');
+  d.open = sbCollapse.has(key) ? sbCollapse.get(key) : defaultOpen;
+  d.appendChild(el('summary', summaryClass, summaryText));
+  d.addEventListener('toggle', () => sbCollapse.set(key, d.open));
+  return d;
+}
+
 function renderWhosWho(dramatis) {
   const list = document.getElementById('whoswho-list');
   list.innerHTML = '';
@@ -740,19 +750,7 @@ function renderWhosWho(dramatis) {
     return;
   }
   const tagLabels = { friend: 'Friend', enemy: 'Enemy', unknown: '?' };
-  // Group into vertical sections by optional 'category', preserving
-  // first-appearance order; uncategorized entries render first, unheaded.
-  let lastCategory = null;
-  const ordered = [...dramatis].sort((a, b) => {
-    const ka = dramatis.findIndex(x => (x.category || '') === (a.category || ''));
-    const kb = dramatis.findIndex(x => (x.category || '') === (b.category || ''));
-    return ka - kb;
-  });
-  ordered.forEach(c => {
-    if ((c.category || null) !== lastCategory && c.category) {
-      list.appendChild(el('li', 'sidebar-subhead', c.category));
-    }
-    lastCategory = c.category || null;
+  const item = c => {
     const li = document.createElement('li');
     li.className = 'whoswho-item';
     const head = el('div', 'whoswho-head');
@@ -761,6 +759,25 @@ function renderWhosWho(dramatis) {
     head.appendChild(el('span', `whoswho-tag whoswho-${disp}`, tagLabels[disp]));
     li.appendChild(head);
     if (c.note) li.appendChild(el('div', 'whoswho-note', c.note));
+    return li;
+  };
+  // Group by optional 'category' in first-appearance order; uncategorized
+  // entries render first, unheaded and always visible.
+  const groups = new Map();
+  dramatis.forEach(c => {
+    const k = c.category || '';
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(c);
+  });
+  (groups.get('') || []).forEach(c => list.appendChild(item(c)));
+  groups.forEach((members, cat) => {
+    if (!cat) return;
+    const li = document.createElement('li');
+    const d = collapsible(`who:${cat}`, cat, 'sidebar-subhead', false);
+    const ul = el('ul', 'whoswho-group');
+    members.forEach(c => ul.appendChild(item(c)));
+    d.appendChild(ul);
+    li.appendChild(d);
     list.appendChild(li);
   });
 }
@@ -779,17 +796,23 @@ function renderQuests(quests, hooks) {
     if (q.summary) li.appendChild(el('div', 'quest-summary', q.summary));
     if (q.objectives && q.objectives.length > 0) {
       const ul = el('ul', 'quest-objectives');
-      q.objectives.forEach(obj => {
-        const m = obj.match(/^DONE(?:\s*\([^)]*\))?:\s*/i);
-        if (m) {
-          const li2 = el('li', 'objective-done');
-          li2.appendChild(el('s', null, obj.slice(m[0].length)));
-          ul.appendChild(li2);
-        } else {
-          ul.appendChild(el('li', null, obj));
-        }
-      });
+      const doneRe = /^DONE(?:\s*\([^)]*\))?\s*[:—–-]\s*/i;
+      const open = q.objectives.filter(o => !doneRe.test(o));
+      const done = q.objectives.filter(o => doneRe.test(o));
+      open.forEach(obj => ul.appendChild(el('li', null, obj)));
       li.appendChild(ul);
+      if (done.length > 0) {
+        const d = collapsible(`quest:${q.title}`, `✓ ${done.length} done`, 'objective-done-summary', false);
+        const dul = el('ul', 'quest-objectives');
+        done.forEach(obj => {
+          const li2 = el('li', 'objective-done');
+          li2.appendChild(el('span', 'objective-check', '✓ '));
+          li2.appendChild(el('s', null, obj.replace(doneRe, '')));
+          dul.appendChild(li2);
+        });
+        d.appendChild(dul);
+        li.appendChild(d);
+      }
     }
     list.appendChild(li);
   });
@@ -803,19 +826,6 @@ function renderQuests(quests, hooks) {
       list.appendChild(li);
     });
   }
-}
-
-function renderWorldFlags(flags) {
-  const list = document.getElementById('worldflags-list');
-  list.innerHTML = '';
-  const entries = Object.entries(flags || {});
-  if (entries.length === 0) {
-    list.appendChild(el('li', null, 'Nothing yet.'));
-    return;
-  }
-  entries.forEach(([, note]) => {
-    list.appendChild(el('li', null, note));
-  });
 }
 
 function renderLocationDetail(current) {
