@@ -71,7 +71,7 @@ At 1st level, you know four cantrips of your choice from the sorcerer spell list
 
 The Sorcerer table shows how many spell slots you have to cast your sorcerer spells of 1st level and higher. To cast one of these sorcerer spells, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest.
 
-For example, if you know the 1st-level spell *burning hands* and have a 1st-level and a 2nd-level spell slot available, you can cast *burning hands* using either slot.
+For example, if you know the 1st-level spell *[[rules/srd/07_Spells/Spells_Each/Burning_Hands|burning hands]]* and have a 1st-level and a 2nd-level spell slot available, you can cast *burning hands* using either slot.
 
 #### Spells Known of 1st Level and Higher
 
@@ -170,7 +170,7 @@ When you cast a spell, you can spend 1 sorcery point to cast it without any soma
 
 When you cast a spell that targets only one creature and doesn't have a range of self, you can spend a number of sorcery points equal to the spell's level to target a second creature in range with the same spell (1 sorcery point if the spell is a cantrip).
 
-To be eligible, a spell must be incapable of targeting more than one creature at the spell's current level. For example, *magic missile* and *scorching ray* aren't eligible, but *ray of frost* and *chromatic orb* are.
+To be eligible, a spell must be incapable of targeting more than one creature at the spell's current level. For example, *[[rules/srd/07_Spells/Spells_Each/Magic_Missile|magic missile]]* and *[[rules/srd/07_Spells/Spells_Each/Scorching_Ray|scorching ray]]* aren't eligible, but *[[rules/srd/07_Spells/Spells_Each/Ray_of_Frost|ray of frost]]* and *chromatic orb* are.
 
 ### Ability Score Improvement
 

@@ -26,7 +26,7 @@ Placing the haversack inside an extradimensional space created by a *bag of hold
 
 *Wondrous item, uncommon (requires attunement)*
 
-While wearing this hat, you can use an action to cast the *disguise self* spell from it at will. The spell ends if the hat is removed.
+While wearing this hat, you can use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Disguise_Self|disguise self]]* spell from it at will. The spell ends if the hat is removed.
 
 ### Headband of Intellect
 
@@ -42,7 +42,7 @@ This dazzling helm is set with 1d10 diamonds, 2d10 rubies, 3d10 fire opals, and 
 
 You gain the following benefits while wearing it:
 
-- You can use an action to cast one of the following spells (save DC 18), using one of the helm's gems of the specified type as a component: *daylight* (opal), *fireball* (fire opal), *prismatic spray* (diamond), or *wall of fire* (ruby). The gem is destroyed when the spell is cast and disappears from the helm.
+- You can use an action to cast one of the following spells (save DC 18), using one of the helm's gems of the specified type as a component: *[[rules/srd/07_Spells/Spells_Each/Daylight|daylight]]* (opal), *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]* (fire opal), *[[rules/srd/07_Spells/Spells_Each/Prismatic_Spray|prismatic spray]]* (diamond), or *[[rules/srd/07_Spells/Spells_Each/Wall_of_Fire|wall of fire]]* (ruby). The gem is destroyed when the spell is cast and disappears from the helm.
 - As long as it has at least one diamond, the helm emits dim light in a 30-foot radius when at least one undead is within that area. Any undead that starts its turn in that area takes 1d6 radiant damage.
 - As long as the helm has at least one ruby, you have resistance to fire damage.
 - As long as the helm has at least one fire opal, you can use an action and speak a command word to cause one weapon you are holding to burst into flames. The flames emit bright light in a 10-foot radius and dim light for an additional 10 feet. The flames are harmless to you and the weapon. When you hit with an attack using the blazing weapon, the target takes an extra 1d6 fire damage. The flames last until you use a bonus action to speak the command word again or until you drop or stow the weapon.
@@ -53,21 +53,21 @@ Roll a d20 if you are wearing the helm and take fire damage as a result of faili
 
 *Wondrous item, uncommon*
 
-While wearing this helm, you can use an action to cast the *comprehend languages* spell from it at will.
+While wearing this helm, you can use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Comprehend_Languages|comprehend languages]]* spell from it at will.
 
 ### Helm of Telepathy
 
 *Wondrous item, uncommon (requires attunement)*
 
-While wearing this helm, you can use an action to cast the *detect thoughts* spell (save DC 13) from it. As long as you maintain concentration on the spell, you can use a bonus action to send a telepathic message to a creature you are focused on. It can reply-using a bonus action to do so-while your focus on it continues.
+While wearing this helm, you can use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Detect_Thoughts|detect thoughts]]* spell (save DC 13) from it. As long as you maintain concentration on the spell, you can use a bonus action to send a telepathic message to a creature you are focused on. It can reply-using a bonus action to do so-while your focus on it continues.
 
-While focusing on a creature with *detect thoughts*, you can use an action to cast the *suggestion* spell (save DC 13) from the helm on that creature. Once used, the *suggestion* property can't be used again until the next dawn.
+While focusing on a creature with *detect thoughts*, you can use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Suggestion|suggestion]]* spell (save DC 13) from the helm on that creature. Once used, the *suggestion* property can't be used again until the next dawn.
 
 ### Helm of Teleportation
 
 *Wondrous item, rare (requires attunement)*
 
-This helm has 3 charges. While wearing it, you can use an action and expend 1 charge to cast the *teleport* spell from it. The helm regains 1d3 expended charges daily at dawn.
+This helm has 3 charges. While wearing it, you can use an action and expend 1 charge to cast the *[[rules/srd/07_Spells/Spells_Each/Teleport|teleport]]* spell from it. The helm regains 1d3 expended charges daily at dawn.
 
 ### Holy Avenger
 

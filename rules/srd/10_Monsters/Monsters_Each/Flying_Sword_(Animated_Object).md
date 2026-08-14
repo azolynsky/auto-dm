@@ -24,7 +24,7 @@
 
 **Challenge** 1/4 (50 XP)
 
-***Antimagic Susceptibility***. The sword is incapacitated while in the area of an *antimagic field*. If targeted by *dispel magic*, the sword must succeed on a Constitution saving throw against the caster's spell save DC or fall unconscious for 1 minute.
+***Antimagic Susceptibility***. The sword is incapacitated while in the area of an *[[rules/srd/07_Spells/Spells_Each/Antimagic_Field|antimagic field]]*. If targeted by *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*, the sword must succeed on a Constitution saving throw against the caster's spell save DC or fall unconscious for 1 minute.
 
 ***False Appearance***. While the sword remains motionless and isn't flying, it is indistinguishable from a normal sword.
 

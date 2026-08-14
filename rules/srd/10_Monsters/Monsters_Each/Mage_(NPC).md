@@ -2,7 +2,7 @@
 
 *Medium humanoid (any race), any alignment*
 
-**Armor Class** 12 (15 with *mage armor*)
+**Armor Class** 12 (15 with *[[rules/srd/07_Spells/Spells_Each/Mage_Armor|mage armor]]*)
 
 **Hit Points** 40 (9d8)
 
@@ -24,12 +24,12 @@
 
 ***Spellcasting***. The mage is a 9th-level spellcaster. Its spellcasting ability is Intelligence (spell save DC 14, +6 to hit with spell attacks). The mage has the following wizard spells prepared:
 
-Cantrips (at will): *fire bolt*, *light*, *mage hand*, *prestidigitation*
-1st level (4 slots): *detect magic*, *mage armor*, *magic missile*, *shield*
-2nd level (3 slots): *misty step*, *suggestion*
-3rd level (3 slots): *counterspell*, *fireball*, *fly*
-4th level (3 slots): *greater invisibility*, *ice storm*
-5th level (1 slot): *cone of cold*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Fire_Bolt|fire bolt]]*, *[[rules/srd/07_Spells/Spells_Each/Light|light]]*, *[[rules/srd/07_Spells/Spells_Each/Mage_Hand|mage hand]]*, *[[rules/srd/07_Spells/Spells_Each/Prestidigitation|prestidigitation]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *mage armor*, *[[rules/srd/07_Spells/Spells_Each/Magic_Missile|magic missile]]*, *[[rules/srd/07_Spells/Spells_Each/Shield|shield]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Misty_Step|misty step]]*, *[[rules/srd/07_Spells/Spells_Each/Suggestion|suggestion]]*
+3rd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Counterspell|counterspell]]*, *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]*, *[[rules/srd/07_Spells/Spells_Each/Fly|fly]]*
+4th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Greater_Invisibility|greater invisibility]]*, *[[rules/srd/07_Spells/Spells_Each/Ice_Storm|ice storm]]*
+5th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Cone_of_Cold|cone of cold]]*
 
 ###### Actions
 

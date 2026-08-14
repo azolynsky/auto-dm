@@ -6,7 +6,7 @@ When a one-shot NPC reappears, the Bookkeeper promotes them: copy `recurring/_TE
 
 ## Recurring
 
-- **[Maera Thistle](recurring/maera-thistle/summary.md)** — Keeper of the Waylight Inn in Emberwick; quest-giver for The Cold Lantern.
+- **[[campaigns/starter/npcs/recurring/maera-thistle/summary|Maera Thistle]]** — Keeper of the Waylight Inn in [[campaigns/starter/world/locations/emberwick/summary|Emberwick]]; quest-giver for The Cold Lantern.
 
 ## One-shot
 

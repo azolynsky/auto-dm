@@ -22,11 +22,11 @@
 
 ***Innate Spellcasting***. The lamia's innate spellcasting ability is Charisma (spell save DC 13). It can innately cast the following spells, requiring no material components.
 
-At will: *disguise self* (any humanoid form), *major image*
+At will: *[[rules/srd/07_Spells/Spells_Each/Disguise_Self|disguise self]]* (any humanoid form), *[[rules/srd/07_Spells/Spells_Each/Major_Image|major image]]*
 
-3/day each: *charm person*, *mirror image*, *scrying*, *suggestion*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Charm_Person|charm person]]*, *[[rules/srd/07_Spells/Spells_Each/Mirror_Image|mirror image]]*, *[[rules/srd/07_Spells/Spells_Each/Scrying|scrying]]*, *[[rules/srd/07_Spells/Spells_Each/Suggestion|suggestion]]*
 
-1/day: *geas*
+1/day: *[[rules/srd/07_Spells/Spells_Each/Geas|geas]]*
 
 ###### Actions
 

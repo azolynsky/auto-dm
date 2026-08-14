@@ -24,9 +24,9 @@
 
 ***Innate Spellcasting***. The oni's innate spellcasting ability is Charisma (spell save DC 13). The oni can innately cast the following spells, requiring no material Components
 
-At will: *darkness*, *invisibility*
+At will: *[[rules/srd/07_Spells/Spells_Each/Darkness|darkness]]*, *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]*
 
-1/day each: *charm person*, *cone of cold*, *gaseous form*, *sleep*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Charm_Person|charm person]]*, *[[rules/srd/07_Spells/Spells_Each/Cone_of_Cold|cone of cold]]*, *[[rules/srd/07_Spells/Spells_Each/Gaseous_Form|gaseous form]]*, *[[rules/srd/07_Spells/Spells_Each/Sleep|sleep]]*
 
 ***Magic Weapons***. The oni's weapon attacks are magical.
 

@@ -28,4 +28,4 @@
 
 ***Rake***. *Melee Weapon Attack:* +1 to hit, reach 5 ft., one target. *Hit:* 1 (1d4-1) slashing damage.
 
-An **awakened shrub** is an ordinary shrub given sentience and mobility by the *awaken* spell or similar magic.
+An **awakened shrub** is an ordinary shrub given sentience and mobility by the *[[rules/srd/07_Spells/Spells_Each/Awaken|awaken]]* spell or similar magic.

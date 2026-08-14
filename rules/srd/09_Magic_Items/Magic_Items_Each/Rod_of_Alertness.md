@@ -6,7 +6,7 @@ This rod has a flanged head and the following properties.
 
 ***Alertness***. While holding the rod, you have advantage on Wisdom (Perception) checks and on rolls for initiative.
 
-***Spells***. While holding the rod, you can use an action to cast one of the following spells from it: *detect evil and good*, *detect magic*, *detect poison and disease*, or *see invisibility.*
+***Spells***. While holding the rod, you can use an action to cast one of the following spells from it: *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Poison_and_Disease|detect poison and disease]]*, or *see invisibility.*
 
 ***Protective Aura***. As an action, you can plant the haft end of the rod in the ground, whereupon the rod's head sheds bright light in a 60-foot radius and dim light for an additional 60 feet. While in that bright light, you and any creature that is friendly to you gain a +1 bonus to AC and saving throws and can sense the location of any invisible hostile creature that is also in the bright light.
 

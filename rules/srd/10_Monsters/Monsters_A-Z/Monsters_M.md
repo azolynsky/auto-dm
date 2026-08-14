@@ -86,7 +86,7 @@
 
 **Challenge** 6 (2,300 XP)
 
-***Petrifying Gaze***. When a creature that can see the medusa's eyes starts its turn within 30 feet of the medusa, the medusa can force it to make a DC 14 Constitution saving throw if the medusa isn't incapacitated and can see the creature. If the saving throw fails by 5 or more, the creature is instantly petrified. Otherwise, a creature that fails the save begins to turn to stone and is restrained. The restrained creature must repeat the saving throw at the end of its next turn, becoming petrified on a failure or ending the effect on a success. The petrification lasts until the creature is freed by the *greater restoration* spell or other magic.
+***Petrifying Gaze***. When a creature that can see the medusa's eyes starts its turn within 30 feet of the medusa, the medusa can force it to make a DC 14 Constitution saving throw if the medusa isn't incapacitated and can see the creature. If the saving throw fails by 5 or more, the creature is instantly petrified. Otherwise, a creature that fails the save begins to turn to stone and is restrained. The restrained creature must repeat the saving throw at the end of its next turn, becoming petrified on a failure or ending the effect on a success. The petrification lasts until the creature is freed by the *[[rules/srd/07_Spells/Spells_Each/Greater_Restoration|greater restoration]]* spell or other magic.
 
 Unless surprised, a creature can avert its eyes to avoid the saving throw at the start of its turn. If the creature does so, it can't see the medusa until the start of its next turn, when it can avert its eyes again. If the creature looks at the medusa in the meantime, it must immediately make the save.
 
@@ -134,7 +134,7 @@ If the medusa sees itself reflected on a polished surface within 30 feet of it a
 
 ***Death Burst***. When the mephit dies, it explodes in a burst of dust. Each creature within 5 feet of it must then succeed on a DC 10 Constitution saving throw or be blinded for 1 minute. A blinded creature can repeat the saving throw on each of its turns, ending the effect on itself on a success.
 
-***Innate Spellcasting (1/Day)***. The mephit can innately cast *sleep*, requiring no material components. Its innate spellcasting ability is Charisma.
+***Innate Spellcasting (1/Day)***. The mephit can innately cast *[[rules/srd/07_Spells/Spells_Each/Sleep|sleep]]*, requiring no material components. Its innate spellcasting ability is Charisma.
 
 ###### Actions
 
@@ -174,7 +174,7 @@ If the medusa sees itself reflected on a polished surface within 30 feet of it a
 
 ***False Appearance***. While the mephit remains motionless, it is indistinguishable from an ordinary shard of ice.
 
-***Innate Spellcasting (1/Day)***. The mephit can innately cast *fog cloud*, requiring no material components. Its innate spellcasting ability is Charisma.
+***Innate Spellcasting (1/Day)***. The mephit can innately cast *[[rules/srd/07_Spells/Spells_Each/Fog_Cloud|fog cloud]]*, requiring no material components. Its innate spellcasting ability is Charisma.
 
 ###### Actions
 
@@ -214,7 +214,7 @@ If the medusa sees itself reflected on a polished surface within 30 feet of it a
 
 ***False Appearance***. While the mephit remains motionless, it is indistinguishable from an ordinary mound of magma.
 
-***Innate Spellcasting (1/Day)***. The mephit can innately cast *heat metal* (spell save DC 10), requiring no material components. Its innate spellcasting ability is Charisma.
+***Innate Spellcasting (1/Day)***. The mephit can innately cast *[[rules/srd/07_Spells/Spells_Each/Heat_Metal|heat metal]]* (spell save DC 10), requiring no material components. Its innate spellcasting ability is Charisma.
 
 ###### Actions
 
@@ -248,7 +248,7 @@ If the medusa sees itself reflected on a polished surface within 30 feet of it a
 
 ***Death Burst***. When the mephit dies, it explodes in a cloud of steam. Each creature within 5 feet of the mephit must succeed on a DC 10 Dexterity saving throw or take 4 (1d8) fire damage.
 
-***Innate Spellcasting (1/Day)***. The mephit can innately cast *blur*, requiring no material components. Its innate spellcasting ability is Charisma.
+***Innate Spellcasting (1/Day)***. The mephit can innately cast *[[rules/srd/07_Spells/Spells_Each/Blur|blur]]*, requiring no material components. Its innate spellcasting ability is Charisma.
 
 ###### Actions
 
@@ -426,7 +426,7 @@ If the medusa sees itself reflected on a polished surface within 30 feet of it a
 
 ***Multiattack***. The mummy can use its Dreadful Glare and makes one attack with its rotting fist.
 
-***Rotting Fist***. *Melee Weapon Attack:* +5 to hit, reach 5 ft., one target. *Hit:* 10 (2d6+3) bludgeoning damage plus 10 (3d6) necrotic damage. If the target is a creature, it must succeed on a DC 12 Constitution saving throw or be cursed with mummy rot. The cursed target can't regain hit points, and its hit point maximum decreases by 10 (3d6) for every 24 hours that elapse. If the curse reduces the target's hit point maximum to 0, the target dies, and its body turns to dust. The curse lasts until removed by the *remove curse* spell or other magic.
+***Rotting Fist***. *Melee Weapon Attack:* +5 to hit, reach 5 ft., one target. *Hit:* 10 (2d6+3) bludgeoning damage plus 10 (3d6) necrotic damage. If the target is a creature, it must succeed on a DC 12 Constitution saving throw or be cursed with mummy rot. The cursed target can't regain hit points, and its hit point maximum decreases by 10 (3d6) for every 24 hours that elapse. If the curse reduces the target's hit point maximum to 0, the target dies, and its body turns to dust. The curse lasts until removed by the *[[rules/srd/07_Spells/Spells_Each/Remove_Curse|remove curse]]* spell or other magic.
 
 ***Dreadful Glare***. The mummy targets one creature it can see within 60 feet of it. If the target can see the mummy, it must succeed on a DC 11 Wisdom saving throw against this magic or become frightened until the end of the mummy's next turn. If the target fails the saving throw by 5 or more, it is also paralyzed for the same duration. A target that succeeds on the saving throw is immune to the Dreadful Glare of all mummies (but not mummy lords) for the next 24 hours.
 
@@ -466,13 +466,13 @@ If the medusa sees itself reflected on a polished surface within 30 feet of it a
 
 ***Spellcasting***. The mummy lord is a 10th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 17, +9 to hit with spell attacks). The mummy lord has the following cleric spells prepared:
 
-Cantrips (at will): *sacred flame*, *thaumaturgy*
-1st level (4 slots): *command*, *guiding bolt*, *shield of faith*
-2nd level (3 slots): *hold person*, *silence*, *spiritual weapon*
-3rd level (3 slots): *animate dead*, *dispel magic*
-4th level (3 slots): *divination*, *guardian of faith*
-5th level (2 slots): *contagion*, *insect plague*
-6th level (1 slot): *harm*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Sacred_Flame|sacred flame]]*, *[[rules/srd/07_Spells/Spells_Each/Thaumaturgy|thaumaturgy]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Command|command]]*, *[[rules/srd/07_Spells/Spells_Each/Guiding_Bolt|guiding bolt]]*, *[[rules/srd/07_Spells/Spells_Each/Shield_of_Faith|shield of faith]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Hold_Person|hold person]]*, *[[rules/srd/07_Spells/Spells_Each/Silence|silence]]*, *[[rules/srd/07_Spells/Spells_Each/Spiritual_Weapon|spiritual weapon]]*
+3rd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Animate_Dead|animate dead]]*, *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*
+4th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Divination|divination]]*, *[[rules/srd/07_Spells/Spells_Each/Guardian_of_Faith|guardian of faith]]*
+5th level (2 slots): *[[rules/srd/07_Spells/Spells_Each/Contagion|contagion]]*, *[[rules/srd/07_Spells/Spells_Each/Insect_Plague|insect plague]]*
+6th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Harm|harm]]*
 
 ###### Actions
 

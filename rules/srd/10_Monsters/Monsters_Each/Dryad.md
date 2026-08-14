@@ -2,7 +2,7 @@
 
 *Medium fey, neutral*
 
-**Armor Class** 11 (16 with *barkskin*)
+**Armor Class** 11 (16 with *[[rules/srd/07_Spells/Spells_Each/Barkskin|barkskin]]*)
 
 **Hit Points** 22 (5d8)
 
@@ -22,17 +22,17 @@
 
 ***Innate Spellcasting***. The dryad's innate spellcasting ability is Charisma (spell save DC 14). The dryad can innately cast the following spells, requiring no material Components
 
-At will: *druidcraft*
+At will: *[[rules/srd/07_Spells/Spells_Each/Druidcraft|druidcraft]]*
 
-3/day each: *entangle*, *goodberry*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Entangle|entangle]]*, *[[rules/srd/07_Spells/Spells_Each/Goodberry|goodberry]]*
 
-1/day each: *barkskin*, *pass without trace*, *shillelagh*
+1/day each: *barkskin*, *[[rules/srd/07_Spells/Spells_Each/Pass_without_Trace|pass without trace]]*, *[[rules/srd/07_Spells/Spells_Each/Shillelagh|shillelagh]]*
 
 ***Magic Resistance***. The dryad has advantage on saving throws against spells and other magical effects.
 
 ***Speak with Beasts and Plants***. The dryad can communicate with beasts and plants as if they shared a language.
 
-***Tree Stride***. Once on her turn, the dryad can use 10 feet of her movement to step magically into one living tree within her reach and emerge from a second living tree within 60 feet of the first tree, appearing in an unoccupied space within 5 feet of the second tree. Both trees must be Large or bigger.
+***[[rules/srd/07_Spells/Spells_Each/Tree_Stride|Tree Stride]]***. Once on her turn, the dryad can use 10 feet of her movement to step magically into one living tree within her reach and emerge from a second living tree within 60 feet of the first tree, appearing in an unoccupied space within 5 feet of the second tree. Both trees must be Large or bigger.
 
 ###### Actions
 

@@ -72,6 +72,15 @@ onboarding, combat-encounter, skill-check, spellcasting, leveling-up, session-wr
 - `budget_recap.py` — keeps the rolling recap within its character budget.
 - `new_campaign.py` — creates `campaign/` from `campaigns/starter/`.
 
+## Obsidian wikilinks
+
+The repo doubles as an Obsidian vault (`.obsidian/` is gitignored). Markdown files cross-reference each other with wikilinks so the graph view works and entities are navigable:
+
+- Format: `[[full/path/from/repo/root|name as written]]` — e.g. `[[campaign/npcs/recurring/pip/summary|Pip]]`. Always full path (many files share names like `summary.md`), always an alias so prose reads unchanged.
+- Link the **first mention per file** of any NPC, location, faction, spell, monster, or magic item that has its own file. Later mentions stay plain. No self-links within an entity's own folder; no links inside code blocks or frontmatter.
+- SRD hubs: `Monster_Index.md`, `Magic_Item_Index.md`, and `Spell_Lists_Wikilinked.md` link every leaf file in the `*_Each/` folders. **When adding an SRD entry, add it to its hub too.** Stat blocks link spells in italics: `*[[…/Spells_Each/Misty_Step|misty step]]*`.
+- Session logs carry `Prev:`/`Next:` footers linking adjacent sessions.
+
 ## Web companion
 
 A webpage the players watch during the session: character cards with live HP (click a portrait for the full sheet — saves, skills, spells, full inventory), the narration feed (streamed via SSE as the DM calls `narrate.py`, with mechanical changes as subtext under the prose), the quest log (party-known quests only — `secret_truth` never leaves the server), an initiative bar during combat, and a ⚙ **Settings** tab where the table tunes the DM: rules strictness (strict vs. hand-of-god), beginner guidance, public dice rolls, kid-friendly narration, narration length, and free-text house rules.

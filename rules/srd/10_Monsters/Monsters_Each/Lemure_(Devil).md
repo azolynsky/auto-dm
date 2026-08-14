@@ -26,7 +26,7 @@
 
 ***Devil's Sight***. Magical darkness doesn't impede the lemure's darkvision.
 
-***Hellish Rejuvenation***. A lemure that dies in the Nine Hells comes back to life with all its hit points in 1d10 days unless it is killed by a good-aligned creature with a *bless* spell cast on that creature or its remains are sprinkled with holy water.
+***Hellish Rejuvenation***. A lemure that dies in the Nine Hells comes back to life with all its hit points in 1d10 days unless it is killed by a good-aligned creature with a *[[rules/srd/07_Spells/Spells_Each/Bless|bless]]* spell cast on that creature or its remains are sprinkled with holy water.
 
 ###### Actions
 

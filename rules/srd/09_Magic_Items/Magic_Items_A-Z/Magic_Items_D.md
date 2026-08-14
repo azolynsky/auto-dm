@@ -123,7 +123,7 @@ Once a card is drawn, it fades from existence. Unless the card is the Fool or th
 
 ***Comet***. If you single-handedly defeat the next hostile monster or group of monsters you encounter, you gain experience points enough to gain one level. Otherwise, this card has no effect.
 
-***Donjon***. You disappear and become entombed in a state of suspended animation in an extradimensional sphere. Everything you were wearing and carrying stays behind in the space you occupied when you disappeared. You remain imprisoned until you are found and removed from the sphere. You can't be located by any divination magic, but a *wish* spell can reveal the location of your prison. You draw no more cards.
+***Donjon***. You disappear and become entombed in a state of suspended animation in an extradimensional sphere. Everything you were wearing and carrying stays behind in the space you occupied when you disappeared. You remain imprisoned until you are found and removed from the sphere. You can't be located by any divination magic, but a *[[rules/srd/07_Spells/Spells_Each/Wish|wish]]* spell can reveal the location of your prison. You draw no more cards.
 
 ***Euryale***. The card's medusa-like visage curses you. You take a -2 penalty on saving throws while cursed in this way. Only a god or the magic of The Fates card can end this curse.
 
@@ -209,7 +209,7 @@ The first time you attack with the sword on each of your turns, you can transfer
 
 While wearing this armor, you gain a +1 bonus to AC, and you can understand and speak Abyssal. In addition, the armor's clawed gauntlets turn unarmed strikes with your hands into magic weapons that deal slashing damage, with a +1 bonus to attack rolls and damage rolls and a damage die of 1d8.
 
-***Curse***. Once you don this cursed armor, you can't doff it unless you are targeted by the *remove curse* spell or similar magic. While wearing the armor, you have disadvantage on attack rolls against demons and on saving throws against their spells and special abilities.
+***Curse***. Once you don this cursed armor, you can't doff it unless you are targeted by the *[[rules/srd/07_Spells/Spells_Each/Remove_Curse|remove curse]]* spell or similar magic. While wearing the armor, you have disadvantage on attack rolls against demons and on saving throws against their spells and special abilities.
 
 ### Dimensional Shackles
 
@@ -272,9 +272,9 @@ An elemental composed mostly of water that is exposed to a pinch of the dust mus
 
 *Wondrous item, uncommon*
 
-Found in a small container, this powder resembles very fine sand. It appears to be *dust of disappearance*, and an *identify* spell reveals it to be such. There is enough of it for one use.
+Found in a small container, this powder resembles very fine sand. It appears to be *dust of disappearance*, and an *[[rules/srd/07_Spells/Spells_Each/Identify|identify]]* spell reveals it to be such. There is enough of it for one use.
 
-When you use an action to throw a handful of the dust into the air, you and each creature that needs to breathe within 30 feet of you must succeed on a DC 15 Constitution saving throw or become unable to breathe, while sneezing uncontrollably. A creature affected in this way is incapacitated and suffocating. As long as it is conscious, a creature can repeat the saving throw at the end of each of its turns, ending the effect on it on a success. The *lesser restoration* spell can also end the effect on a creature.
+When you use an action to throw a handful of the dust into the air, you and each creature that needs to breathe within 30 feet of you must succeed on a DC 15 Constitution saving throw or become unable to breathe, while sneezing uncontrollably. A creature affected in this way is incapacitated and suffocating. As long as it is conscious, a creature can repeat the saving throw at the end of each of its turns, ending the effect on it on a success. The *[[rules/srd/07_Spells/Spells_Each/Lesser_Restoration|lesser restoration]]* spell can also end the effect on a creature.
 
 ### Dwarven Plate
 

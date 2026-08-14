@@ -26,7 +26,7 @@
 
 ***Amphibious***. The chuul can breathe air and water.
 
-***Sense Magic***. The chuul senses magic within 120 feet of it at will. This trait otherwise works like the *detect magic* spell but isn't itself magical.
+***Sense Magic***. The chuul senses magic within 120 feet of it at will. This trait otherwise works like the *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]* spell but isn't itself magical.
 
 ###### Actions
 

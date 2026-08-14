@@ -2,7 +2,7 @@
 
 A deliberately small, system-neutral starting canvas: **the Vale**, a quiet
 farming valley a week's ride from the nearest city, with the village of
-**Emberwick** at its heart. Everything here is meant to be replaced or grown —
+**[[campaigns/starter/world/locations/emberwick/summary|Emberwick]]** at its heart. Everything here is meant to be replaced or grown —
 swap in the Sword Coast, your homebrew continent, or anything else during
 session 0. Nothing is load-bearing.
 

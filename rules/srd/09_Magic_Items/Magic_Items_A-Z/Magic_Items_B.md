@@ -169,7 +169,7 @@ While you wear these boots, your steps make no sound, regardless of the surface 
 
 *Wondrous item, rare (requires attunement)*
 
-While you wear these boots, you can use an action to cast the *levitate* spell on yourself at will.
+While you wear these boots, you can use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Levitate|levitate]]* spell on yourself at will.
 
 ### Boots of Speed
 
@@ -199,7 +199,7 @@ These furred boots are snug and feel quite warm. While you wear them, you gain t
 
 *Wondrous item, rare*
 
-While this bowl is filled with water, you can use an action to speak the bowl's command word and summon a water elemental, as if you had cast the *conjure elemental* spell. The bowl can't be used this way again until the next dawn.
+While this bowl is filled with water, you can use an action to speak the bowl's command word and summon a water elemental, as if you had cast the *[[rules/srd/07_Spells/Spells_Each/Conjure_Elemental|conjure elemental]]* spell. The bowl can't be used this way again until the next dawn.
 
 The bowl is about 1 foot in diameter and half as deep. It weighs 3 pounds and holds about 3 gallons.
 
@@ -227,7 +227,7 @@ The brazier weighs 5 pounds.
 
 *Wondrous item, uncommon (requires attunement)*
 
-While wearing this brooch, you have resistance to force damage, and you have immunity to damage from the *magic missile* spell.
+While wearing this brooch, you have resistance to force damage, and you have immunity to damage from the *[[rules/srd/07_Spells/Spells_Each/Magic_Missile|magic missile]]* spell.
 
 ### Broom of Flying
 

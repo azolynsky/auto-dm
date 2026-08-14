@@ -26,17 +26,17 @@
 
 **Challenge** 10 (5,900 XP)
 
-***Rejuvenation***. If it dies, the naga returns to life in 1d6 days and regains all its hit points. Only a *wish* spell can prevent this trait from functioning.
+***Rejuvenation***. If it dies, the naga returns to life in 1d6 days and regains all its hit points. Only a *[[rules/srd/07_Spells/Spells_Each/Wish|wish]]* spell can prevent this trait from functioning.
 
 ***Spellcasting***. The naga is an 11th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 16, +8 to hit with spell attacks), and it needs only verbal components to cast its spells. It has the following cleric spells prepared:
 
-Cantrips (at will): *mending*, *sacred flame*, *thaumaturgy*
-1st level (4 slots): *command*, *cure wounds*, *shield of faith*
-2nd level (3 slots): *calm emotions*, *hold person*
-3rd level (3 slots): *bestow curse*, *clairvoyance*
-4th level (3 slots): *banishment*, *freedom of movement*
-5th level (2 slots): *flame strike*, *geas*
-6th level (1 slot): *true seeing*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Mending|mending]]*, *[[rules/srd/07_Spells/Spells_Each/Sacred_Flame|sacred flame]]*, *[[rules/srd/07_Spells/Spells_Each/Thaumaturgy|thaumaturgy]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Command|command]]*, *[[rules/srd/07_Spells/Spells_Each/Cure_Wounds|cure wounds]]*, *[[rules/srd/07_Spells/Spells_Each/Shield_of_Faith|shield of faith]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Calm_Emotions|calm emotions]]*, *[[rules/srd/07_Spells/Spells_Each/Hold_Person|hold person]]*
+3rd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Bestow_Curse|bestow curse]]*, *[[rules/srd/07_Spells/Spells_Each/Clairvoyance|clairvoyance]]*
+4th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Banishment|banishment]]*, *[[rules/srd/07_Spells/Spells_Each/Freedom_of_Movement|freedom of movement]]*
+5th level (2 slots): *[[rules/srd/07_Spells/Spells_Each/Flame_Strike|flame strike]]*, *[[rules/srd/07_Spells/Spells_Each/Geas|geas]]*
+6th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/True_Seeing|true seeing]]*
 
 ###### Actions
 

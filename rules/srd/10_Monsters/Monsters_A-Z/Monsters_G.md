@@ -66,11 +66,11 @@
 
 ***Innate Spellcasting***. The djinni's innate spellcasting ability is Charisma (spell save DC 17, +9 to hit with spell attacks). It can innately cast the following spells, requiring no material Components
 
-At will: *detect evil and good*, *detect magic*, *thunderwave*
+At will: *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Thunderwave|thunderwave]]*
 
-3/day each: *create food and water* (can create wine instead of water), *tongues*, *wind walk*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Create_Food_and_Water|create food and water]]* (can create wine instead of water), *[[rules/srd/07_Spells/Spells_Each/Tongues|tongues]]*, *[[rules/srd/07_Spells/Spells_Each/Wind_Walk|wind walk]]*
 
-1/day each: *conjure elemental* (air elemental only), *creation*, *gaseous form*, *invisibility*, *major image*, *plane shift*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Conjure_Elemental|conjure elemental]]* (air elemental only), *[[rules/srd/07_Spells/Spells_Each/Creation|creation]]*, *[[rules/srd/07_Spells/Spells_Each/Gaseous_Form|gaseous form]]*, *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]*, *[[rules/srd/07_Spells/Spells_Each/Major_Image|major image]]*, *[[rules/srd/07_Spells/Spells_Each/Plane_Shift|plane shift]]*
 
 ###### Actions
 
@@ -114,7 +114,7 @@ At will: *detect magic*
 
 3/day each: *enlarge/reduce*, *tongues*
 
-1/day each: *conjure elemental* (fire elemental only), *gaseous form*, *invisibility*, *major image*, *plane shift*, *wall of fire*
+1/day each: *conjure elemental* (fire elemental only), *gaseous form*, *invisibility*, *major image*, *plane shift*, *[[rules/srd/07_Spells/Spells_Each/Wall_of_Fire|wall of fire]]*
 
 ###### Actions
 
@@ -160,11 +160,11 @@ At will: *detect magic*
 
 ***Etherealness***. The ghost enters the Ethereal Plane from the Material Plane, or vice versa. It is visible on the Material Plane while it is in the Border Ethereal, and vice versa, yet it can't affect or be affected by anything on the other plane.
 
-***Horrifying Visage***. Each non-undead creature within 60 feet of the ghost that can see it must succeed on a DC 13 Wisdom saving throw or be frightened for 1 minute. If the save fails by 5 or more, the target also ages 1d4 × 10 years. A frightened target can repeat the saving throw at the end of each of its turns, ending the frightened condition on itself on a success. If a target's saving throw is successful or the effect ends for it, the target is immune to this ghost's Horrifying Visage for the next 24 hours. The aging effect can be reversed with a *greater restoration* spell, but only within 24 hours of it occurring.
+***Horrifying Visage***. Each non-undead creature within 60 feet of the ghost that can see it must succeed on a DC 13 Wisdom saving throw or be frightened for 1 minute. If the save fails by 5 or more, the target also ages 1d4 × 10 years. A frightened target can repeat the saving throw at the end of each of its turns, ending the frightened condition on itself on a success. If a target's saving throw is successful or the effect ends for it, the target is immune to this ghost's Horrifying Visage for the next 24 hours. The aging effect can be reversed with a *[[rules/srd/07_Spells/Spells_Each/Greater_Restoration|greater restoration]]* spell, but only within 24 hours of it occurring.
 
 ***Possession (Recharge 6)***. One humanoid that the ghost can see within 5 feet of it must succeed on a DC 13 Charisma saving throw or be possessed by the ghost; the ghost then disappears, and the target is incapacitated and loses control of its body. The ghost now controls the body but doesn't deprive the target of awareness. The ghost can't be targeted by any attack, spell, or other effect, except ones that turn undead, and it retains its alignment, Intelligence, Wisdom, Charisma, and immunity to being charmed and frightened. It otherwise uses the possessed target's statistics, but doesn't gain access to the target's knowledge, class features, or proficiencies.
 
-The possession lasts until the body drops to 0 hit points, the ghost ends it as a bonus action, or the ghost is turned or forced out by an effect like the *dispel evil and good* spell. When the possession ends, the ghost reappears in an unoccupied space within 5 feet of the body. The target is immune to this ghost's Possession for 24 hours after succeeding on the saving throw or after the possession ends.
+The possession lasts until the body drops to 0 hit points, the ghost ends it as a bonus action, or the ghost is turned or forced out by an effect like the *[[rules/srd/07_Spells/Spells_Each/Dispel_Evil_and_Good|dispel evil and good]]* spell. When the possession ends, the ghost reappears in an unoccupied space within 5 feet of the body. The target is immune to this ghost's Possession for 24 hours after succeeding on the saving throw or after the possession ends.
 
 ## Ghouls
 
@@ -264,11 +264,11 @@ The possession lasts until the body drops to 0 hit points, the ghost ends it as 
 
 ***Innate Spellcasting***. The giant's innate spellcasting ability is Charisma. It can innately cast the following spells, requiring no material Components
 
-At will: *detect magic*, *fog cloud*, *light*
+At will: *detect magic*, *[[rules/srd/07_Spells/Spells_Each/Fog_Cloud|fog cloud]]*, *[[rules/srd/07_Spells/Spells_Each/Light|light]]*
 
-3/day each: *feather fall*, *fly*, *misty step*, *telekinesis*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Feather_Fall|feather fall]]*, *[[rules/srd/07_Spells/Spells_Each/Fly|fly]]*, *[[rules/srd/07_Spells/Spells_Each/Misty_Step|misty step]]*, *[[rules/srd/07_Spells/Spells_Each/Telekinesis|telekinesis]]*
 
-1/day each: *control weather*, *gaseous form*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Control_Weather|control weather]]*, *gaseous form*
 
 ###### Actions
 
@@ -446,9 +446,9 @@ At will: *detect magic*, *fog cloud*, *light*
 
 ***Innate Spellcasting***. The giant's innate spellcasting ability is Charisma (spell save DC 17). It can innately cast the following spells, requiring no material components
 
-At will: *detect magic*, *feather fall*, *levitate*, *light*
+At will: *detect magic*, *feather fall*, *[[rules/srd/07_Spells/Spells_Each/Levitate|levitate]]*, *light*
 
-3/day each: *control weather*, *water breathing*
+3/day each: *control weather*, *[[rules/srd/07_Spells/Spells_Each/Water_Breathing|water breathing]]*
 
 ###### Actions
 
@@ -552,9 +552,9 @@ At will: *detect magic*, *feather fall*, *levitate*, *light*
 
 ***Innate Spellcasting***. The gnome's innate spellcasting ability is Intelligence (spell save DC 11). It can innately cast the following spells, requiring no material Components
 
-At will: *nondetection* (self only)
+At will: *[[rules/srd/07_Spells/Spells_Each/Nondetection|nondetection]]* (self only)
 
-1/day each: *blindness/deafness*, *blur*, *disguise self*
+1/day each: *blindness/deafness*, *[[rules/srd/07_Spells/Spells_Each/Blur|blur]]*, *[[rules/srd/07_Spells/Spells_Each/Disguise_Self|disguise self]]*
 
 ###### Actions
 

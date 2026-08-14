@@ -28,7 +28,7 @@
 
 ***Magic Resistance***. The tarrasque has advantage on saving throws against spells and other magical effects.
 
-***Reflective Carapace***. Any time the tarrasque is targeted by a *magic missile* spell, a line spell, or a spell that requires a ranged attack roll, roll a d6. On a 1 to 5, the tarrasque is unaffected. On a 6, the tarrasque is unaffected, and the effect is reflected back at the caster as though it originated from the tarrasque, turning the caster into the target.
+***Reflective Carapace***. Any time the tarrasque is targeted by a *[[rules/srd/07_Spells/Spells_Each/Magic_Missile|magic missile]]* spell, a line spell, or a spell that requires a ranged attack roll, roll a d6. On a 1 to 5, the tarrasque is unaffected. On a 6, the tarrasque is unaffected, and the effect is reflected back at the caster as though it originated from the tarrasque, turning the caster into the target.
 
 ***Siege Monster***. The tarrasque deals double damage to objects and structures.
 

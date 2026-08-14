@@ -24,9 +24,9 @@
 
 ***Spellcasting***. The fanatic is a 4th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 11, +3 to hit with spell attacks). The fanatic has the following cleric spells prepared:
 
-Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
-1st level (4 slots): *command*, *inflict wounds*, *shield of faith*
-2nd level (3 slots): *hold person*, *spiritual weapon*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Light|light]]*, *[[rules/srd/07_Spells/Spells_Each/Sacred_Flame|sacred flame]]*, *[[rules/srd/07_Spells/Spells_Each/Thaumaturgy|thaumaturgy]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Command|command]]*, *[[rules/srd/07_Spells/Spells_Each/Inflict_Wounds|inflict wounds]]*, *[[rules/srd/07_Spells/Spells_Each/Shield_of_Faith|shield of faith]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Hold_Person|hold person]]*, *[[rules/srd/07_Spells/Spells_Each/Spiritual_Weapon|spiritual weapon]]*
 
 ###### Actions
 

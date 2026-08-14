@@ -34,6 +34,10 @@ When the Director's DECISION block contains `hidden_state_change`, route it to t
 
 Public observable events go to `beats.md` (entity folder) and `campaign/sessions/session-NN.md` as before. The dual write is intentional: one file the Narrator reads, one file only the Director reads.
 
+# Wikilinks
+
+Markdown you write follows the vault convention: first mention per file of any entity with its own file becomes `[[full/path/from/repo/root|name as written]]` (e.g. `[[campaign/npcs/recurring/pip/summary|Pip]]`); later mentions stay plain; no self-links inside an entity's own folder; INDEX.md entries are wikilinks to the entity's `summary.md`. Session logs end with `Prev:`/`Next:` footers linking adjacent sessions.
+
 # Entity lifecycle
 
 - **New one-shot NPC**: write `campaign/npcs/one-shot/<id>.md` (flat file with stats + voice + disposition).

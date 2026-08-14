@@ -30,7 +30,7 @@
 
 ***False Appearance***. While the mephit remains motionless, it is indistinguishable from an ordinary shard of ice.
 
-***Innate Spellcasting (1/Day)***. The mephit can innately cast *fog cloud*, requiring no material components. Its innate spellcasting ability is Charisma.
+***Innate Spellcasting (1/Day)***. The mephit can innately cast *[[rules/srd/07_Spells/Spells_Each/Fog_Cloud|fog cloud]]*, requiring no material components. Its innate spellcasting ability is Charisma.
 
 ###### Actions
 

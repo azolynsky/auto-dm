@@ -30,9 +30,9 @@
 
 ***Innate Spellcasting***. The deva's spellcasting ability is Charisma (spell save DC 17). The deva can innately cast the following spells, requiring only verbal Components
 
-At will: *detect evil and good*
+At will: *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*
 
-1/day each: *commune*, *raise dead*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Commune|commune]]*, *[[rules/srd/07_Spells/Spells_Each/Raise_Dead|raise dead]]*
 
 ***Magic Resistance***. The deva has advantage on saving throws against spells and other magical effects.
 

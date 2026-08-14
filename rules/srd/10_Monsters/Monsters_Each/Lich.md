@@ -34,16 +34,16 @@
 
 ***Spellcasting***. The lich is an 18th-level spellcaster. Its spellcasting ability is Intelligence (spell save DC 20, +12 to hit with spell attacks). The lich has the following wizard spells prepared:
 
-Cantrips (at will): *mage hand*, *prestidigitation*, *ray of frost*
-1st level (4 slots): *detect magic*, *magic missile*, *shield*, *thunderwave*
-2nd level (3 slots): *acid arrow*, *detect thoughts*, *invisibility*, *mirror image*
-3rd level (3 slots): *animate dead*, *counterspell*, *dispel magic*, *fireball*
-4th level (3 slots): *blight*, *dimension door*
-5th level (3 slots): *cloudkill*, *scrying*
-6th level (1 slot): *disintegrate*, *globe of invulnerability*
-7th level (1 slot): *finger of death*, *plane shift*
-8th level (1 slot): *dominate monster*, *power word stun*
-9th level (1 slot): *power word kill*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Mage_Hand|mage hand]]*, *[[rules/srd/07_Spells/Spells_Each/Prestidigitation|prestidigitation]]*, *[[rules/srd/07_Spells/Spells_Each/Ray_of_Frost|ray of frost]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Magic_Missile|magic missile]]*, *[[rules/srd/07_Spells/Spells_Each/Shield|shield]]*, *[[rules/srd/07_Spells/Spells_Each/Thunderwave|thunderwave]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Acid_Arrow|acid arrow]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Thoughts|detect thoughts]]*, *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]*, *[[rules/srd/07_Spells/Spells_Each/Mirror_Image|mirror image]]*
+3rd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Animate_Dead|animate dead]]*, *[[rules/srd/07_Spells/Spells_Each/Counterspell|counterspell]]*, *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*, *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]*
+4th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Blight|blight]]*, *[[rules/srd/07_Spells/Spells_Each/Dimension_Door|dimension door]]*
+5th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Cloudkill|cloudkill]]*, *[[rules/srd/07_Spells/Spells_Each/Scrying|scrying]]*
+6th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Disintegrate|disintegrate]]*, *[[rules/srd/07_Spells/Spells_Each/Globe_of_Invulnerability|globe of invulnerability]]*
+7th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Finger_of_Death|finger of death]]*, *[[rules/srd/07_Spells/Spells_Each/Plane_Shift|plane shift]]*
+8th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Dominate_Monster|dominate monster]]*, *[[rules/srd/07_Spells/Spells_Each/Power_Word_Stun|power word stun]]*
+9th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Power_Word_Kill|power word kill]]*
 
 ***Turn Resistance***. The lich has advantage on saving throws against any effect that turns undead.
 

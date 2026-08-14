@@ -32,11 +32,11 @@
 
 ***Innate Spellcasting***. The planetar's spellcasting ability is Charisma (spell save DC 20). The planetar can innately cast the following spells, requiring no material Components
 
-At will: *detect evil and good*, *invisibility* (self only)
+At will: *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]* (self only)
 
-3/day each: *blade barrier*, *dispel evil and good*, *flame strike*, *raise dead*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Blade_Barrier|blade barrier]]*, *[[rules/srd/07_Spells/Spells_Each/Dispel_Evil_and_Good|dispel evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Flame_Strike|flame strike]]*, *[[rules/srd/07_Spells/Spells_Each/Raise_Dead|raise dead]]*
 
-1/day each: *commune*, *control weather*, *insect plague*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Commune|commune]]*, *[[rules/srd/07_Spells/Spells_Each/Control_Weather|control weather]]*, *[[rules/srd/07_Spells/Spells_Each/Insect_Plague|insect plague]]*
 
 ***Magic Resistance***. The planetar has advantage on saving throws against spells and other magical effects.
 

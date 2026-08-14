@@ -4,7 +4,7 @@
 
 *Wondrous item, very rare (requires attunement)*
 
-This slender taper is dedicated to a deity and shares that deity's alignment. The candle's alignment can be detected with the *detect evil and good* spell. The GM chooses the god and associated alignment or determines the alignment randomly.
+This slender taper is dedicated to a deity and shares that deity's alignment. The candle's alignment can be detected with the *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]* spell. The GM chooses the god and associated alignment or determines the alignment randomly.
 
 **Table- Candle of Invocation**
 
@@ -25,13 +25,13 @@ The candle's magic is activated when the candle is lit, which requires an action
 
 While lit, the candle sheds dim light in a 30-foot radius. Any creature within that light whose alignment matches that of the candle makes attack rolls, saving throws, and ability checks with advantage. In addition, a cleric or druid in the light whose alignment matches the candle's can cast 1st-level spells he or she has prepared without expending spell slots, though the spell's effect is as if cast with a 1st-level slot.
 
-Alternatively, when you light the candle for the first time, you can cast the *gate* spell with it. Doing so destroys the candle.
+Alternatively, when you light the candle for the first time, you can cast the *[[rules/srd/07_Spells/Spells_Each/Gate|gate]]* spell with it. Doing so destroys the candle.
 
 ### Cape of the Mountebank
 
 *Wondrous item, rare*
 
-This cape smells faintly of brimstone. While wearing it, you can use it to cast the *dimension door* spell as an action. This property of the cape can't be used again until the next dawn.
+This cape smells faintly of brimstone. While wearing it, you can use it to cast the *[[rules/srd/07_Spells/Spells_Each/Dimension_Door|dimension door]]* spell as an action. This property of the cape can't be used again until the next dawn.
 
 When you disappear, you leave behind a cloud of smoke, and you appear in a similar cloud of smoke at your destination. The smoke lightly obscures the space you left and the space you appear in, and it dissipates at the end of your next turn. A light or stronger wind disperses the smoke.
 
@@ -59,7 +59,7 @@ A carpet can carry up to twice the weight shown on the table, but it flies at ha
 
 *Wondrous item, rare*
 
-While incense is burning in this censer, you can use an action to speak the censer's command word and summon an air elemental, as if you had cast the *conjure elemental* spell. The censer can't be used this way again until the next dawn.
+While incense is burning in this censer, you can use an action to speak the censer's command word and summon an air elemental, as if you had cast the *[[rules/srd/07_Spells/Spells_Each/Conjure_Elemental|conjure elemental]]* spell. The censer can't be used this way again until the next dawn.
 
 This 6-inch-wide, 1-foot high vessel resembles a chalice with a decorated lid. It weighs 1 pound.
 
@@ -75,7 +75,7 @@ The chime can be used ten times. After the tenth time, it cracks and becomes use
 
 *Wondrous item, uncommon*
 
-While wearing this circlet, you can use an action to cast the *scorching ray* spell with it. When you make the spell's attacks, you do so with an attack bonus of +5. The circlet can't be used this way again until the next dawn.
+While wearing this circlet, you can use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Scorching_Ray|scorching ray]]* spell with it. When you make the spell's attacks, you do so with an attack bonus of +5. The circlet can't be used this way again until the next dawn.
 
 ### Cloak of Arachnida
 
@@ -87,7 +87,7 @@ This fine garment is made of black silk interwoven with faint silvery threads. W
 - You have a climbing speed equal to your walking speed.
 - You can move up, down, and across vertical surfaces and upside down along ceilings, while leaving your hands free.
 - You can't be caught in webs of any sort and can move through webs as if they were difficult terrain.
-- You can use an action to cast the *web* spell (save DC 13). The web created by the spell fills twice its normal area. Once used, this property of the cloak can't be used again until the next dawn.
+- You can use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Web|web]]* spell (save DC 13). The web created by the spell fills twice its normal area. Once used, this property of the cloak can't be used again until the next dawn.
 
 ### Cloak of Displacement
 
@@ -113,7 +113,7 @@ You gain a +1 bonus to AC and saving throws while you wear this cloak.
 
 While wearing this cloak, you have advantage on Dexterity (Stealth) checks. In an area of dim light or darkness, you can grip the edges of the cloak with both hands and use it to fly at a speed of 40 feet. If you ever fail to grip the cloak's edges while flying in this way, or if you are no longer in dim light or darkness, you lose this flying speed.
 
-While wearing the cloak in an area of dim light or darkness, you can use your action to cast *polymorph* on yourself, transforming into a bat. While you are in the form of the bat, you retain your Intelligence, Wisdom, and Charisma scores. The cloak can't be used this way again until the next dawn.
+While wearing the cloak in an area of dim light or darkness, you can use your action to cast *[[rules/srd/07_Spells/Spells_Each/Polymorph|polymorph]]* on yourself, transforming into a bat. While you are in the form of the bat, you retain your Intelligence, Wisdom, and Charisma scores. The cloak can't be used this way again until the next dawn.
 
 ### Cloak of the Manta Ray
 
@@ -125,13 +125,13 @@ While wearing this cloak with its hood up, you can breathe underwater, and you h
 
 *Wondrous item, very rare or legendary (requires attunement)*
 
-The typical *crystal ball*, a very rare item, is about 6 inches in diameter. While touching it, you can cast the *scrying* spell (save DC 17) with it.
+The typical *crystal ball*, a very rare item, is about 6 inches in diameter. While touching it, you can cast the *[[rules/srd/07_Spells/Spells_Each/Scrying|scrying]]* spell (save DC 17) with it.
 
 The following *crystal ball* variants are legendary items and have additional properties.
 
-***Crystal Ball of Mind Reading***. You can use an action to cast the *detect thoughts* spell (save DC 17) while you are scrying with the *crystal ball*, targeting creatures you can see within 30 feet of the spell's sensor. You don't need to concentrate on this *detect thoughts* to maintain it during its duration, but it ends if *scrying* ends.
+***Crystal Ball of Mind Reading***. You can use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Detect_Thoughts|detect thoughts]]* spell (save DC 17) while you are scrying with the *crystal ball*, targeting creatures you can see within 30 feet of the spell's sensor. You don't need to concentrate on this *detect thoughts* to maintain it during its duration, but it ends if *scrying* ends.
 
-***Crystal Ball of Telepathy***. While scrying with the crystal ball, you can communicate telepathically with creatures you can see within 30 feet of the spell's sensor. You can also use an action to cast the *suggestion* spell (save DC 17) through the sensor on one of those creatures. You don't need to concentrate on this *suggestion* to maintain it during its duration, but it ends if *scrying* ends. Once used, the *suggestion* power of the *crystal ball* can't be used again until the next dawn.
+***Crystal Ball of Telepathy***. While scrying with the crystal ball, you can communicate telepathically with creatures you can see within 30 feet of the spell's sensor. You can also use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Suggestion|suggestion]]* spell (save DC 17) through the sensor on one of those creatures. You don't need to concentrate on this *suggestion* to maintain it during its duration, but it ends if *scrying* ends. Once used, the *suggestion* power of the *crystal ball* can't be used again until the next dawn.
 
 ***Crystal Ball of True Seeing***. While scrying with the crystal ball, you have truesight with a radius of 120 feet centered on the spell's sensor.
 
@@ -176,6 +176,6 @@ The cube loses charges when the barrier is targeted by certain spells or comes i
 
 This cube is 3 inches across and radiates palpable magical energy. The six sides of the cube are each keyed to a different plane of existence, one of which is the Material Plane. The other sides are linked to planes determined by the GM.
 
-You can use an action to press one side of the cube to cast the *gate* spell with it, opening a portal to the plane keyed to that side. Alternatively, if you use an action to press one side twice, you can cast the *plane shift* spell (save DC 17) with the cube and transport the targets to the plane keyed to that side.
+You can use an action to press one side of the cube to cast the *gate* spell with it, opening a portal to the plane keyed to that side. Alternatively, if you use an action to press one side twice, you can cast the *[[rules/srd/07_Spells/Spells_Each/Plane_Shift|plane shift]]* spell (save DC 17) with the cube and transport the targets to the plane keyed to that side.
 
 The cube has 3 charges. Each use of the cube expends 1 charge. The cube regains 1d3 expended charges daily at dawn.

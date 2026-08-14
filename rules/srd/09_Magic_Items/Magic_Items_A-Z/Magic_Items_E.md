@@ -29,7 +29,7 @@ The first time the bottle is opened, the GM rolls to determine what happens.
 
 *Wondrous item, uncommon*
 
-This gem contains a mote of elemental energy. When you use an action to break the gem, an elemental is summoned as if you had cast the *conjure elemental* spell, and the gem's magic is lost. The type of gem determines the elemental summoned by the spell.
+This gem contains a mote of elemental energy. When you use an action to break the gem, an elemental is summoned as if you had cast the *[[rules/srd/07_Spells/Spells_Each/Conjure_Elemental|conjure elemental]]* spell, and the gem's magic is lost. The type of gem determines the elemental summoned by the spell.
 
 **Table- Elemental Gem**
 
@@ -59,7 +59,7 @@ The cloud persists as long as the bottle is open. Closing the bottle requires yo
 
 *Wondrous item, uncommon (requires attunement)*
 
-These crystal lenses fit over the eyes. They have 3 charges. While wearing them, you can expend 1 charge as an action to cast the *charm person* spell (save DC 13) on a humanoid within 30 feet of you, provided that you and the target can see each other. The lenses regain all expended charges daily at dawn.
+These crystal lenses fit over the eyes. They have 3 charges. While wearing them, you can expend 1 charge as an action to cast the *[[rules/srd/07_Spells/Spells_Each/Charm_Person|charm person]]* spell (save DC 13) on a humanoid within 30 feet of you, provided that you and the target can see each other. The lenses regain all expended charges daily at dawn.
 
 ### Eyes of Minute Seeing
 

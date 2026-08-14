@@ -32,6 +32,7 @@ A draft `campaign/sessions/prep-NNN.md` containing:
 - **Don't railroad.** Prep multiple branches. The party will surprise you.
 - **Right-size the encounters.** Use `skills/encounter-building` for CR math. Don't TPK by accident.
 - **Match motivations.** New NPCs should fit factions and locations already established. Don't drop a Red Wizard into Phandalin without justification.
+- **Wikilink what you write.** First mention per file of any entity with its own file → `[[full/path/from/repo/root|name as written]]`; SRD monsters/spells/items link to their `rules/srd/**/*_Each/` files; new entities get a wikilinked INDEX.md line.
 
 # Stat block template (write to `campaign/npcs/one-shot/<slug>.md`)
 

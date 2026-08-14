@@ -24,11 +24,11 @@
 
 ***Innate Spellcasting***. The drider's innate spellcasting ability is Wisdom (spell save DC 13). The drider can innately cast the following spells, requiring no material Components
 
-At will: *dancing lights*
+At will: *[[rules/srd/07_Spells/Spells_Each/Dancing_Lights|dancing lights]]*
 
-1/day each: *darkness*, *faerie fire*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Darkness|darkness]]*, *[[rules/srd/07_Spells/Spells_Each/Faerie_Fire|faerie fire]]*
 
-***Spider Climb***. The drider can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
+***[[rules/srd/07_Spells/Spells_Each/Spider_Climb|Spider Climb]]***. The drider can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 
 ***Sunlight Sensitivity***. While in sunlight, the drider has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.
 

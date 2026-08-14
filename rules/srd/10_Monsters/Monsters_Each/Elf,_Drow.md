@@ -24,9 +24,9 @@
 
 ***Innate Spellcasting***. The drow's spellcasting ability is Charisma (spell save DC 11). It can innately cast the following spells, requiring no material Components
 
-At will: *dancing lights*
+At will: *[[rules/srd/07_Spells/Spells_Each/Dancing_Lights|dancing lights]]*
 
-1/day each: *darkness*, *faerie fire*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Darkness|darkness]]*, *[[rules/srd/07_Spells/Spells_Each/Faerie_Fire|faerie fire]]*
 
 ***Sunlight Sensitivity***. While in sunlight, the drow has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.
 

@@ -26,7 +26,7 @@
 
 ***Swarm***. The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny quipper. The swarm can't regain hit points or gain temporary hit points.
 
-***Water Breathing***. The swarm can breathe only underwater.
+***[[rules/srd/07_Spells/Spells_Each/Water_Breathing|Water Breathing]]***. The swarm can breathe only underwater.
 
 ###### Actions
 

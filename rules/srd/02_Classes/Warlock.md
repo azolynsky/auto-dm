@@ -111,7 +111,7 @@ At 3rd level, your otherworldly patron bestows a gift upon you for your loyal se
 
 #### Pact of the Chain
 
-You learn the *find familiar* spell and can cast it as a ritual. The spell doesn't count against your number of spells known.
+You learn the *[[rules/srd/07_Spells/Spells_Each/Find_Familiar|find familiar]]* spell and can cast it as a ritual. The spell doesn't count against your number of spells known.
 
 When you cast the spell, you can choose one of the normal forms for your familiar or one of the following special forms: imp, pseudodragon, quasit, or sprite.
 
@@ -155,21 +155,21 @@ If an eldritch invocation has prerequisites, you must meet them to learn it. You
 
 *Prerequisite: Eldritch Blast cantrip*
 
-When you cast *eldritch blast*, add your Charisma modifier to the damage it deals on a hit.
+When you cast *[[rules/srd/07_Spells/Spells_Each/Eldritch_Blast|eldritch blast]]*, add your Charisma modifier to the damage it deals on a hit.
 
 #### Armor of Shadows
 
-You can cast *mage armor* on yourself at will, without expending a spell slot or material components.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Mage_Armor|mage armor]]* on yourself at will, without expending a spell slot or material components.
 
 #### Ascendant Step
 
 *Prerequisite: 9th level*
 
-You can cast *levitate* on yourself at will, without expending a spell slot or material components.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Levitate|levitate]]* on yourself at will, without expending a spell slot or material components.
 
 #### Beast Speech
 
-You can cast *speak with animals* at will, without expending a spell slot.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Speak_with_Animals|speak with animals]]* at will, without expending a spell slot.
 
 #### Beguiling Influence
 
@@ -179,7 +179,7 @@ You gain proficiency in the Deception and Persuasion skills.
 
 *Prerequisite: 7th level*
 
-You can cast *compulsion* once using a warlock spell slot. You can't do so again until you finish a long rest.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Compulsion|compulsion]]* once using a warlock spell slot. You can't do so again until you finish a long rest.
 
 #### Book of Ancient Secrets
 
@@ -193,7 +193,7 @@ On your adventures, you can add other ritual spells to your Book of Shadows. Whe
 
 *Prerequisite: 15th level, Pact of the Chain feature*
 
-You can cast *hold monster* at will-targeting a celestial, fiend, or elemental-without expending a spell slot or material components. You must finish a long rest before you can use this invocation on the same creature again.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Hold_Monster|hold monster]]* at will-targeting a celestial, fiend, or elemental-without expending a spell slot or material components. You must finish a long rest before you can use this invocation on the same creature again.
 
 #### Devil's Sight
 
@@ -203,11 +203,11 @@ You can see normally in darkness, both magical and nonmagical, to a distance of 
 
 *Prerequisite: 7th level*
 
-You can cast *confusion* once using a warlock spell slot. You can't do so again until you finish a long rest.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Confusion|confusion]]* once using a warlock spell slot. You can't do so again until you finish a long rest.
 
 #### Eldritch Sight
 
-You can cast *detect magic* at will, without expending a spell slot.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]* at will, without expending a spell slot.
 
 #### Eldritch Spear
 
@@ -221,7 +221,7 @@ You can read all writing.
 
 #### Fiendish Vigor
 
-You can cast *false life* on yourself at will as a 1st-level spell, without expending a spell slot or material components.
+You can cast *[[rules/srd/07_Spells/Spells_Each/False_Life|false life]]* on yourself at will as a 1st-level spell, without expending a spell slot or material components.
 
 #### Gaze of Two Minds
 
@@ -235,29 +235,29 @@ When you hit a creature with your pact weapon, the creature takes extra necrotic
 
 #### Mask of Many Faces
 
-You can cast *disguise self* at will, without expending a spell slot.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Disguise_Self|disguise self]]* at will, without expending a spell slot.
 
 #### Master of Myriad Forms
 
 *Prerequisite: 15th level*
 
-You can cast *alter self* at will, without expending a spell slot.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Alter_Self|alter self]]* at will, without expending a spell slot.
 
 #### Minions of Chaos
 
 *Prerequisite: 9th level*
 
-You can cast *conjure elemental* once using a warlock spell slot. You can't do so again until you finish a long rest.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Conjure_Elemental|conjure elemental]]* once using a warlock spell slot. You can't do so again until you finish a long rest.
 
 #### Mire the Mind
 
 *Prerequisite: 5th level*
 
-You can cast *slow* once using a warlock spell slot. You can't do so again until you finish a long rest.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Slow|slow]]* once using a warlock spell slot. You can't do so again until you finish a long rest.
 
 #### Misty Visions
 
-You can cast *silent image* at will, without expending a spell slot or material components.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Silent_Image|silent image]]* at will, without expending a spell slot or material components.
 
 #### One with Shadows
 
@@ -269,7 +269,7 @@ When you are in an area of dim light or darkness, you can use your action to bec
 
 *Prerequisite: 9th level*
 
-You can cast *jump* on yourself at will, without expending a spell slot or material components.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Jump|jump]]* on yourself at will, without expending a spell slot or material components.
 
 #### Repelling Blast
 
@@ -281,17 +281,17 @@ When you hit a creature with *eldritch blast*, you can push the creature up to 1
 
 *Prerequisite: 7th level*
 
-You can cast *polymorph* once using a warlock spell slot. You can't do so again until you finish a long rest.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Polymorph|polymorph]]* once using a warlock spell slot. You can't do so again until you finish a long rest.
 
 #### Sign of Ill Omen
 
 *Prerequisite: 5th level*
 
-You can cast *bestow curse* once using a warlock spell slot. You can't do so again until you finish a long rest.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Bestow_Curse|bestow curse]]* once using a warlock spell slot. You can't do so again until you finish a long rest.
 
 #### Thief of Five Fates
 
-You can cast *bane* once using a warlock spell slot. You can't do so again until you finish a long rest.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Bane|bane]]* once using a warlock spell slot. You can't do so again until you finish a long rest.
 
 #### Thirsting Blade
 
@@ -303,7 +303,7 @@ You can attack with your pact weapon twice, instead of once, whenever you take t
 
 *Prerequisite: 15th level*
 
-You can cast *arcane eye* at will, without expending a spell slot.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Arcane_Eye|arcane eye]]* at will, without expending a spell slot.
 
 #### Voice of the Chain Master
 
@@ -315,7 +315,7 @@ You can communicate telepathically with your familiar and perceive through your 
 
 *Prerequisite: 9th level*
 
-You can cast *speak with dead* at will, without expending a spell slot.
+You can cast *[[rules/srd/07_Spells/Spells_Each/Speak_with_Dead|speak with dead]]* at will, without expending a spell slot.
 
 #### Witch Sight
 

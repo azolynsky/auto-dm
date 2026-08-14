@@ -12,13 +12,13 @@ This flat iron rod has a button on one end. You can use an action to press the b
 
 You can use an action to place this 1-inch metal cube on the ground and speak its command word. The cube rapidly grows into a fortress that remains until you use an action to speak the command word that dismisses it, which works only if the fortress is empty.
 
-The fortress is a square tower, 20 feet on a side and 30 feet high, with arrow slits on all sides and a battlement atop it. Its interior is divided into two floors, with a ladder running along one wall to connect them. The ladder ends at a trapdoor leading to the roof. When activated, the tower has a small door on the side facing you. The door opens only at your command, which you can speak as a bonus action. It is immune to the *knock* spell and similar magic, such as that of a *chime of opening*.
+The fortress is a square tower, 20 feet on a side and 30 feet high, with arrow slits on all sides and a battlement atop it. Its interior is divided into two floors, with a ladder running along one wall to connect them. The ladder ends at a trapdoor leading to the roof. When activated, the tower has a small door on the side facing you. The door opens only at your command, which you can speak as a bonus action. It is immune to the *[[rules/srd/07_Spells/Spells_Each/Knock|knock]]* spell and similar magic, such as that of a *chime of opening*.
 
 Each creature in the area where the fortress appears must make a DC 15 Dexterity saving throw, taking 10d10 bludgeoning damage on a failed save, or half as much damage on a successful one. In either case, the creature is pushed to an unoccupied space outside but next to the fortress. Objects in the area that aren't being worn or carried take this damage and are pushed automatically.
 
 The tower is made of adamantine, and its magic prevents it from being tipped over. The roof, the door, and the walls each have 100 hit points,
 
-immunity to damage from nonmagical weapons excluding siege weapons, and resistance to all other damage. Only a *wish* spell can repair the fortress (this use of the spell counts as replicating a spell of 8th level or lower). Each casting of *wish* causes the roof, the door, or one wall to regain 50 hit points.
+immunity to damage from nonmagical weapons excluding siege weapons, and resistance to all other damage. Only a *[[rules/srd/07_Spells/Spells_Each/Wish|wish]]* spell can repair the fortress (this use of the spell counts as replicating a spell of 8th level or lower). Each casting of *wish* causes the roof, the door, or one wall to regain 50 hit points.
 
 ### Ioun Stone
 
@@ -86,7 +86,7 @@ This iron bottle has a brass stopper. You can use an action to speak the flask's
 
 You can use an action to remove the flask's stopper and release the creature the flask contains. The creature is friendly to you and your companions for 1 hour and obeys your commands for that duration. If you give no commands or give it a command that is likely to result in its death, it defends itself but otherwise takes no actions. At the end of the duration, the creature acts in accordance with its normal disposition and alignment.
 
-An *identify* spell reveals that a creature is inside the flask, but the only way to determine the type of creature is to open the flask. A newly discovered bottle might already contain a creature chosen by the GM or determined randomly.
+An *[[rules/srd/07_Spells/Spells_Each/Identify|identify]]* spell reveals that a creature is inside the flask, but the only way to determine the type of creature is to open the flask. A newly discovered bottle might already contain a creature chosen by the GM or determined randomly.
 
 **Table- Iron Flask**
 

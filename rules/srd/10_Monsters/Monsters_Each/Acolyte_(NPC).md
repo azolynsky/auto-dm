@@ -22,8 +22,8 @@
 
 ***Spellcasting***. The acolyte is a 1st-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 12, +4 to hit with spell attacks). The acolyte has following cleric spells prepared:
 
-Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
-1st level (3 slots): *bless*, *cure wounds*, *sanctuary*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Light|light]]*, *[[rules/srd/07_Spells/Spells_Each/Sacred_Flame|sacred flame]]*, *[[rules/srd/07_Spells/Spells_Each/Thaumaturgy|thaumaturgy]]*
+1st level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Bless|bless]]*, *[[rules/srd/07_Spells/Spells_Each/Cure_Wounds|cure wounds]]*, *[[rules/srd/07_Spells/Spells_Each/Sanctuary|sanctuary]]*
 
 ###### Actions
 

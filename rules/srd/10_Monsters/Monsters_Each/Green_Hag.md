@@ -24,7 +24,7 @@
 
 ***Innate Spellcasting***. The hag's innate spellcasting ability is Charisma (spell save DC 12). She can innately cast the following spells, requiring no material Components
 
-At will: *dancing lights*, *minor illusion*, *vicious mockery*
+At will: *[[rules/srd/07_Spells/Spells_Each/Dancing_Lights|dancing lights]]*, *[[rules/srd/07_Spells/Spells_Each/Minor_Illusion|minor illusion]]*, *[[rules/srd/07_Spells/Spells_Each/Vicious_Mockery|vicious mockery]]*
 
 ***Mimicry***. The hag can mimic animal sounds and humanoid voices. A creature that hears the sounds can tell they are imitations with a successful DC 14 Wisdom (Insight) check.
 

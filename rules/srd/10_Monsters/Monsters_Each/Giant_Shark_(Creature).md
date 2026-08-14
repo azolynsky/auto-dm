@@ -22,7 +22,7 @@
 
 ***Blood Frenzy***. The shark has advantage on melee attack rolls against any creature that doesn't have all its hit points.
 
-***Water Breathing***. The shark can breathe only underwater.
+***[[rules/srd/07_Spells/Spells_Each/Water_Breathing|Water Breathing]]***. The shark can breathe only underwater.
 
 ###### Actions
 

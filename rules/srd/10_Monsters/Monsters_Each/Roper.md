@@ -24,7 +24,7 @@
 
 ***Grasping Tendrils***. The roper can have up to six tendrils at a time. Each tendril can be attacked (AC 20; 10 hit points; immunity to poison and psychic damage). Destroying a tendril deals no damage to the roper, which can extrude a replacement tendril on its next turn. A tendril can also be broken if a creature takes an action and succeeds on a DC 15 Strength check against it.
 
-***Spider Climb***. The roper can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
+***[[rules/srd/07_Spells/Spells_Each/Spider_Climb|Spider Climb]]***. The roper can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 
 ###### Actions
 

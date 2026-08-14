@@ -28,4 +28,4 @@ A magic weapon's properties and powers are suppressed if it is used against a ta
 
 ***Creatures and Objects***. A creature or object summoned or created by magic temporarily winks out of existence in the sphere. Such a creature instantly reappears once the space the creature occupied is no longer within the sphere.
 
-***Dispel Magic***. Spells and magical effects such as *dispel magic* have no effect on the sphere. Likewise, the spheres created by different *antimagic field* spells don't nullify each other.
+***[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|Dispel Magic]]***. Spells and magical effects such as *dispel magic* have no effect on the sphere. Likewise, the spheres created by different *antimagic field* spells don't nullify each other.

@@ -26,11 +26,11 @@
 
 ***Innate Spellcasting***. The djinni's innate spellcasting ability is Charisma (spell save DC 17, +9 to hit with spell attacks). It can innately cast the following spells, requiring no material Components
 
-At will: *detect evil and good*, *detect magic*, *thunderwave*
+At will: *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Thunderwave|thunderwave]]*
 
-3/day each: *create food and water* (can create wine instead of water), *tongues*, *wind walk*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Create_Food_and_Water|create food and water]]* (can create wine instead of water), *[[rules/srd/07_Spells/Spells_Each/Tongues|tongues]]*, *[[rules/srd/07_Spells/Spells_Each/Wind_Walk|wind walk]]*
 
-1/day each: *conjure elemental* (air elemental only), *creation*, *gaseous form*, *invisibility*, *major image*, *plane shift*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Conjure_Elemental|conjure elemental]]* (air elemental only), *[[rules/srd/07_Spells/Spells_Each/Creation|creation]]*, *[[rules/srd/07_Spells/Spells_Each/Gaseous_Form|gaseous form]]*, *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]*, *[[rules/srd/07_Spells/Spells_Each/Major_Image|major image]]*, *[[rules/srd/07_Spells/Spells_Each/Plane_Shift|plane shift]]*
 
 ###### Actions
 

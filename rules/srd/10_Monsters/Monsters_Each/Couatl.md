@@ -26,11 +26,11 @@
 
 ***Innate Spellcasting***. The couatl's spellcasting ability is Charisma (spell save DC 14). It can innately cast the following spells, requiring only verbal Components
 
-At will: *detect evil and good*, *detect magic*, *detect thoughts*
+At will: *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Thoughts|detect thoughts]]*
 
-3/day each: *bless*, *create food and water*, *cure wounds*, *lesser restoration*, *protection from poison*, *sanctuary*, *shield*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Bless|bless]]*, *[[rules/srd/07_Spells/Spells_Each/Create_Food_and_Water|create food and water]]*, *[[rules/srd/07_Spells/Spells_Each/Cure_Wounds|cure wounds]]*, *[[rules/srd/07_Spells/Spells_Each/Lesser_Restoration|lesser restoration]]*, *[[rules/srd/07_Spells/Spells_Each/Protection_from_Poison|protection from poison]]*, *[[rules/srd/07_Spells/Spells_Each/Sanctuary|sanctuary]]*, *[[rules/srd/07_Spells/Spells_Each/Shield|shield]]*
 
-1/day each: *dream*, *greater restoration*, *scrying*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Dream|dream]]*, *[[rules/srd/07_Spells/Spells_Each/Greater_Restoration|greater restoration]]*, *[[rules/srd/07_Spells/Spells_Each/Scrying|scrying]]*
 
 ***Magic Weapons***. The couatl's weapon attacks are magical.
 

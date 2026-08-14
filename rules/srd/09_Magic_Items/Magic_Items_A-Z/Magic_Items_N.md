@@ -4,13 +4,13 @@
 
 *Wondrous item, uncommon (requires attunement)*
 
-While wearing this necklace, you can breathe normally in any environment, and you have advantage on saving throws made against harmful gases and vapors (such as *cloudkill* and *stinking cloud* effects, inhaled poisons, and the breath weapons of some dragons).
+While wearing this necklace, you can breathe normally in any environment, and you have advantage on saving throws made against harmful gases and vapors (such as *[[rules/srd/07_Spells/Spells_Each/Cloudkill|cloudkill]]* and *[[rules/srd/07_Spells/Spells_Each/Stinking_Cloud|stinking cloud]]* effects, inhaled poisons, and the breath weapons of some dragons).
 
 ### Necklace of Fireballs
 
 *Wondrous item, rare*
 
-This necklace has 1d6+3 beads hanging from it. You can use an action to detach a bead and throw it up to 60 feet away. When it reaches the end of its trajectory, the bead detonates as a 3rd-level *fireball* spell (save DC 15).
+This necklace has 1d6+3 beads hanging from it. You can use an action to detach a bead and throw it up to 60 feet away. When it reaches the end of its trajectory, the bead detonates as a 3rd-level *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]* spell (save DC 15).
 
 You can hurl multiple beads, or even the whole necklace, as one action. When you do so, increase the level of the *fireball* by 1 for each bead beyond the first.
 

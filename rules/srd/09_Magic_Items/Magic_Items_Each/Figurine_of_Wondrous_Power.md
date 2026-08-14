@@ -48,4 +48,4 @@ If you have a good alignment, the figurine has a 10 percent chance each time you
 
 ***Serpentine Owl (Rare)***. This serpentine statuette of an owl can become a giant owl for up to 8 hours. Once it has been used, it can't be used again until 2 days have passed. The owl can telepathically communicate with you at any range if you and it are on the same plane of existence.
 
-***Silver Raven (Uncommon)***. This silver statuette of a raven can become a raven for up to 12 hours. Once it has been used, it can't be used again until 2 days have passed. While in raven form, the figurine allows you to cast the *animal messenger* spell on it at will.
+***Silver Raven (Uncommon)***. This silver statuette of a raven can become a raven for up to 12 hours. Once it has been used, it can't be used again until 2 days have passed. While in raven form, the figurine allows you to cast the *[[rules/srd/07_Spells/Spells_Each/Animal_Messenger|animal messenger]]* spell on it at will.

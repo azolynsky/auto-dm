@@ -24,10 +24,10 @@
 
 ***Spellcasting***. The priest is a 5th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 13, +5 to hit with spell attacks). The priest has the following cleric spells prepared:
 
-Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
-1st level (4 slots): *cure wounds*, *guiding bolt*, *sanctuary*
-2nd level (3 slots): *lesser restoration*, *spiritual weapon*
-3rd level (2 slots): *dispel magic*, *spirit guardians*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Light|light]]*, *[[rules/srd/07_Spells/Spells_Each/Sacred_Flame|sacred flame]]*, *[[rules/srd/07_Spells/Spells_Each/Thaumaturgy|thaumaturgy]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Cure_Wounds|cure wounds]]*, *[[rules/srd/07_Spells/Spells_Each/Guiding_Bolt|guiding bolt]]*, *[[rules/srd/07_Spells/Spells_Each/Sanctuary|sanctuary]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Lesser_Restoration|lesser restoration]]*, *[[rules/srd/07_Spells/Spells_Each/Spiritual_Weapon|spiritual weapon]]*
+3rd level (2 slots): *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*, *[[rules/srd/07_Spells/Spells_Each/Spirit_Guardians|spirit guardians]]*
 
 ###### Actions
 

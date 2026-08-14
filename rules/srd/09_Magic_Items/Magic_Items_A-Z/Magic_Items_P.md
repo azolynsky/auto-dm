@@ -50,7 +50,7 @@ Whenever a swarm of rats that isn't under another creature's control comes withi
 
 *Armor (plate), legendary (requires attunement)*
 
-While you're wearing this armor, you can speak its command word as an action to gain the effect of the *etherealness* spell, which last for 10 minutes or until you remove the armor or use an action to speak the command word again. This property of the armor can't be used again until the next dawn.
+While you're wearing this armor, you can speak its command word as an action to gain the effect of the *[[rules/srd/07_Spells/Spells_Each/Etherealness|etherealness]]* spell, which last for 10 minutes or until you remove the armor or use an action to speak the command word again. This property of the armor can't be used again until the next dawn.
 
 ### Portable Hole
 
@@ -70,13 +70,13 @@ Placing a *portable hole* inside an extradimensional space created by a *bag of 
 
 *Potion, uncommon*
 
-When you drink this potion, you can cast the *animal friendship* spell (save DC 13) for 1 hour at will. Agitating this muddy liquid brings little bits into view: a fish scale, a hummingbird tongue, a cat claw, or a squirrel hair.
+When you drink this potion, you can cast the *[[rules/srd/07_Spells/Spells_Each/Animal_Friendship|animal friendship]]* spell (save DC 13) for 1 hour at will. Agitating this muddy liquid brings little bits into view: a fish scale, a hummingbird tongue, a cat claw, or a squirrel hair.
 
 ### Potion of Clairvoyance
 
 *Potion, rare*
 
-When you drink this potion, you gain the effect of the *clairvoyance* spell. An eyeball bobs in this yellowish liquid but vanishes when the potion is opened.
+When you drink this potion, you gain the effect of the *[[rules/srd/07_Spells/Spells_Each/Clairvoyance|clairvoyance]]* spell. An eyeball bobs in this yellowish liquid but vanishes when the potion is opened.
 
 ### Potion of Climbing
 
@@ -100,7 +100,7 @@ When you drink this potion, you gain a flying speed equal to your walking speed 
 
 *Potion, rare*
 
-When you drink this potion, you gain the effect of the *gaseous form* spell for 1 hour (no concentration required) or until you end the effect as a bonus action. This potion's container seems to hold fog that moves and pours like water.
+When you drink this potion, you gain the effect of the *[[rules/srd/07_Spells/Spells_Each/Gaseous_Form|gaseous form]]* spell for 1 hour (no concentration required) or until you end the effect as a bonus action. This potion's container seems to hold fog that moves and pours like water.
 
 ### Potion of Giant Strength
 
@@ -147,7 +147,7 @@ You regain hit points when you drink this potion. The number of hit points depen
 
 *Potion, rare*
 
-For 1 hour after drinking it, you gain 10 temporary hit points that last for 1 hour. For the same duration, you are under the effect of the *bless* spell (no concentration required). This blue potion bubbles and steams as if boiling.
+For 1 hour after drinking it, you gain 10 temporary hit points that last for 1 hour. For the same duration, you are under the effect of the *[[rules/srd/07_Spells/Spells_Each/Bless|bless]]* spell (no concentration required). This blue potion bubbles and steams as if boiling.
 
 ### Potion of Invisibility
 
@@ -159,13 +159,13 @@ This potion's container looks empty but feels as though it holds liquid. When yo
 
 *Potion, rare*
 
-When you drink this potion, you gain the effect of the *detect thoughts* spell (save DC 13). The potion's dense, purple liquid has an ovoid cloud of pink floating in it.
+When you drink this potion, you gain the effect of the *[[rules/srd/07_Spells/Spells_Each/Detect_Thoughts|detect thoughts]]* spell (save DC 13). The potion's dense, purple liquid has an ovoid cloud of pink floating in it.
 
 ### Potion of Poison
 
 *Potion, uncommon*
 
-This concoction looks, smells, and tastes like a *potion of healing* or other beneficial potion. However, it is actually poison masked by illusion magic. An *identify* spell reveals its true nature.
+This concoction looks, smells, and tastes like a *potion of healing* or other beneficial potion. However, it is actually poison masked by illusion magic. An *[[rules/srd/07_Spells/Spells_Each/Identify|identify]]* spell reveals its true nature.
 
 If you drink it, you take 3d6 poison damage, and you must succeed on a DC 13 Constitution saving throw or be poisoned. At the start of each of your turns while you are poisoned in this way, you take 3d6 poison damage. At the end of each of your turns, you can repeat the saving throw. On a successful save, the poison damage you take on your subsequent turns decreases by 1d6. The poison ends when the damage decreases to 0.
 
@@ -195,7 +195,7 @@ When you drink this potion, you gain resistance to one type of damage for 1 hour
 
 *Potion, very rare*
 
-When you drink this potion, you gain the effect of the *haste* spell for 1 minute (no concentration required). The potion's yellow fluid is streaked with black and swirls on its own.
+When you drink this potion, you gain the effect of the *[[rules/srd/07_Spells/Spells_Each/Haste|haste]]* spell for 1 minute (no concentration required). The potion's yellow fluid is streaked with black and swirls on its own.
 
 ### Potion of Water Breathing
 

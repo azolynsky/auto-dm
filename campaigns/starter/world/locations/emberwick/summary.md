@@ -23,7 +23,7 @@ night in living memory — until three nights ago.
 - **Mood**: uneasy; everyone has noticed the dark hilltop
 
 ## Notable features / buildings
-- **The Waylight Inn** — kept by Maera Thistle; named for the shrine lantern you can (could) see from its porch
+- **The Waylight Inn** — kept by [[campaigns/starter/npcs/recurring/maera-thistle/summary|Maera Thistle]]; named for the shrine lantern you can (could) see from its porch
 - **The mill** — largest building in the village
 - **The hill shrine** — a ring of old stones and a lantern housing, up the washed-out path
 - **Sheep pens** — hillside; something has been taking sheep at night

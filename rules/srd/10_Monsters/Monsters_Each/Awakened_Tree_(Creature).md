@@ -28,4 +28,4 @@
 
 ***Slam***. *Melee Weapon Attack:* +6 to hit, reach 10 ft., one target. *Hit:* 14 (3d6+4) bludgeoning damage.
 
-An **awakened tree** is an ordinary tree given sentience and mobility by the *awaken* spell or similar magic.
+An **awakened tree** is an ordinary tree given sentience and mobility by the *[[rules/srd/07_Spells/Spells_Each/Awaken|awaken]]* spell or similar magic.

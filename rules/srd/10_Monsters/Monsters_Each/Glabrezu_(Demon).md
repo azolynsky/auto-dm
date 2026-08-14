@@ -28,9 +28,9 @@
 
 ***Innate Spellcasting***. The glabrezu's spellcasting ability is Intelligence (spell save DC 16). The glabrezu can innately cast the following spells, requiring no material Components
 
-At will: *darkness*, *detect magic*, *dispel magic*
+At will: *[[rules/srd/07_Spells/Spells_Each/Darkness|darkness]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*
 
-1/day each: *confusion*, *fly*, *power word stun*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Confusion|confusion]]*, *[[rules/srd/07_Spells/Spells_Each/Fly|fly]]*, *[[rules/srd/07_Spells/Spells_Each/Power_Word_Stun|power word stun]]*
 
 ***Magic Resistance***. The glabrezu has advantage on saving throws against spells and other magical effects.
 

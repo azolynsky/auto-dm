@@ -4,7 +4,7 @@ Maintained by the Bookkeeper. One line per significant location.
 
 ## Active
 
-- **[Emberwick](emberwick/summary.md)** — Sheep-farming village in the Vale; campaign starting location.
+- **[[campaigns/starter/world/locations/emberwick/summary|Emberwick]]** — Sheep-farming village in the Vale; campaign starting location.
 
 ## Referenced (no folder yet)
 

@@ -41,7 +41,7 @@ Once a card is drawn, it fades from existence. Unless the card is the Fool or th
 
 ***Comet***. If you single-handedly defeat the next hostile monster or group of monsters you encounter, you gain experience points enough to gain one level. Otherwise, this card has no effect.
 
-***Donjon***. You disappear and become entombed in a state of suspended animation in an extradimensional sphere. Everything you were wearing and carrying stays behind in the space you occupied when you disappeared. You remain imprisoned until you are found and removed from the sphere. You can't be located by any divination magic, but a *wish* spell can reveal the location of your prison. You draw no more cards.
+***Donjon***. You disappear and become entombed in a state of suspended animation in an extradimensional sphere. Everything you were wearing and carrying stays behind in the space you occupied when you disappeared. You remain imprisoned until you are found and removed from the sphere. You can't be located by any divination magic, but a *[[rules/srd/07_Spells/Spells_Each/Wish|wish]]* spell can reveal the location of your prison. You draw no more cards.
 
 ***Euryale***. The card's medusa-like visage curses you. You take a -2 penalty on saving throws while cursed in this way. Only a god or the magic of The Fates card can end this curse.
 

@@ -136,7 +136,7 @@ Starting at 6th level, your unarmed strikes count as magical for the purpose of 
 
 ### Evasion
 
-At 7th level, your instinctive agility lets you dodge out of the way of certain area effects, such as a blue dragon's lightning breath or a *fireball* spell. When you are subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw, and only half damage if you fail.
+At 7th level, your instinctive agility lets you dodge out of the way of certain area effects, such as a blue dragon's lightning breath or a *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]* spell. When you are subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw, and only half damage if you fail.
 
 ### Stillness of Mind
 
@@ -164,7 +164,7 @@ At 15th level, your ki sustains you so that you suffer none of the frailty of ol
 
 Beginning at 18th level, you can use your action to spend 4 ki points to become invisible for 1 minute. During that time, you also have resistance to all damage but force damage.
 
-Additionally, you can spend 8 ki points to cast the *astral projection* spell, without needing material components. When you do so, you can't take any other creatures with you.
+Additionally, you can spend 8 ki points to cast the *[[rules/srd/07_Spells/Spells_Each/Astral_Projection|astral projection]]* spell, without needing material components. When you do so, you can't take any other creatures with you.
 
 ### Perfect Self
 
@@ -192,7 +192,7 @@ At 6th level, you gain the ability to heal yourself. As an action, you can regai
 
 #### Tranquility
 
-Beginning at 11th level, you can enter a special meditation that surrounds you with an aura of peace. At the end of a long rest, you gain the effect of a *sanctuary* spell that lasts until the start of your next long rest (the spell can end early as normal). The saving throw DC for the spell equals 8 + your Wisdom modifier + your proficiency bonus.
+Beginning at 11th level, you can enter a special meditation that surrounds you with an aura of peace. At the end of a long rest, you gain the effect of a *[[rules/srd/07_Spells/Spells_Each/Sanctuary|sanctuary]]* spell that lasts until the start of your next long rest (the spell can end early as normal). The saving throw DC for the spell equals 8 + your Wisdom modifier + your proficiency bonus.
 
 #### Quivering Palm
 

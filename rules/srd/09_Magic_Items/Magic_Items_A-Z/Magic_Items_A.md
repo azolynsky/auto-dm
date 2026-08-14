@@ -28,7 +28,7 @@ While wearing this amulet, you are hidden from divination magic. You can't be ta
 
 *Wondrous item, very rare (requires attunement)*
 
-While wearing this amulet, you can use an action to name a location that you are familiar with on another plane of existence. Then make a DC 15 Intelligence check. On a successful check, you cast the *plane shift* spell. On a failure, you and each creature and object within 15 feet of you travel to a random destination. Roll a d100. On a 1-60, you travel to a random location on the plane you named. On a 61-100, you travel to a randomly determined plane of existence.
+While wearing this amulet, you can use an action to name a location that you are familiar with on another plane of existence. Then make a DC 15 Intelligence check. On a successful check, you cast the *[[rules/srd/07_Spells/Spells_Each/Plane_Shift|plane shift]]* spell. On a failure, you and each creature and object within 15 feet of you travel to a random destination. Roll a d100. On a 1-60, you travel to a random location on the plane you named. On a 61-100, you travel to a randomly determined plane of existence.
 
 ### Animated Shield
 
@@ -114,7 +114,7 @@ You have resistance to one type of damage while you wear this armor. The GM choo
 
 While wearing this armor, you have resistance to one of the following damage types: bludgeoning, piercing, or slashing. The GM chooses the type or determines it randomly.
 
-***Curse***. This armor is cursed, a fact that is revealed only when an *identify* spell is cast on the armor or you attune to it. Attuning to the armor curses you until you are targeted by the *remove curse* spell or similar magic; removing the armor fails to end the curse. While cursed, you have vulnerability to two of the three damage types associated with the armor (not the one to which it grants resistance).
+***Curse***. This armor is cursed, a fact that is revealed only when an *[[rules/srd/07_Spells/Spells_Each/Identify|identify]]* spell is cast on the armor or you attune to it. Attuning to the armor curses you until you are targeted by the *[[rules/srd/07_Spells/Spells_Each/Remove_Curse|remove curse]]* spell or similar magic; removing the armor fails to end the curse. While cursed, you have vulnerability to two of the three damage types associated with the armor (not the one to which it grants resistance).
 
 ### Arrow-Catching Shield
 

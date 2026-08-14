@@ -26,9 +26,9 @@
 
 ***Innate Spellcasting***. The gnome's innate spellcasting ability is Intelligence (spell save DC 11). It can innately cast the following spells, requiring no material Components
 
-At will: *nondetection* (self only)
+At will: *[[rules/srd/07_Spells/Spells_Each/Nondetection|nondetection]]* (self only)
 
-1/day each: *blindness/deafness*, *blur*, *disguise self*
+1/day each: *blindness/deafness*, *[[rules/srd/07_Spells/Spells_Each/Blur|blur]]*, *[[rules/srd/07_Spells/Spells_Each/Disguise_Self|disguise self]]*
 
 ###### Actions
 

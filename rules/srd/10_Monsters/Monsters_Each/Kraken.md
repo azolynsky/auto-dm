@@ -26,7 +26,7 @@
 
 ***Amphibious***. The kraken can breathe air and water.
 
-***Freedom of Movement***. The kraken ignores difficult terrain, and magical effects can't reduce its speed or cause it to be restrained. It can spend 5 feet of movement to escape from nonmagical restraints or being grappled.
+***[[rules/srd/07_Spells/Spells_Each/Freedom_of_Movement|Freedom of Movement]]***. The kraken ignores difficult terrain, and magical effects can't reduce its speed or cause it to be restrained. It can spend 5 feet of movement to escape from nonmagical restraints or being grappled.
 
 ***Siege Monster***. The kraken deals double damage to objects and structures.
 

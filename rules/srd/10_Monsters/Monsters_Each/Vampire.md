@@ -38,7 +38,7 @@ While it has 0 hit points in mist form, it can't revert to its vampire form, and
 
 ***Regeneration***. The vampire regains 20 hit points at the start of its turn if it has at least 1 hit point and isn't in sunlight or running water. If the vampire takes radiant damage or damage from holy water, this trait doesn't function at the start of the vampire's next turn.
 
-***Spider Climb***. The vampire can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
+***[[rules/srd/07_Spells/Spells_Each/Spider_Climb|Spider Climb]]***. The vampire can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 
 ***Vampire Weaknesses***. The vampire has the following flaws:
 

@@ -18,4 +18,4 @@
 
 **Challenge** 0 (0 XP)
 
-***Water Breathing***. The sea horse can breathe only underwater.
+***[[rules/srd/07_Spells/Spells_Each/Water_Breathing|Water Breathing]]***. The sea horse can breathe only underwater.

@@ -86,7 +86,7 @@ If you paint a form of energy such as fire or lightning, the energy appears but 
 
 *Wondrous item, uncommon (requires attunement)*
 
-The medallion has 3 charges. While wearing it, you can use an action and expend 1 charge to cast the *detect thoughts* spell (save DC 13) from it. The medallion regains 1d3 expended charges daily at dawn.
+The medallion has 3 charges. While wearing it, you can use an action and expend 1 charge to cast the *[[rules/srd/07_Spells/Spells_Each/Detect_Thoughts|detect thoughts]]* spell (save DC 13) from it. The medallion regains 1d3 expended charges daily at dawn.
 
 ### Mirror of Life Trapping
 

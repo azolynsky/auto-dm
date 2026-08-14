@@ -114,7 +114,7 @@ By the time you reach 2nd level, you have learned to use the magical essence of 
 
 The Ranger table shows how many spell slots you have to cast your ranger spells of 1st level and higher. To cast one of these spells, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest.
 
-For example, if you know the 1st-level spell *animal friendship* and have a 1st-level and a 2nd-level spell slot available, you can cast *animal friendship* using either slot.
+For example, if you know the 1st-level spell *[[rules/srd/07_Spells/Spells_Each/Animal_Friendship|animal friendship]]* and have a 1st-level and a 2nd-level spell slot available, you can cast *animal friendship* using either slot.
 
 #### Spells Known of 1st Level and Higher
 
@@ -152,7 +152,7 @@ Beginning at 5th level, you can attack twice, instead of once, whenever you take
 
 Starting at 8th level, moving through nonmagical difficult terrain costs you no extra movement. You can also pass through nonmagical plants without being slowed by them and without taking damage from them if they have thorns, spines, or a similar hazard.
 
-In addition, you have advantage on saving throws against plants that are magically created or manipulated to impede movement, such those created by the *entangle* spell.
+In addition, you have advantage on saving throws against plants that are magically created or manipulated to impede movement, such those created by the *[[rules/srd/07_Spells/Spells_Each/Entangle|entangle]]* spell.
 
 ### Hide in Plain Sight
 
@@ -214,7 +214,7 @@ At 11th level, you gain one of the following features of your choice.
 
 At 15th level, you gain one of the following features of your choice.
 
-***Evasion***. When you are subjected to an effect, such as a red dragon's fiery breath or a *lightning bolt* spell, that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw, and only half damage if you fail.
+***Evasion***. When you are subjected to an effect, such as a red dragon's fiery breath or a *[[rules/srd/07_Spells/Spells_Each/Lightning_Bolt|lightning bolt]]* spell, that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw, and only half damage if you fail.
 
 ***Stand Against the Tide***. When a hostile creature misses you with a melee attack, you can use your reaction to force that creature to repeat the same attack against another creature (other than itself) of your choice.
 

@@ -22,7 +22,7 @@
 
 ***Ethereal Jaunt***. As a bonus action, the spider can magically shift from the Material Plane to the Ethereal Plane, or vice versa.
 
-***Spider Climb***. The spider can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
+***[[rules/srd/07_Spells/Spells_Each/Spider_Climb|Spider Climb]]***. The spider can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 
 ***Web Walker***. The spider ignores movement restrictions caused by webbing.
 

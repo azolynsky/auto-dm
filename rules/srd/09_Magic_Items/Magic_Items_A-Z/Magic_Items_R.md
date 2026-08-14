@@ -38,13 +38,13 @@ While wearing this ring, you have advantage on attack rolls against elementals f
 
 The ring has 5 charges. It regains 1d4+1 expended charges daily at dawn. Spells cast from the ring have a save DC of 17.
 
-***Ring of Air Elemental Command***. You can expend 2 of the ring's charges to cast *dominate monster* on an air elemental. In addition, when you fall, you descend 60 feet per round and take no damage from falling. You can also speak and understand Auran.
+***Ring of Air Elemental Command***. You can expend 2 of the ring's charges to cast *[[rules/srd/07_Spells/Spells_Each/Dominate_Monster|dominate monster]]* on an air elemental. In addition, when you fall, you descend 60 feet per round and take no damage from falling. You can also speak and understand Auran.
 
 If you help slay an air elemental while attuned to the ring, you gain access to the following additional properties:
 
 - You have resistance to lightning damage.
 - You have a flying speed equal to your walking speed and can hover.
-- You can cast the following spells from the ring, expending the necessary number of charges: *chain lightning* (3 charges), *gust of wind* (2 charges), or *wind wall* (1 charge).
+- You can cast the following spells from the ring, expending the necessary number of charges: *[[rules/srd/07_Spells/Spells_Each/Chain_Lightning|chain lightning]]* (3 charges), *[[rules/srd/07_Spells/Spells_Each/Gust_of_Wind|gust of wind]]* (2 charges), or *[[rules/srd/07_Spells/Spells_Each/Wind_Wall|wind wall]]* (1 charge).
 
 ***Ring of Earth Elemental Command***. You can expend 2 of the ring's charges to cast *dominate monster* on an earth elemental. In addition, you can move in difficult terrain that is composed of rubble, rocks, or dirt as if it were normal terrain. You can also speak and understand Terran.
 
@@ -52,21 +52,21 @@ If you help slay an earth elemental while attuned to the ring, you gain access t
 
 - You have resistance to acid damage.
 - You can move through solid earth or rock as if those areas were difficult terrain. If you end your turn there, you are shunted out to the nearest unoccupied space you last occupied.
-- You can cast the following spells from the ring, expending the necessary number of charges: *stone shape* (2 charges), *stoneskin* (3 charges), or *wall of stone* (3 charges).
+- You can cast the following spells from the ring, expending the necessary number of charges: *[[rules/srd/07_Spells/Spells_Each/Stone_Shape|stone shape]]* (2 charges), *[[rules/srd/07_Spells/Spells_Each/Stoneskin|stoneskin]]* (3 charges), or *[[rules/srd/07_Spells/Spells_Each/Wall_of_Stone|wall of stone]]* (3 charges).
 
 ***Ring of Fire Elemental Command***. You can expend 2 of the ring's charges to cast *dominate monster* on a fire elemental. In addition, you have resistance to fire damage. You can also speak and understand Ignan.
 
 If you help slay a fire elemental while attuned to the ring, you gain access to the following additional properties:
 
 - You are immune to fire damage.
-- You can cast the following spells from the ring, expending the necessary number of charges: *burning hands* (1 charge), *fireball* (2 charges), and *wall of fire* (3 charges).
+- You can cast the following spells from the ring, expending the necessary number of charges: *[[rules/srd/07_Spells/Spells_Each/Burning_Hands|burning hands]]* (1 charge), *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]* (2 charges), and *[[rules/srd/07_Spells/Spells_Each/Wall_of_Fire|wall of fire]]* (3 charges).
 
 ***Ring of Water Elemental Command***. You can expend 2 of the ring's charges to cast *dominate monster* on a water elemental. In addition, you can stand on and walk across liquid surfaces as if they were solid ground. You can also speak and understand Aquan.
 
 If you help slay a water elemental while attuned to the ring, you gain access to the following additional properties:
 
 - You can breathe underwater and have a swimming speed equal to your walking speed.
-- You can cast the following spells from the ring, expending the necessary number of charges: *create or destroy water* (1 charge), *control water* (3 charges), *ice storm* (2 charges), or *wall of ice* (3 charges).
+- You can cast the following spells from the ring, expending the necessary number of charges: *[[rules/srd/07_Spells/Spells_Each/Create_or_Destroy_Water|create or destroy water]]* (1 charge), *[[rules/srd/07_Spells/Spells_Each/Control_Water|control water]]* (3 charges), *[[rules/srd/07_Spells/Spells_Each/Ice_Storm|ice storm]]* (2 charges), or *[[rules/srd/07_Spells/Spells_Each/Wall_of_Ice|wall of ice]]* (3 charges).
 
 ### Ring of Evasion
 
@@ -96,7 +96,7 @@ While wearing this ring, you can turn invisible as an action. Anything you are w
 
 *Ring, uncommon (requires attunement)*
 
-While wearing this ring, you can cast the *jump* spell from it as a bonus action at will, but can target only yourself when you do so.
+While wearing this ring, you can cast the *[[rules/srd/07_Spells/Spells_Each/Jump|jump]]* spell from it as a bonus action at will, but can target only yourself when you do so.
 
 ### Ring of Mind Shielding
 
@@ -146,11 +146,11 @@ You have resistance to one damage type while wearing this ring. The gem in the r
 
 *Ring, very rare (requires attunement outdoors at night)*
 
-While wearing this ring in dim light or darkness, you can cast *dancing lights* and *light* from the ring at will. Casting either spell from the ring requires an action.
+While wearing this ring in dim light or darkness, you can cast *[[rules/srd/07_Spells/Spells_Each/Dancing_Lights|dancing lights]]* and *[[rules/srd/07_Spells/Spells_Each/Light|light]]* from the ring at will. Casting either spell from the ring requires an action.
 
 The ring has 6 charges for the following other properties. The ring regains 1d6 expended charges daily at dawn.
 
-***Faerie Fire***. You can expend 1 charge as an action to cast *faerie fire* from the ring.
+***Faerie Fire***. You can expend 1 charge as an action to cast *[[rules/srd/07_Spells/Spells_Each/Faerie_Fire|faerie fire]]* from the ring.
 
 ***Ball Lightning***. You can expend 2 charges as an action to create one to four 3-foot diameter spheres of lightning. The more spheres you create, the less powerful each sphere is individually.
 
@@ -196,7 +196,7 @@ You have a swimming speed of 40 feet while wearing this ring.
 
 *Ring, very rare (requires attunement)*
 
-While wearing this ring, you can cast the *telekinesis* spell at will, but you can target only objects that aren't being worn or carried.
+While wearing this ring, you can cast the *[[rules/srd/07_Spells/Spells_Each/Telekinesis|telekinesis]]* spell at will, but you can target only objects that aren't being worn or carried.
 
 ### Ring of the Ram
 
@@ -210,7 +210,7 @@ Alternatively, you can expend 1 to 3 of the ring's charges as an action to try t
 
 *Ring, legendary*
 
-While wearing this ring, you can use an action to expend 1 of its 3 charges to cast the *wish* spell from it. The ring becomes nonmagical when you use the last charge.
+While wearing this ring, you can use an action to expend 1 of its 3 charges to cast the *[[rules/srd/07_Spells/Spells_Each/Wish|wish]]* spell from it. The ring becomes nonmagical when you use the last charge.
 
 ### Ring of Warmth
 
@@ -244,7 +244,7 @@ This robe is adorned with eyelike patterns. While you wear the robe, you gain th
 
 The eyes on the robe can't be closed or averted. Although you can close or avert your own eyes, you are never considered to be doing so while wearing this robe.
 
-A *light* spell cast on the robe or a *daylight* spell cast within 5 feet of the robe causes you to be blinded for 1 minute. At the end of each of your turns, you can make a Constitution saving throw (DC 11 for *light* or DC 15 for *daylight*), ending the blindness on a success.
+A *light* spell cast on the robe or a *[[rules/srd/07_Spells/Spells_Each/Daylight|daylight]]* spell cast within 5 feet of the robe causes you to be blinded for 1 minute. At the end of each of your turns, you can make a Constitution saving throw (DC 11 for *light* or DC 15 for *daylight*), ending the blindness on a success.
 
 ### Robe of Scintillating Colors
 
@@ -258,7 +258,7 @@ This robe has 3 charges, and it regains 1d3 expended charges daily at dawn. Whil
 
 This black or dark blue robe is embroidered with small white or silver stars. You gain a +1 bonus to saving throws while you wear it.
 
-Six stars, located on the robe's upper front portion, are particularly large. While wearing this robe, you can use an action to pull off one of the stars and use it to cast *magic missile* as a 5th-level spell. Daily at dusk, 1d6 removed stars reappear on the robe.
+Six stars, located on the robe's upper front portion, are particularly large. While wearing this robe, you can use an action to pull off one of the stars and use it to cast *[[rules/srd/07_Spells/Spells_Each/Magic_Missile|magic missile]]* as a 5th-level spell. Daily at dusk, 1d6 removed stars reappear on the robe.
 
 While you wear the robe, you can use an action to enter the Astral Plane along with everything you are wearing and carrying. You remain there until you use an action to return to the plane you were on. You reappear in the last space you occupied, or if that space is occupied, the nearest unoccupied space.
 
@@ -329,7 +329,7 @@ This rod has a flanged head and the following properties.
 
 ***Alertness***. While holding the rod, you have advantage on Wisdom (Perception) checks and on rolls for initiative.
 
-***Spells***. While holding the rod, you can use an action to cast one of the following spells from it: *detect evil and good*, *detect magic*, *detect poison and disease*, or *see invisibility.*
+***Spells***. While holding the rod, you can use an action to cast one of the following spells from it: *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Poison_and_Disease|detect poison and disease]]*, or *see invisibility.*
 
 ***Protective Aura***. As an action, you can plant the haft end of the rod in the ground, whereupon the rod's head sheds bright light in a 60-foot radius and dim light for an additional 60 feet. While in that bright light, you and any creature that is friendly to you gain a +1 bonus to AC and saving throws and can sense the location of any invisible hostile creature that is also in the bright light.
 

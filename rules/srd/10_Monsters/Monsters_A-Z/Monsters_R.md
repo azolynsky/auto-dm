@@ -30,17 +30,17 @@
 
 ***Innate Spellcasting***. The rakshasa's innate spellcasting ability is Charisma (spell save DC 18, +10 to hit with spell attacks). The rakshasa can innately cast the following spells, requiring no material Components
 
-At will: *detect thoughts*, *disguise self*, *mage hand*, *minor illusion*
+At will: *[[rules/srd/07_Spells/Spells_Each/Detect_Thoughts|detect thoughts]]*, *[[rules/srd/07_Spells/Spells_Each/Disguise_Self|disguise self]]*, *[[rules/srd/07_Spells/Spells_Each/Mage_Hand|mage hand]]*, *[[rules/srd/07_Spells/Spells_Each/Minor_Illusion|minor illusion]]*
 
-3/day each: *charm person*, *detect magic*, *invisibility*, *major image*, *suggestion*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Charm_Person|charm person]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]*, *[[rules/srd/07_Spells/Spells_Each/Major_Image|major image]]*, *[[rules/srd/07_Spells/Spells_Each/Suggestion|suggestion]]*
 
-1/day each: *dominate person*, *fly*, *plane shift*, *true seeing*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Dominate_Person|dominate person]]*, *[[rules/srd/07_Spells/Spells_Each/Fly|fly]]*, *[[rules/srd/07_Spells/Spells_Each/Plane_Shift|plane shift]]*, *[[rules/srd/07_Spells/Spells_Each/True_Seeing|true seeing]]*
 
 ###### Actions
 
 ***Multiattack***. The rakshasa makes two claw attacks.
 
-***Claw***. *Melee Weapon Attack:* +7 to hit, reach 5 ft., one target. *Hit:* 9 (2d6+2) slashing damage, and the target is cursed if it is a creature. The magical curse takes effect whenever the target takes a short or long rest, filling the target's thoughts with horrible images and dreams. The cursed target gains no benefit from finishing a short or long rest. The curse lasts until it is lifted by a *remove curse* spell or similar magic.
+***Claw***. *Melee Weapon Attack:* +7 to hit, reach 5 ft., one target. *Hit:* 9 (2d6+2) slashing damage, and the target is cursed if it is a creature. The magical curse takes effect whenever the target takes a short or long rest, filling the target's thoughts with horrible images and dreams. The cursed target gains no benefit from finishing a short or long rest. The curse lasts until it is lifted by a *[[rules/srd/07_Spells/Spells_Each/Remove_Curse|remove curse]]* spell or similar magic.
 
 ## Remorhaz
 

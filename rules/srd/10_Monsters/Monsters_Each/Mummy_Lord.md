@@ -34,19 +34,19 @@
 
 ***Spellcasting***. The mummy lord is a 10th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 17, +9 to hit with spell attacks). The mummy lord has the following cleric spells prepared:
 
-Cantrips (at will): *sacred flame*, *thaumaturgy*
-1st level (4 slots): *command*, *guiding bolt*, *shield of faith*
-2nd level (3 slots): *hold person*, *silence*, *spiritual weapon*
-3rd level (3 slots): *animate dead*, *dispel magic*
-4th level (3 slots): *divination*, *guardian of faith*
-5th level (2 slots): *contagion*, *insect plague*
-6th level (1 slot): *harm*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Sacred_Flame|sacred flame]]*, *[[rules/srd/07_Spells/Spells_Each/Thaumaturgy|thaumaturgy]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Command|command]]*, *[[rules/srd/07_Spells/Spells_Each/Guiding_Bolt|guiding bolt]]*, *[[rules/srd/07_Spells/Spells_Each/Shield_of_Faith|shield of faith]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Hold_Person|hold person]]*, *[[rules/srd/07_Spells/Spells_Each/Silence|silence]]*, *[[rules/srd/07_Spells/Spells_Each/Spiritual_Weapon|spiritual weapon]]*
+3rd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Animate_Dead|animate dead]]*, *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*
+4th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Divination|divination]]*, *[[rules/srd/07_Spells/Spells_Each/Guardian_of_Faith|guardian of faith]]*
+5th level (2 slots): *[[rules/srd/07_Spells/Spells_Each/Contagion|contagion]]*, *[[rules/srd/07_Spells/Spells_Each/Insect_Plague|insect plague]]*
+6th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Harm|harm]]*
 
 ###### Actions
 
 ***Multiattack***. The mummy can use its Dreadful Glare and makes one attack with its rotting fist.
 
-***Rotting Fist***. *Melee Weapon Attack:* +9 to hit, reach 5 ft., one target. *Hit:* 14 (3d6+4) bludgeoning damage plus 21 (6d6) necrotic damage. If the target is a creature, it must succeed on a DC 16 Constitution saving throw or be cursed with mummy rot. The cursed target can't regain hit points, and its hit point maximum decreases by 10 (3d6) for every 24 hours that elapse. If the curse reduces the target's hit point maximum to 0, the target dies, and its body turns to dust. The curse lasts until removed by the *remove curse* spell or other magic.
+***Rotting Fist***. *Melee Weapon Attack:* +9 to hit, reach 5 ft., one target. *Hit:* 14 (3d6+4) bludgeoning damage plus 21 (6d6) necrotic damage. If the target is a creature, it must succeed on a DC 16 Constitution saving throw or be cursed with mummy rot. The cursed target can't regain hit points, and its hit point maximum decreases by 10 (3d6) for every 24 hours that elapse. If the curse reduces the target's hit point maximum to 0, the target dies, and its body turns to dust. The curse lasts until removed by the *[[rules/srd/07_Spells/Spells_Each/Remove_Curse|remove curse]]* spell or other magic.
 
 ***Dreadful Glare***. The mummy lord targets one creature it can see within 60 feet of it. If the target can see the mummy lord, it must succeed on a DC 16 Wisdom saving throw against this magic or become frightened until the end of the mummy's next turn. If the target fails the saving throw by 5 or more, it is also paralyzed for the same duration. A target that succeeds on the saving throw is immune to the Dreadful Glare of all mummies and mummy lords for the next 24 hours.
 

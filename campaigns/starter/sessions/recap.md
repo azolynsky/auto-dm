@@ -3,7 +3,7 @@
 Nothing yet — the campaign hasn't started.
 
 Run a session 0 (character creation), then open session 1 at the Waylight Inn
-in Emberwick. After each session, the session-wrap skill rewrites this file.
+in [[campaigns/starter/world/locations/emberwick/summary|Emberwick]]. After each session, the session-wrap skill rewrites this file.
 
 ## Open threads
 

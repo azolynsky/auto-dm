@@ -30,7 +30,7 @@
 
 ***False Appearance***. While the mephit remains motionless, it is indistinguishable from an ordinary mound of magma.
 
-***Innate Spellcasting (1/Day)***. The mephit can innately cast *heat metal* (spell save DC 10), requiring no material components. Its innate spellcasting ability is Charisma.
+***Innate Spellcasting (1/Day)***. The mephit can innately cast *[[rules/srd/07_Spells/Spells_Each/Heat_Metal|heat metal]]* (spell save DC 10), requiring no material components. Its innate spellcasting ability is Charisma.
 
 ###### Actions
 

@@ -40,7 +40,7 @@
 
 ***Tail***. *Melee Weapon Attack:* +10 to hit, reach 10 ft., one target. *Hit:* 12 (2d6+5) bludgeoning damage plus 10 (3d6) cold damage.
 
-***Wall of Ice (Recharge 6)***. The devil magically forms an opaque wall of ice on a solid surface it can see within 60 feet of it. The wall is 1 foot thick and up to 30 feet long and 10 feet high, or it's a hemispherical dome up to 20 feet in diameter.
+***[[rules/srd/07_Spells/Spells_Each/Wall_of_Ice|Wall of Ice]] (Recharge 6)***. The devil magically forms an opaque wall of ice on a solid surface it can see within 60 feet of it. The wall is 1 foot thick and up to 30 feet long and 10 feet high, or it's a hemispherical dome up to 20 feet in diameter.
 
 When the wall appears, each creature in its space is pushed out of it by the shortest route. The creature chooses which side of the wall to end up on, unless the creature is incapacitated. The creature then makes a DC 17 Dexterity saving throw, taking 35 (10d6) cold damage on a failed save, or half as much damage on a successful one.
 

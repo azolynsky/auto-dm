@@ -193,6 +193,17 @@ When the Director plans a scene, update `present_entities` to reflect who/what i
 
 This pattern is the antidote to context drift: unbounded detail can live in entity folders, but only what's in scope hits the LLM's window.
 
+## Wikilinks (Obsidian)
+
+The repo is also an Obsidian vault; markdown files cross-reference with wikilinks. Maintain them whenever you write or edit a `.md` file:
+
+- Format: `[[full/path/from/repo/root|name as written]]` (e.g. `[[campaign/npcs/recurring/pip/summary|Pip]]`). Full path always — many files are named `summary.md`; the alias keeps prose reading unchanged.
+- Link the **first mention per file** of any entity that has its own file (NPC, location, faction, spell, monster, magic item). Later mentions stay plain. Never self-link within an entity's own folder; never link inside code blocks or frontmatter.
+- New entity → its INDEX.md entry is a wikilink to its `summary.md`. Ambiguous names get a disambiguation line (see `pip` vs `pip-stonehill`).
+- Session wrap: new session log gets `Prev:`/`Next:` footer links; update the previous log's `Next:`.
+- New SRD entry (spell/monster/item) → also add it to its hub (`Spell_Lists_Wikilinked.md`, `Monster_Index.md`, `Magic_Item_Index.md`); monster/item stat blocks link spells in italics: `*[[…/Spells_Each/Misty_Step|misty step]]*`.
+- Wikilinks are plain text — follow them with Grep/Read; no plugin needed.
+
 ## When you don't know
 
 Say so. "Let me check the rules" beats inventing. "Let me check what's in that direction" beats hand-waving geography. Use Read freely; you have all the state in this directory.

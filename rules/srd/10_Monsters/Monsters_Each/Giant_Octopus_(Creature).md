@@ -24,7 +24,7 @@
 
 ***Underwater Camouflage***. The octopus has advantage on Dexterity (Stealth) checks made while underwater.
 
-***Water Breathing***. The octopus can breathe only underwater.
+***[[rules/srd/07_Spells/Spells_Each/Water_Breathing|Water Breathing]]***. The octopus can breathe only underwater.
 
 ###### Actions
 

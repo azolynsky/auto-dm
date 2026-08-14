@@ -28,7 +28,7 @@
 
 ***Death Burst***. When the mephit dies, it explodes in a burst of dust. Each creature within 5 feet of it must then succeed on a DC 10 Constitution saving throw or be blinded for 1 minute. A blinded creature can repeat the saving throw on each of its turns, ending the effect on itself on a success.
 
-***Innate Spellcasting (1/Day)***. The mephit can innately cast *sleep*, requiring no material components. Its innate spellcasting ability is Charisma.
+***Innate Spellcasting (1/Day)***. The mephit can innately cast *[[rules/srd/07_Spells/Spells_Each/Sleep|sleep]]*, requiring no material components. Its innate spellcasting ability is Charisma.
 
 ###### Actions
 

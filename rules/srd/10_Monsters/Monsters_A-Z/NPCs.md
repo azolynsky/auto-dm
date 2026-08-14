@@ -38,8 +38,8 @@ There are many easy ways to customize the NPCs in this appendix for your home ca
 
 ***Spellcasting***. The acolyte is a 1st-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 12, +4 to hit with spell attacks). The acolyte has following cleric spells prepared:
 
-Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
-1st level (3 slots): *bless*, *cure wounds*, *sanctuary*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Light|light]]*, *[[rules/srd/07_Spells/Spells_Each/Sacred_Flame|sacred flame]]*, *[[rules/srd/07_Spells/Spells_Each/Thaumaturgy|thaumaturgy]]*
+1st level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Bless|bless]]*, *[[rules/srd/07_Spells/Spells_Each/Cure_Wounds|cure wounds]]*, *[[rules/srd/07_Spells/Spells_Each/Sanctuary|sanctuary]]*
 
 ###### Actions
 
@@ -51,7 +51,7 @@ Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
 
 *Medium humanoid (any race), any alignment*
 
-**Armor Class** 12 (15 with *mage armor*)
+**Armor Class** 12 (15 with *[[rules/srd/07_Spells/Spells_Each/Mage_Armor|mage armor]]*)
 
 **Hit Points** 99 (18d8 + 18)
 
@@ -65,7 +65,7 @@ Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
 
 **Skills** Arcana +13, History +13
 
-**Damage Resistance** damage from spells; nonmagical bludgeoning, piercing, and slashing (from *stoneskin*)
+**Damage Resistance** damage from spells; nonmagical bludgeoning, piercing, and slashing (from *[[rules/srd/07_Spells/Spells_Each/Stoneskin|stoneskin]]*)
 
 **Senses** passive Perception 12
 
@@ -75,18 +75,18 @@ Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
 
 ***Magic Resistance***. The archmage has advantage on saving throws against spells and other magical effects.
 
-***Spellcasting***. The archmage is an 18th-level spellcaster. Its spellcasting ability is Intelligence (spell save DC 17, +9 to hit with spell attacks). The archmage can cast *disguise self* and *invisibility* at will and has the following wizard spells prepared:
+***Spellcasting***. The archmage is an 18th-level spellcaster. Its spellcasting ability is Intelligence (spell save DC 17, +9 to hit with spell attacks). The archmage can cast *[[rules/srd/07_Spells/Spells_Each/Disguise_Self|disguise self]]* and *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]* at will and has the following wizard spells prepared:
 
-Cantrips (at will): *fire bolt*, *light*, *mage hand*, *prestidigitation*, *shocking grasp*
-1st level (4 slots): *detect magic*, *identify*, *mage armor*, *magic missile*
-2nd level (3 slots): *detect thoughts*, *mirror image*, *misty step*
-3rd level (3 slots): *counterspell*, *fly*, *lightning bolt*
-4th level (3 slots): *banishment*, *fire shield*, *stoneskin*
-5th level (3 slots): *cone of cold*, *scrying*, *wall of force*
-6th level (1 slot): *globe of invulnerability*
-7th level (1 slot): *teleport*
-8th level (1 slot): *mind blank**
-9th level (1 slot): *time stop*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Fire_Bolt|fire bolt]]*, *light*, *[[rules/srd/07_Spells/Spells_Each/Mage_Hand|mage hand]]*, *[[rules/srd/07_Spells/Spells_Each/Prestidigitation|prestidigitation]]*, *[[rules/srd/07_Spells/Spells_Each/Shocking_Grasp|shocking grasp]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Identify|identify]]*, *mage armor*, *[[rules/srd/07_Spells/Spells_Each/Magic_Missile|magic missile]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Detect_Thoughts|detect thoughts]]*, *[[rules/srd/07_Spells/Spells_Each/Mirror_Image|mirror image]]*, *[[rules/srd/07_Spells/Spells_Each/Misty_Step|misty step]]*
+3rd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Counterspell|counterspell]]*, *[[rules/srd/07_Spells/Spells_Each/Fly|fly]]*, *[[rules/srd/07_Spells/Spells_Each/Lightning_Bolt|lightning bolt]]*
+4th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Banishment|banishment]]*, *[[rules/srd/07_Spells/Spells_Each/Fire_Shield|fire shield]]*, *stoneskin*
+5th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Cone_of_Cold|cone of cold]]*, *[[rules/srd/07_Spells/Spells_Each/Scrying|scrying]]*, *[[rules/srd/07_Spells/Spells_Each/Wall_of_Force|wall of force]]*
+6th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Globe_of_Invulnerability|globe of invulnerability]]*
+7th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Teleport|teleport]]*
+8th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Mind_Blank|mind blank]]**
+9th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Time_Stop|time stop]]*
 \* The archmage casts these spells on itself before combat.
 
 ###### Actions
@@ -322,8 +322,8 @@ Hailing from uncivilized lands, unpredictable **berserkers** come together in wa
 ***Spellcasting***. The fanatic is a 4th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 11, +3 to hit with spell attacks). The fanatic has the following cleric spells prepared:
 
 Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
-1st level (4 slots): *command*, *inflict wounds*, *shield of faith*
-2nd level (3 slots): *hold person*, *spiritual weapon*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Command|command]]*, *[[rules/srd/07_Spells/Spells_Each/Inflict_Wounds|inflict wounds]]*, *[[rules/srd/07_Spells/Spells_Each/Shield_of_Faith|shield of faith]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Hold_Person|hold person]]*, *[[rules/srd/07_Spells/Spells_Each/Spiritual_Weapon|spiritual weapon]]*
 
 ###### Actions
 
@@ -337,7 +337,7 @@ Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
 
 *Medium humanoid (any race), any alignment*
 
-**Armor Class** 11 (16 with *barkskin*)
+**Armor Class** 11 (16 with *[[rules/srd/07_Spells/Spells_Each/Barkskin|barkskin]]*)
 
 **Hit Points** 27 (5d8 + 5)
 
@@ -357,9 +357,9 @@ Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
 
 ***Spellcasting***. The druid is a 4th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 12, +4 to hit with spell attacks). It has the following druid spells prepared:
 
-Cantrips (at will): *druidcraft*, *produce flame*, *shillelagh*
-1st level (4 slots): *entangle*, *longstrider*, *speak with animals*, *thunderwave*
-2nd level (3 slots): *animal messenger*, *barkskin*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Druidcraft|druidcraft]]*, *[[rules/srd/07_Spells/Spells_Each/Produce_Flame|produce flame]]*, *[[rules/srd/07_Spells/Spells_Each/Shillelagh|shillelagh]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Entangle|entangle]]*, *[[rules/srd/07_Spells/Spells_Each/Longstrider|longstrider]]*, *[[rules/srd/07_Spells/Spells_Each/Speak_with_Animals|speak with animals]]*, *[[rules/srd/07_Spells/Spells_Each/Thunderwave|thunderwave]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Animal_Messenger|animal messenger]]*, *barkskin*
 
 ###### Actions
 
@@ -504,10 +504,10 @@ Cantrips (at will): *druidcraft*, *produce flame*, *shillelagh*
 ***Spellcasting***. The mage is a 9th-level spellcaster. Its spellcasting ability is Intelligence (spell save DC 14, +6 to hit with spell attacks). The mage has the following wizard spells prepared:
 
 Cantrips (at will): *fire bolt*, *light*, *mage hand*, *prestidigitation*
-1st level (4 slots): *detect magic*, *mage armor*, *magic missile*, *shield*
-2nd level (3 slots): *misty step*, *suggestion*
-3rd level (3 slots): *counterspell*, *fireball*, *fly*
-4th level (3 slots): *greater invisibility*, *ice storm*
+1st level (4 slots): *detect magic*, *mage armor*, *magic missile*, *[[rules/srd/07_Spells/Spells_Each/Shield|shield]]*
+2nd level (3 slots): *misty step*, *[[rules/srd/07_Spells/Spells_Each/Suggestion|suggestion]]*
+3rd level (3 slots): *counterspell*, *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]*, *fly*
+4th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Greater_Invisibility|greater invisibility]]*, *[[rules/srd/07_Spells/Spells_Each/Ice_Storm|ice storm]]*
 5th level (1 slot): *cone of cold*
 
 ###### Actions
@@ -577,9 +577,9 @@ The noble's statistics can also be used to represent **courtiers** who aren't of
 ***Spellcasting***. The priest is a 5th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 13, +5 to hit with spell attacks). The priest has the following cleric spells prepared:
 
 Cantrips (at will): *light*, *sacred flame*, *thaumaturgy*
-1st level (4 slots): *cure wounds*, *guiding bolt*, *sanctuary*
-2nd level (3 slots): *lesser restoration*, *spiritual weapon*
-3rd level (2 slots): *dispel magic*, *spirit guardians*
+1st level (4 slots): *cure wounds*, *[[rules/srd/07_Spells/Spells_Each/Guiding_Bolt|guiding bolt]]*, *sanctuary*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Lesser_Restoration|lesser restoration]]*, *spiritual weapon*
+3rd level (2 slots): *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*, *[[rules/srd/07_Spells/Spells_Each/Spirit_Guardians|spirit guardians]]*
 
 ###### Actions
 

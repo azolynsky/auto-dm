@@ -27,7 +27,7 @@ While holding this shield, you have a bonus to AC determined by the shield's rar
 
 While holding this shield, you have resistance to damage from ranged weapon attacks.
 
-***Curse***. This shield is cursed. Attuning to it curses you until you are targeted by the *remove curse* spell or similar magic. Removing the shield fails to end the curse on you. Whenever a ranged weapon attack is made against a target within 10 feet of you, the curse causes you to become the target instead.
+***Curse***. This shield is cursed. Attuning to it curses you until you are targeted by the *[[rules/srd/07_Spells/Spells_Each/Remove_Curse|remove curse]]* spell or similar magic. Removing the shield fails to end the curse on you. Whenever a ranged weapon attack is made against a target within 10 feet of you, the curse causes you to become the target instead.
 
 ### Slippers of Spider Climbing
 
@@ -41,7 +41,7 @@ While you wear these light shoes, you can move up, down, and across vertical sur
 
 This viscous, milky-white substance can form a permanent adhesive bond between any two objects. It must be stored in a jar or flask that has been coated inside with *oil of slipperiness*. When found, a container contains 1d6+1 ounces.
 
-One ounce of the glue can cover a 1-foot square surface. The glue takes 1 minute to set. Once it has done so, the bond it creates can be broken only by the application of *universal solvent* or *oil of etherealness*, or with a *wish* spell.
+One ounce of the glue can cover a 1-foot square surface. The glue takes 1 minute to set. Once it has done so, the bond it creates can be broken only by the application of *universal solvent* or *oil of etherealness*, or with a *[[rules/srd/07_Spells/Spells_Each/Wish|wish]]* spell.
 
 ### Spell Scroll
 
@@ -89,7 +89,7 @@ The sphere is stationary until someone controls it. If you are within 60 feet of
 
 If you attempt to control a sphere that is under another creature's control, you make an Intelligence (Arcana) check contested by the other creature's Intelligence (Arcana) check. The winner of the contest gains control of the sphere and can levitate it as normal.
 
-If the sphere comes into contact with a planar portal, such as that created by the *gate* spell, or an extradimensional space, such as that within a *portable hole*, the GM determines randomly what happens, using the following table.
+If the sphere comes into contact with a planar portal, such as that created by the *[[rules/srd/07_Spells/Spells_Each/Gate|gate]]* spell, or an extradimensional space, such as that within a *portable hole*, the GM determines randomly what happens, using the following table.
 
 **Table- Sphere of Annihilation**
 
@@ -104,7 +104,7 @@ If the sphere comes into contact with a planar portal, such as that created by t
 
 *Staff, rare (requires attunement by a bard, cleric, druid, sorcerer, warlock, or wizard)*
 
-While holding this staff, you can use an action to expend 1 of its 10 charges to cast *charm person*, *command*, *or comprehend languages* from it using your spell save DC. The staff can also be used as a magic quarterstaff.
+While holding this staff, you can use an action to expend 1 of its 10 charges to cast *[[rules/srd/07_Spells/Spells_Each/Charm_Person|charm person]]*, *[[rules/srd/07_Spells/Spells_Each/Command|command]]*, *or comprehend languages* from it using your spell save DC. The staff can also be used as a magic quarterstaff.
 
 If you are holding the staff and fail a saving throw against an enchantment spell that targets only you, you can turn your failed save into a successful one. You can't use this property of the staff again until the next dawn. If you succeed on a save against an enchantment spell that targets only you, with or without the staff's intervention, you can use your reaction to expend 1 charge from the staff and turn the spell back on its caster as if you had cast the spell.
 
@@ -116,7 +116,7 @@ The staff regains 1d8+2 expended charges daily at dawn. If you expend the last c
 
 You have resistance to fire damage while you hold this staff.
 
-The staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC: *burning hands* (1 charge), *fireball* (3 charges), or *wall of fire* (4 charges).
+The staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC: *[[rules/srd/07_Spells/Spells_Each/Burning_Hands|burning hands]]* (1 charge), *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]* (3 charges), or *[[rules/srd/07_Spells/Spells_Each/Wall_of_Fire|wall of fire]]* (4 charges).
 
 The staff regains 1d6+4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff blackens, crumbles into cinders, and is destroyed.
 
@@ -126,7 +126,7 @@ The staff regains 1d6+4 expended charges daily at dawn. If you expend the last c
 
 You have resistance to cold damage while you hold this staff.
 
-The staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC: *cone of cold* (5 charges), *fog cloud* (1 charge), *ice storm* (4 charges), or *wall of ice* (4 charges).
+The staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC: *[[rules/srd/07_Spells/Spells_Each/Cone_of_Cold|cone of cold]]* (5 charges), *[[rules/srd/07_Spells/Spells_Each/Fog_Cloud|fog cloud]]* (1 charge), *[[rules/srd/07_Spells/Spells_Each/Ice_Storm|ice storm]]* (4 charges), or *[[rules/srd/07_Spells/Spells_Each/Wall_of_Ice|wall of ice]]* (4 charges).
 
 The staff regains 1d6+4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff turns to water and is destroyed.
 
@@ -134,7 +134,7 @@ The staff regains 1d6+4 expended charges daily at dawn. If you expend the last c
 
 *Staff, rare (requires attunement by a bard, cleric, or druid)*
 
-This staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC and spellcasting ability modifier: *cure wounds* (1 charge per spell level, up to 4th), *lesser restoration* (2 charges), or *mass cure wounds* (5 charges).
+This staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC and spellcasting ability modifier: *[[rules/srd/07_Spells/Spells_Each/Cure_Wounds|cure wounds]]* (1 charge per spell level, up to 4th), *[[rules/srd/07_Spells/Spells_Each/Lesser_Restoration|lesser restoration]]* (2 charges), or *[[rules/srd/07_Spells/Spells_Each/Mass_Cure_Wounds|mass cure wounds]]* (5 charges).
 
 The staff regains 1d6+4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff vanishes in a flash of light, lost forever.
 
@@ -148,7 +148,7 @@ The staff has 20 charges for the following properties. The staff regains 2d8+4 e
 
 ***Power Strike***. When you hit with a melee attack using the staff, you can expend 1 charge to deal an extra 1d6 force damage to the target.
 
-***Spells***. While holding this staff, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC and spell attack bonus: *cone of cold* (5 charges), *fireball* (5th-level version, 5 charges), *globe of invulnerability* (6 charges), *hold monster* (5 charges), *levitate* (2 charges), *lightning bolt* (5th-level version, 5 charges), *magic missile* (1 charge), *ray of enfeeblement* (1 charge), or *wall of force* (5 charges).
+***Spells***. While holding this staff, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC and spell attack bonus: *cone of cold* (5 charges), *fireball* (5th-level version, 5 charges), *[[rules/srd/07_Spells/Spells_Each/Globe_of_Invulnerability|globe of invulnerability]]* (6 charges), *[[rules/srd/07_Spells/Spells_Each/Hold_Monster|hold monster]]* (5 charges), *[[rules/srd/07_Spells/Spells_Each/Levitate|levitate]]* (2 charges), *[[rules/srd/07_Spells/Spells_Each/Lightning_Bolt|lightning bolt]]* (5th-level version, 5 charges), *[[rules/srd/07_Spells/Spells_Each/Magic_Missile|magic missile]]* (1 charge), *[[rules/srd/07_Spells/Spells_Each/Ray_of_Enfeeblement|ray of enfeeblement]]* (1 charge), or *[[rules/srd/07_Spells/Spells_Each/Wall_of_Force|wall of force]]* (5 charges).
 
 ***Retributive Strike***. You can use an action to break the staff over your knee or against a solid surface, performing a retributive strike. The staff is destroyed and releases its remaining magic in an explosion that expands to fill a 30-foot radius sphere centered on it.
 
@@ -177,7 +177,7 @@ The staff has 10 charges. When you hit with a melee attack using it, you can exp
 
 This staff has 10 charges and regains 1d6+4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, a swarm of insects consumes and destroys the staff, then disperses.
 
-***Spells***. While holding the staff, you can use an action to expend some of its charges to cast one of the following spells from it, using your spell save DC: *giant insect* (4 charges) or *insect plague* (5 charges).
+***Spells***. While holding the staff, you can use an action to expend some of its charges to cast one of the following spells from it, using your spell save DC: *[[rules/srd/07_Spells/Spells_Each/Giant_Insect|giant insect]]* (4 charges) or *[[rules/srd/07_Spells/Spells_Each/Insect_Plague|insect plague]]* (5 charges).
 
 ***Insect Cloud***. While holding the staff, you can use an action and expend 1 charge to cause a swarm of harmless flying insects to spread out in a 30-foot radius from you. The insects remain for 10 minutes, making the area heavily obscured for creatures other than you. The swarm moves with you, remaining centered on you. A wind of at least 10 miles per hour disperses the swarm and ends the effect.
 
@@ -191,9 +191,9 @@ The staff has 50 charges for the following properties. It regains 4d6+2 expended
 
 ***Spell Absorption***. While holding the staff, you have advantage on saving throws against spells. In addition, you can use your reaction when another creature casts a spell that targets only you. If you do, the staff absorbs the magic of the spell, canceling its effect and gaining a number of charges equal to the absorbed spell's level. However, if doing so brings the staff's total number of charges above 50, the staff explodes as if you activated its retributive strike (see below).
 
-***Spells***. While holding the staff, you can use an action to expend some of its charges to cast one of the following spells from it, using your spell save DC and spellcasting ability: *conjure elemental* (7 charges), *dispel magic* (3 charges), *fireball* (7th-level version, 7 charges), *flaming sphere* (2 charges), *ice storm* (4 charges), *invisibility* (2 charges), *knock* (2 charges), *lightning bolt* (7th-level version, 7 charges), *passwall* (5 charges), *plane shift* (7 charges), *telekinesis* (5 charges), *wall of fire* (4 charges), or *web* (2 charges).
+***Spells***. While holding the staff, you can use an action to expend some of its charges to cast one of the following spells from it, using your spell save DC and spellcasting ability: *[[rules/srd/07_Spells/Spells_Each/Conjure_Elemental|conjure elemental]]* (7 charges), *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]* (3 charges), *fireball* (7th-level version, 7 charges), *[[rules/srd/07_Spells/Spells_Each/Flaming_Sphere|flaming sphere]]* (2 charges), *ice storm* (4 charges), *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]* (2 charges), *[[rules/srd/07_Spells/Spells_Each/Knock|knock]]* (2 charges), *lightning bolt* (7th-level version, 7 charges), *[[rules/srd/07_Spells/Spells_Each/Passwall|passwall]]* (5 charges), *[[rules/srd/07_Spells/Spells_Each/Plane_Shift|plane shift]]* (7 charges), *[[rules/srd/07_Spells/Spells_Each/Telekinesis|telekinesis]]* (5 charges), *wall of fire* (4 charges), or *[[rules/srd/07_Spells/Spells_Each/Web|web]]* (2 charges).
 
-You can also use an action to cast one of the following spells from the staff without using any charges: *arcane lock*, *detect magic*, *enlarge/reduce*, *light*, *mage hand*, or *protection from evil and good.*
+You can also use an action to cast one of the following spells from the staff without using any charges: *[[rules/srd/07_Spells/Spells_Each/Arcane_Lock|arcane lock]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *enlarge/reduce*, *[[rules/srd/07_Spells/Spells_Each/Light|light]]*, *[[rules/srd/07_Spells/Spells_Each/Mage_Hand|mage hand]]*, or *protection from evil and good.*
 
 ***Retributive Strike***. You can use an action to break the staff over your knee or against a solid surface, performing a retributive strike. The staff is destroyed and releases its remaining magic in an explosion that expands to fill a 30-foot radius sphere centered on it.
 
@@ -226,9 +226,9 @@ This staff can be wielded as a magic quarterstaff that grants a +2 bonus to atta
 
 The staff has 10 charges for the following properties. It regains 1d6+4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff loses its properties and becomes a nonmagical quarterstaff.
 
-***Spells***. You can use an action to expend 1 or more of the staff's charges to cast one of the following spells from it, using your spell save DC: *animal friendship* (1 charge), *awaken* (5 charges), *barkskin* (2 charges), *locate animals or plants* (2 charges), *speak with animals* (1 charge), *speak with plants* (3 charges), or *wall of thorns* (6 charges).
+***Spells***. You can use an action to expend 1 or more of the staff's charges to cast one of the following spells from it, using your spell save DC: *[[rules/srd/07_Spells/Spells_Each/Animal_Friendship|animal friendship]]* (1 charge), *[[rules/srd/07_Spells/Spells_Each/Awaken|awaken]]* (5 charges), *[[rules/srd/07_Spells/Spells_Each/Barkskin|barkskin]]* (2 charges), *[[rules/srd/07_Spells/Spells_Each/Locate_Animals_or_Plants|locate animals or plants]]* (2 charges), *[[rules/srd/07_Spells/Spells_Each/Speak_with_Animals|speak with animals]]* (1 charge), *[[rules/srd/07_Spells/Spells_Each/Speak_with_Plants|speak with plants]]* (3 charges), or *[[rules/srd/07_Spells/Spells_Each/Wall_of_Thorns|wall of thorns]]* (6 charges).
 
-You can also use an action to cast the *pass without trace* spell from the staff without using any charges.
+You can also use an action to cast the *[[rules/srd/07_Spells/Spells_Each/Pass_without_Trace|pass without trace]]* spell from the staff without using any charges.
 
 ***Tree Form***. You can use an action to plant one end of the staff in fertile earth and expend 1 charge to transform the staff into a healthy tree. The tree is 60 feet tall and has a 5-foot diameter trunk, and its branches at the top spread out in a 20-foot radius.
 

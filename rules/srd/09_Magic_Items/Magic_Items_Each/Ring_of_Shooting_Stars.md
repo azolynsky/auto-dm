@@ -2,11 +2,11 @@
 
 *Ring, very rare (requires attunement outdoors at night)*
 
-While wearing this ring in dim light or darkness, you can cast *dancing lights* and *light* from the ring at will. Casting either spell from the ring requires an action.
+While wearing this ring in dim light or darkness, you can cast *[[rules/srd/07_Spells/Spells_Each/Dancing_Lights|dancing lights]]* and *[[rules/srd/07_Spells/Spells_Each/Light|light]]* from the ring at will. Casting either spell from the ring requires an action.
 
 The ring has 6 charges for the following other properties. The ring regains 1d6 expended charges daily at dawn.
 
-***Faerie Fire***. You can expend 1 charge as an action to cast *faerie fire* from the ring.
+***[[rules/srd/07_Spells/Spells_Each/Faerie_Fire|Faerie Fire]]***. You can expend 1 charge as an action to cast *faerie fire* from the ring.
 
 ***Ball Lightning***. You can expend 2 charges as an action to create one to four 3-foot diameter spheres of lightning. The more spheres you create, the less powerful each sphere is individually.
 

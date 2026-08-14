@@ -20,7 +20,7 @@
 
 **Challenge** 1/4 (50 XP)
 
-***Spider Climb***. The spider can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
+***[[rules/srd/07_Spells/Spells_Each/Spider_Climb|Spider Climb]]***. The spider can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 
 ***Web Sense***. While in contact with a web, the spider knows the exact location of any other creature in contact with the same web.
 

@@ -34,7 +34,7 @@
 
 ***Multiattack***. The aboleth makes three tentacle attacks.
 
-***Tentacle***. *Melee Weapon Attack:* +9 to hit, reach 10 ft., one target. *Hit:* 12 (2d6+5) bludgeoning damage. If the target is a creature, it must succeed on a DC 14 Constitution saving throw or become diseased. The disease has no effect for 1 minute and can be removed by any magic that cures disease. After 1 minute, the diseased creature's skin becomes translucent and slimy, the creature can't regain hit points unless it is underwater, and the disease can be removed only by *heal* or another disease-curing spell of 6th level or higher. When the creature is outside a body of water, it takes 6 (1d12) acid damage every 10 minutes unless moisture is applied to the skin before 10 minutes have passed.
+***Tentacle***. *Melee Weapon Attack:* +9 to hit, reach 10 ft., one target. *Hit:* 12 (2d6+5) bludgeoning damage. If the target is a creature, it must succeed on a DC 14 Constitution saving throw or become diseased. The disease has no effect for 1 minute and can be removed by any magic that cures disease. After 1 minute, the diseased creature's skin becomes translucent and slimy, the creature can't regain hit points unless it is underwater, and the disease can be removed only by *[[rules/srd/07_Spells/Spells_Each/Heal|heal]]* or another disease-curing spell of 6th level or higher. When the creature is outside a body of water, it takes 6 (1d12) acid damage every 10 minutes unless moisture is applied to the skin before 10 minutes have passed.
 
 ***Tail***. *Melee Weapon Attack:* +9 to hit, reach 10 ft. one target. *Hit:* 15 (3d6+5) bludgeoning damage.
 
@@ -86,9 +86,9 @@ The aboleth can take 3 legendary actions, choosing from the options below. Only 
 
 ***Innate Spellcasting***. The deva's spellcasting ability is Charisma (spell save DC 17). The deva can innately cast the following spells, requiring only verbal Components
 
-At will: *detect evil and good*
+At will: *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*
 
-1/day each: *commune*, *raise dead*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Commune|commune]]*, *[[rules/srd/07_Spells/Spells_Each/Raise_Dead|raise dead]]*
 
 ***Magic Resistance***. The deva has advantage on saving throws against spells and other magical effects.
 
@@ -138,11 +138,11 @@ In a new form, the deva retains its game statistics and ability to speak, but it
 
 ***Innate Spellcasting***. The planetar's spellcasting ability is Charisma (spell save DC 20). The planetar can innately cast the following spells, requiring no material Components
 
-At will: *detect evil and good*, *invisibility* (self only)
+At will: *detect evil and good*, *[[rules/srd/07_Spells/Spells_Each/Invisibility|invisibility]]* (self only)
 
-3/day each: *blade barrier*, *dispel evil and good*, *flame strike*, *raise dead*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Blade_Barrier|blade barrier]]*, *[[rules/srd/07_Spells/Spells_Each/Dispel_Evil_and_Good|dispel evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Flame_Strike|flame strike]]*, *raise dead*
 
-1/day each: *commune*, *control weather*, *insect plague*
+1/day each: *commune*, *[[rules/srd/07_Spells/Spells_Each/Control_Weather|control weather]]*, *[[rules/srd/07_Spells/Spells_Each/Insect_Plague|insect plague]]*
 
 ***Magic Resistance***. The planetar has advantage on saving throws against spells and other magical effects.
 
@@ -192,7 +192,7 @@ At will: *detect evil and good*, *invisibility* (self only)
 
 At will: *detect evil and good*, *invisibility* (self only)
 
-3/day each: *blade barrier*, *dispel evil and good*, *resurrection*
+3/day each: *blade barrier*, *dispel evil and good*, *[[rules/srd/07_Spells/Spells_Each/Resurrection|resurrection]]*
 
 1/day each: *commune*, *control weather*
 
@@ -218,7 +218,7 @@ The solar can take 3 legendary actions, choosing from the options below. Only on
 
 **Searing Burst (Costs 2 Actions)**. The solar emits magical, divine energy. Each creature of its choice in a 10-foot radius must make a DC 23 Dexterity saving throw, taking 14 (4d6) fire damage plus 14 (4d6) radiant damage on a failed save, or half as much damage on a successful one.
 
-**Blinding Gaze (Costs 3 Actions)**. The solar targets one creature it can see within 30 feet of it. If the target can see it, the target must succeed on a DC 15 Constitution saving throw or be blinded until magic such as the *lesser restoration* spell removes the blindness.
+**Blinding Gaze (Costs 3 Actions)**. The solar targets one creature it can see within 30 feet of it. If the target can see it, the target must succeed on a DC 15 Constitution saving throw or be blinded until magic such as the *[[rules/srd/07_Spells/Spells_Each/Lesser_Restoration|lesser restoration]]* spell removes the blindness.
 
 ## Animated Objects
 
@@ -246,7 +246,7 @@ The solar can take 3 legendary actions, choosing from the options below. Only on
 
 **Challenge** 1 (200 XP)
 
-***Antimagic Susceptibility***. The armor is incapacitated while in the area of an *antimagic field*. If targeted by *dispel magic*, the armor must succeed on a
+***Antimagic Susceptibility***. The armor is incapacitated while in the area of an *[[rules/srd/07_Spells/Spells_Each/Antimagic_Field|antimagic field]]*. If targeted by *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*, the armor must succeed on a
 
 Constitution saving throw against the caster's spell save DC or fall unconscious for 1 minute.
 

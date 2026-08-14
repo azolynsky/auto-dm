@@ -26,7 +26,7 @@
 
 ***Amorphous***. The jelly can move through a space as narrow as 1 inch wide without squeezing.
 
-***Spider Climb***. The jelly can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
+***[[rules/srd/07_Spells/Spells_Each/Spider_Climb|Spider Climb]]***. The jelly can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 
 ###### Actions
 

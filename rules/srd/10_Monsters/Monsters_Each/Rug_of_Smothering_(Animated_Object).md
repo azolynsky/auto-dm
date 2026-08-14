@@ -22,7 +22,7 @@
 
 **Challenge** 2 (450 XP)
 
-***Antimagic Susceptibility***. The rug is incapacitated while in the area of an *antimagic field*. If targeted by *dispel magic*, the rug must succeed on a Constitution saving throw against the caster's spell save DC or fall unconscious for 1 minute.
+***Antimagic Susceptibility***. The rug is incapacitated while in the area of an *[[rules/srd/07_Spells/Spells_Each/Antimagic_Field|antimagic field]]*. If targeted by *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*, the rug must succeed on a Constitution saving throw against the caster's spell save DC or fall unconscious for 1 minute.
 
 ***Damage Transfer***. While it is grappling a creature, the rug takes only half the damage dealt to it, and the creature grappled by the rug takes the other half.
 

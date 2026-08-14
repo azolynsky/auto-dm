@@ -22,7 +22,7 @@
 
 **Challenge** 4 (1,100 XP)
 
-***Telepathic Bond***. The fiend ignores the range restriction on its telepathy when communicating with a creature it has charmed. The two don't even need to be on the same plane of existence.
+***[[rules/srd/07_Spells/Spells_Each/Telepathic_Bond|Telepathic Bond]]***. The fiend ignores the range restriction on its telepathy when communicating with a creature it has charmed. The two don't even need to be on the same plane of existence.
 
 ***Shapechanger***. The fiend can use its action to polymorph into a Small or Medium humanoid, or back into its true form. Without wings, the fiend loses its flying speed. Other than its size and speed, its statistics are the same in each form. Any equipment it is wearing or carrying isn't transformed. It reverts to its true form if it dies.
 

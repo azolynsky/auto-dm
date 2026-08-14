@@ -150,9 +150,9 @@ A creature can detach the darkmantle by making a successful DC 13 Strength check
 
 ***Innate Spellcasting***. The glabrezu's spellcasting ability is Intelligence (spell save DC 16). The glabrezu can innately cast the following spells, requiring no material Components
 
-At will: *darkness*, *detect magic*, *dispel magic*
+At will: *[[rules/srd/07_Spells/Spells_Each/Darkness|darkness]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*, *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*
 
-1/day each: *confusion*, *fly*, *power word stun*
+1/day each: *[[rules/srd/07_Spells/Spells_Each/Confusion|confusion]]*, *[[rules/srd/07_Spells/Spells_Each/Fly|fly]]*, *[[rules/srd/07_Spells/Spells_Each/Power_Word_Stun|power word stun]]*
 
 ***Magic Resistance***. The glabrezu has advantage on saving throws against spells and other magical effects.
 
@@ -592,7 +592,7 @@ Each animated chain is an object with AC 20, 20 hit points, resistance to pierci
 
 ***Longsword***. *Melee Weapon Attack:* +8 to hit, reach 5 ft., one target. *Hit:* 8 (1d8+4) slashing damage, or 9 (1d10+4) slashing damage if used with two hands, plus 13 (3d8) poison damage.
 
-***Longbow***. *Ranged Weapon Attack:* +7 to hit, range 150/600 ft., one target. *Hit:* 7 (1d8+3) piercing damage plus 13 (3d8) poison damage, and the target must succeed on a DC 14 Constitution saving throw or be poisoned. The poison lasts until it is removed by the *lesser restoration* spell or similar magic.
+***Longbow***. *Ranged Weapon Attack:* +7 to hit, range 150/600 ft., one target. *Hit:* 7 (1d8+3) piercing damage plus 13 (3d8) poison damage, and the target must succeed on a DC 14 Constitution saving throw or be poisoned. The poison lasts until it is removed by the *[[rules/srd/07_Spells/Spells_Each/Lesser_Restoration|lesser restoration]]* spell or similar magic.
 
 ###### Reactions
 
@@ -756,7 +756,7 @@ The wall lasts for 1 minute or until the devil is incapacitated or dies. The wal
 
 ***Devil's Sight***. Magical darkness doesn't impede the lemure's darkvision.
 
-***Hellish Rejuvenation***. A lemure that dies in the Nine Hells comes back to life with all its hit points in 1d10 days unless it is killed by a good-aligned creature with a *bless* spell cast on that creature or its remains are sprinkled with holy water.
+***Hellish Rejuvenation***. A lemure that dies in the Nine Hells comes back to life with all its hit points in 1d10 days unless it is killed by a good-aligned creature with a *[[rules/srd/07_Spells/Spells_Each/Bless|bless]]* spell cast on that creature or its remains are sprinkled with holy water.
 
 ###### Actions
 
@@ -798,9 +798,9 @@ The wall lasts for 1 minute or until the devil is incapacitated or dies. The wal
 
 ***Innate Spellcasting***. The pit fiend's spellcasting ability is Charisma (spell save DC 21). The pit fiend can innately cast the following spells, requiring no material Components
 
-At will: *detect magic*, *fireball*
+At will: *detect magic*, *[[rules/srd/07_Spells/Spells_Each/Fireball|fireball]]*
 
-3/day each: *hold monster*, *wall of fire*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Hold_Monster|hold monster]]*, *[[rules/srd/07_Spells/Spells_Each/Wall_of_Fire|wall of fire]]*
 
 ###### Actions
 
@@ -2907,9 +2907,9 @@ The dragon can take 3 legendary actions, choosing from the options below. Only o
 
 ***Innate Spellcasting***. The drider's innate spellcasting ability is Wisdom (spell save DC 13). The drider can innately cast the following spells, requiring no material Components
 
-At will: *dancing lights*
+At will: *[[rules/srd/07_Spells/Spells_Each/Dancing_Lights|dancing lights]]*
 
-1/day each: *darkness*, *faerie fire*
+1/day each: *darkness*, *[[rules/srd/07_Spells/Spells_Each/Faerie_Fire|faerie fire]]*
 
 ***Spider Climb***. The drider can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 
@@ -2931,7 +2931,7 @@ At will: *dancing lights*
 
 *Medium fey, neutral*
 
-**Armor Class** 11 (16 with *barkskin*)
+**Armor Class** 11 (16 with *[[rules/srd/07_Spells/Spells_Each/Barkskin|barkskin]]*)
 
 **Hit Points** 22 (5d8)
 
@@ -2951,11 +2951,11 @@ At will: *dancing lights*
 
 ***Innate Spellcasting***. The dryad's innate spellcasting ability is Charisma (spell save DC 14). The dryad can innately cast the following spells, requiring no material Components
 
-At will: *druidcraft*
+At will: *[[rules/srd/07_Spells/Spells_Each/Druidcraft|druidcraft]]*
 
-3/day each: *entangle*, *goodberry*
+3/day each: *[[rules/srd/07_Spells/Spells_Each/Entangle|entangle]]*, *[[rules/srd/07_Spells/Spells_Each/Goodberry|goodberry]]*
 
-1/day each: *barkskin*, *pass without trace*, *shillelagh*
+1/day each: *barkskin*, *[[rules/srd/07_Spells/Spells_Each/Pass_without_Trace|pass without trace]]*, *[[rules/srd/07_Spells/Spells_Each/Shillelagh|shillelagh]]*
 
 ***Magic Resistance***. The dryad has advantage on saving throws against spells and other magical effects.
 

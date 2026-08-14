@@ -396,13 +396,13 @@ If a non-evil humanoid dies from this attack, a new shadow rises from the corpse
 
 ***Spellcasting***. The sphinx is a 12th-level spellcaster. Its spellcasting ability is Wisdom (spell save DC 18, +10 to hit with spell attacks). It requires no material components to cast its spells. The sphinx has the following cleric spells prepared:
 
-Cantrips (at will): *sacred flame*, *spare the dying*, *thaumaturgy*
-1st level (4 slots): *command*, *detect evil and good*, *detect magic*
-2nd level (3 slots): *lesser restoration*, *zone of truth*
-3rd level (3 slots): *dispel magic*, *tongues*
-4th level (3 slots): *banishment*, *freedom of movement*
-5th level (2 slots): *flame strike*, *greater restoration*
-6th level (1 slot): *heroes' feast*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Sacred_Flame|sacred flame]]*, *[[rules/srd/07_Spells/Spells_Each/Spare_the_Dying|spare the dying]]*, *[[rules/srd/07_Spells/Spells_Each/Thaumaturgy|thaumaturgy]]*
+1st level (4 slots): *[[rules/srd/07_Spells/Spells_Each/Command|command]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Evil_and_Good|detect evil and good]]*, *[[rules/srd/07_Spells/Spells_Each/Detect_Magic|detect magic]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Lesser_Restoration|lesser restoration]]*, *[[rules/srd/07_Spells/Spells_Each/Zone_of_Truth|zone of truth]]*
+3rd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Dispel_Magic|dispel magic]]*, *[[rules/srd/07_Spells/Spells_Each/Tongues|tongues]]*
+4th level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Banishment|banishment]]*, *[[rules/srd/07_Spells/Spells_Each/Freedom_of_Movement|freedom of movement]]*
+5th level (2 slots): *[[rules/srd/07_Spells/Spells_Each/Flame_Strike|flame strike]]*, *[[rules/srd/07_Spells/Spells_Each/Greater_Restoration|greater restoration]]*
+6th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Heroes'_Feast|heroes' feast]]*
 
 ###### Actions
 
@@ -462,12 +462,12 @@ The sphinx can take 3 legendary actions, choosing from the options below. Only o
 
 ***Spellcasting***. The sphinx is a 9th-level spellcaster. Its spellcasting ability is Intelligence (spell save DC 16, +8 to hit with spell attacks). It requires no material components to cast its spells. The sphinx has the following wizard spells prepared:
 
-Cantrips (at will): *mage hand*, *minor illusion*, *prestidigitation*
-1st level (4 slots): *detect magic*, *identify*, *shield*
-2nd level (3 slots): *darkness*, *locate object*, *suggestion*
-3rd level (3 slots): *dispel magic*, *remove curse*, *tongues*
-4th level (3 slots): *banishment*, *greater invisibility*
-5th level (1 slot): *legend lore*
+Cantrips (at will): *[[rules/srd/07_Spells/Spells_Each/Mage_Hand|mage hand]]*, *[[rules/srd/07_Spells/Spells_Each/Minor_Illusion|minor illusion]]*, *[[rules/srd/07_Spells/Spells_Each/Prestidigitation|prestidigitation]]*
+1st level (4 slots): *detect magic*, *[[rules/srd/07_Spells/Spells_Each/Identify|identify]]*, *[[rules/srd/07_Spells/Spells_Each/Shield|shield]]*
+2nd level (3 slots): *[[rules/srd/07_Spells/Spells_Each/Darkness|darkness]]*, *[[rules/srd/07_Spells/Spells_Each/Locate_Object|locate object]]*, *[[rules/srd/07_Spells/Spells_Each/Suggestion|suggestion]]*
+3rd level (3 slots): *dispel magic*, *[[rules/srd/07_Spells/Spells_Each/Remove_Curse|remove curse]]*, *tongues*
+4th level (3 slots): *banishment*, *[[rules/srd/07_Spells/Spells_Each/Greater_Invisibility|greater invisibility]]*
+5th level (1 slot): *[[rules/srd/07_Spells/Spells_Each/Legend_Lore|legend lore]]*
 
 ###### Actions
 

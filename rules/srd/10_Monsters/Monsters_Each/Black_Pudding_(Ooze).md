@@ -28,7 +28,7 @@
 
 The pudding can eat through 2-inch-thick, nonmagical wood or metal in 1 round.
 
-***Spider Climb***. The pudding can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
+***[[rules/srd/07_Spells/Spells_Each/Spider_Climb|Spider Climb]]***. The pudding can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 
 ###### Actions
 
