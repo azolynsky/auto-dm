@@ -42,7 +42,7 @@ MAX_READ = 60_000          # chars returned by read_file before truncating
 
 # Only the campaign tools are reachable — there is no general shell.
 TOOL_SCRIPTS = ("dice.py", "check_resolver.py", "combat_tracker.py",
-                "narrate.py", "budget_recap.py")
+                "char_update.py", "narrate.py", "budget_recap.py")
 
 
 class DMError(RuntimeError):
@@ -148,11 +148,12 @@ def list_files(pattern: str) -> str:
 def run_tool(tool: str, args: list[str], stdin: str | None = None) -> str:
     """Run a campaign tool with CLI arguments exactly as CLAUDE.md documents them.
 
-    Available: dice.py, check_resolver.py, combat_tracker.py, narrate.py,
-    budget_recap.py. Examples:
+    Available: dice.py, check_resolver.py, combat_tracker.py, char_update.py,
+    narrate.py, budget_recap.py. Examples:
       run_tool("dice.py", ["1d20+5", "1d8+3", "--label", "to-hit", "--label", "damage"])
       run_tool("narrate.py", ["-"], stdin="The gate groans open…")
       run_tool("combat_tracker.py", ["damage", "--who", "Goblin1", "--amount", "6"])
+      run_tool("char_update.py", ["hp", "--char", "Mira", "--heal", "7"])
     Pass multi-paragraph or quote-bearing prose through stdin with args ["-"].
     """
     global _narrated
