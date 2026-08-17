@@ -5,3 +5,4 @@ pywebview>=5.1              # native OS webview — WKWebView / WebView2 / GTK
 langgraph>=1.2,<2           # the DM's agent loop
 langchain-openai>=1.5,<2    # OpenRouter (OpenAI-compatible) chat model
 langgraph-checkpoint-sqlite>=3.1,<4   # conversation survives closing the app
+certifi                     # CA bundle for the key check — system certs can be absent (frozen app, bare python.org installs)

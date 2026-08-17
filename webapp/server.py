@@ -16,10 +16,13 @@ Opens on: http://localhost:8765
 """
 import asyncio
 import json
+import ssl
 import sys
 import traceback
 import urllib.error
 import urllib.request
+
+import certifi
 from pathlib import Path
 from typing import Any
 
@@ -258,8 +261,12 @@ def check_api_key(key: str) -> dict:
     req = urllib.request.Request(
         "https://openrouter.ai/api/v1/key",
         headers={"Authorization": f"Bearer {key}"})
+    # certifi, not system certs: python.org installs and frozen apps often
+    # have no OpenSSL default CA path, and this must fail loud on a bad key,
+    # never on a missing cert store.
+    ctx = ssl.create_default_context(cafile=certifi.where())
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20, context=ctx) as resp:
             data = json.loads(resp.read().decode("utf-8")).get("data") or {}
         limit, usage = data.get("limit"), data.get("usage")
         if limit is not None and usage is not None:
