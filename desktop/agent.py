@@ -145,7 +145,10 @@ def list_files(pattern: str) -> str:
         return _tool_error(e)
 
 
-def run_tool(tool: str, args: list[str], stdin: str | None = None) -> str:
+# The CLI-args parameter must not be named "args": langchain's schema
+# inference silently drops fields named args/kwargs, leaving a v__args
+# placeholder the model fills and the call then rejects.
+def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
     """Run a campaign tool with CLI arguments exactly as CLAUDE.md documents them.
 
     Available: dice.py, check_resolver.py, combat_tracker.py, char_update.py,
@@ -165,7 +168,7 @@ def run_tool(tool: str, args: list[str], stdin: str | None = None) -> str:
     # frozen app has no python interpreter to spawn, hence runpy.
     out, err = io.StringIO(), io.StringIO()
     saved_argv, saved_stdin = sys.argv, sys.stdin
-    sys.argv = [tool] + [str(a) for a in (args or [])]
+    sys.argv = [tool] + [str(a) for a in (argv or [])]
     if stdin is not None:
         sys.stdin = io.StringIO(stdin)
     code = 0
@@ -336,7 +339,27 @@ def run_turn(player_message: str) -> dict:
                   "recursion_limit": int(config.load().get("recursion_limit")
                                          or RECURSION_LIMIT)}
 
-    fresh = not (agent.get_state(run_config).values or {}).get("messages")
+    history = (agent.get_state(run_config).values or {}).get("messages") or []
+    # A turn that crashed mid-tool leaves an AIMessage's tool_calls without
+    # ToolMessages, which bricks the thread: the provider requires results
+    # immediately after the calling message, so every later turn fails too.
+    # Heal by dropping everything after the first unanswered call and closing
+    # it out with synthetic results, so "say it again" actually works.
+    answered = {m.tool_call_id for m in history if getattr(m, "tool_call_id", None)}
+    dangling = next((i for i, m in enumerate(history)
+                     if any(tc["id"] not in answered
+                            for tc in getattr(m, "tool_calls", None) or [])), None)
+    if dangling is not None:
+        from langchain_core.messages import RemoveMessage, ToolMessage
+        agent.update_state(run_config, {"messages": [
+            RemoveMessage(id=m.id) for m in history[dangling + 1:]
+        ] + [
+            ToolMessage(content="(interrupted — the tool never ran)",
+                        tool_call_id=tc["id"])
+            for tc in history[dangling].tool_calls if tc["id"] not in answered
+        ]})
+
+    fresh = not history
     turn = ([HumanMessage(content=session_brief())] if fresh else []) \
         + [HumanMessage(content=player_message)]
 
