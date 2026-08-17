@@ -256,6 +256,48 @@ async def index():
 
 # ── Setup (first run) ─────────────────────────────────────────────────────────
 
+def list_pregens() -> list[dict]:
+    """Setup-screen card data for every character sheet on disk."""
+    cards = []
+    for path in sorted(CHARACTERS_DIR.glob("*.json")):
+        raw = read_json(path)
+        if not raw or not isinstance(raw, dict) or "name" not in raw:
+            continue
+        cards.append({
+            "id": raw.get("id", path.stem),
+            "name": raw["name"],
+            "race": raw.get("race", ""),
+            "class": raw.get("class", ""),
+            "blurb": (raw.get("personality", {}).get("traits") or [""])[0],
+        })
+    return cards
+
+
+def seat_party(party: list[dict]) -> list[str]:
+    """Write the chosen characters into current.json:party and their player
+    names into the sheets. Entries are {id, player}; unknown ids are refused
+    so a typo can't seat a ghost."""
+    known = {c["id"] for c in list_pregens()}
+    ids = []
+    for entry in party:
+        pc_id = str(entry.get("id", ""))
+        if pc_id not in known:
+            raise HTTPException(status_code=400, detail=f"unknown character: {pc_id}")
+        ids.append(pc_id)
+        player = str(entry.get("player", "")).strip()
+        sheet_path = CHARACTERS_DIR / f"{pc_id}.json"
+        sheet = read_json(sheet_path)
+        if player and sheet is not None:
+            sheet["player"] = player
+            sheet_path.write_text(json.dumps(sheet, indent=2, ensure_ascii=False) + "\n",
+                                  encoding="utf-8")
+    current = read_json(CURRENT_FILE) or {}
+    current["party"] = ids
+    CURRENT_FILE.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n",
+                            encoding="utf-8")
+    return ids
+
+
 def check_api_key(key: str) -> dict:
     """Ask OpenRouter whether a key works, so setup fails here and not mid-scene."""
     req = urllib.request.Request(
@@ -291,6 +333,8 @@ async def get_setup():
         "campaign": (read_json(CURRENT_FILE) or {}).get("campaign", ""),
         "model": appconfig.model(),
         "models": [{"id": i, "label": label} for i, label in appconfig.MODEL_CHOICES],
+        "pregens": list_pregens(),
+        "party": (read_json(CURRENT_FILE) or {}).get("party", []),
     })
 
 
@@ -316,11 +360,18 @@ async def post_setup(request: Request):
     if name:
         appconfig.set_campaign_name(name)
 
+    party = body.get("party")
+    if isinstance(party, list) and party:
+        seat_party(party)
+
     # Open the session so the players are greeted instead of facing a blank feed.
     if body.get("start_session"):
         await SAY_QUEUE.put(
             "We're starting. Do the session start procedure, then greet us with a "
-            "short recap and ask what we want to do.")
+            "short recap and ask what we want to do."
+            + (" The players already chose their characters on the setup screen "
+               "(see current.json:party) — introduce those heroes in the opening "
+               "scene instead of asking who's playing." if party else ""))
     return JSONResponse({"ok": True, "credit": result.get("credit")})
 
 

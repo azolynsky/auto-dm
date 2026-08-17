@@ -1,0 +1,187 @@
+{
+  "id": "pc-wizard",
+  "name": "Elowen Frost",
+  "player": "",
+  "race": "High Elf",
+  "class": "Wizard",
+  "subclass": null,
+  "level": 1,
+  "xp": 0,
+  "alignment": "Chaotic Good",
+  "background": "Sage",
+  "abilities": {
+    "str": 8,
+    "dex": 14,
+    "con": 14,
+    "int": 16,
+    "wis": 12,
+    "cha": 10
+  },
+  "proficiency_bonus": 2,
+  "save_proficiencies": [
+    "int",
+    "wis"
+  ],
+  "skills": {
+    "arcana": "proficient",
+    "history": "proficient",
+    "investigation": "proficient",
+    "perception": "proficient"
+  },
+  "ac": 12,
+  "hp": {
+    "max": 8,
+    "current": 8,
+    "temp": 0
+  },
+  "hit_dice": {
+    "size": "d6",
+    "total": 1,
+    "remaining": 1
+  },
+  "speed": 30,
+  "initiative_bonus": 2,
+  "passive_perception": 13,
+  "languages": [
+    "Common",
+    "Elvish",
+    "Draconic",
+    "Dwarvish"
+  ],
+  "proficiencies": {
+    "armor": [],
+    "weapons": [
+      "daggers",
+      "darts",
+      "slings",
+      "quarterstaffs",
+      "light crossbows"
+    ],
+    "tools": []
+  },
+  "features": [
+    {
+      "name": "Darkvision",
+      "source": "Elf",
+      "detail": "See in dim light within 60 ft as if bright, darkness as if dim"
+    },
+    {
+      "name": "Fey Ancestry",
+      "source": "Elf",
+      "detail": "Advantage on saves vs being charmed; magic can't put her to sleep"
+    },
+    {
+      "name": "Trance",
+      "source": "Elf",
+      "detail": "Long rest in 4 hours of semiconscious meditation"
+    },
+    {
+      "name": "Arcane Recovery",
+      "source": "Wizard",
+      "detail": "Once per day on a short rest, recover spell slots totaling half wizard level (rounded up)",
+      "uses": {
+        "max": 1,
+        "remaining": 1,
+        "per": "day"
+      }
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Quarterstaff",
+      "type": "melee",
+      "to_hit": "+1",
+      "damage": "1d6-1 bludgeoning"
+    },
+    {
+      "name": "Dagger",
+      "type": "melee or thrown",
+      "to_hit": "+4",
+      "damage": "1d4+2 piercing",
+      "range": "20/60",
+      "properties": ["finesse", "light", "thrown"]
+    }
+  ],
+  "spells": {
+    "ability": "int",
+    "save_dc": 13,
+    "attack_bonus": "+5",
+    "slots": {
+      "1": {
+        "max": 2,
+        "remaining": 2
+      }
+    },
+    "known": [
+      {
+        "name": "Fire Bolt",
+        "level": 0,
+        "detail": "Ranged spell attack, 120 ft, 1d10 fire"
+      },
+      {
+        "name": "Mage Hand",
+        "level": 0,
+        "detail": "Spectral hand, 30 ft, lift/manipulate up to 10 lb"
+      },
+      {
+        "name": "Prestidigitation",
+        "level": 0,
+        "detail": "Minor magical trick — spark, clean, flavor, chill"
+      },
+      {
+        "name": "Light",
+        "level": 0,
+        "detail": "Touched object sheds bright light 20 ft (High Elf cantrip)"
+      },
+      {
+        "name": "Magic Missile",
+        "level": 1,
+        "detail": "Three darts, auto-hit, 1d4+1 force each"
+      },
+      {
+        "name": "Shield",
+        "level": 1,
+        "detail": "Reaction: +5 AC until next turn, blocks magic missile"
+      },
+      {
+        "name": "Sleep",
+        "level": 1,
+        "detail": "5d8 HP of creatures fall unconscious, weakest first, 90 ft"
+      },
+      {
+        "name": "Burning Hands",
+        "level": 1,
+        "detail": "15-ft cone, DEX save DC 13, 3d6 fire (half on save)"
+      },
+      {
+        "name": "Detect Magic",
+        "level": 1,
+        "detail": "Ritual; sense magic within 30 ft for 10 minutes"
+      },
+      {
+        "name": "Mage Armor",
+        "level": 1,
+        "detail": "Touch, 8 hours: unarmored AC becomes 13 + DEX mod"
+      }
+    ]
+  },
+  "inventory": [
+    { "item": "Spellbook", "qty": 1 },
+    { "item": "Quarterstaff", "qty": 1 },
+    { "item": "Dagger", "qty": 1 },
+    { "item": "Component pouch", "qty": 1 },
+    { "item": "Scholar's pack", "qty": 1 },
+    { "item": "Ink pen and bottle of ink", "qty": 1 }
+  ],
+  "gold": 10,
+  "conditions": [],
+  "exhaustion": 0,
+  "death_saves": { "successes": 0, "failures": 0 },
+  "personality": {
+    "traits": ["Quotes books nobody else has read; delighted when proven wrong."],
+    "ideals": ["Knowledge kept secret helps no one."],
+    "bonds": ["Her spellbook holds the only copy of her mentor's life's work."],
+    "flaws": ["Will absolutely touch the mysterious glowing thing."]
+  },
+  "notes": ""
+}

@@ -1,0 +1,127 @@
+{
+  "id": "pc-rogue",
+  "name": "Dax Tumblestone",
+  "player": "",
+  "race": "Rock Gnome",
+  "class": "Rogue",
+  "subclass": null,
+  "level": 1,
+  "xp": 0,
+  "alignment": "Chaotic Good",
+  "background": "Urchin",
+  "abilities": {
+    "str": 8,
+    "dex": 16,
+    "con": 12,
+    "int": 13,
+    "wis": 12,
+    "cha": 14
+  },
+  "proficiency_bonus": 2,
+  "save_proficiencies": [
+    "dex",
+    "int"
+  ],
+  "skills": {
+    "stealth": "expertise",
+    "sleight_of_hand": "expertise",
+    "acrobatics": "proficient",
+    "perception": "proficient",
+    "deception": "proficient",
+    "insight": "proficient"
+  },
+  "ac": 14,
+  "hp": {
+    "max": 9,
+    "current": 9,
+    "temp": 0
+  },
+  "hit_dice": {
+    "size": "d8",
+    "total": 1,
+    "remaining": 1
+  },
+  "speed": 25,
+  "initiative_bonus": 3,
+  "passive_perception": 13,
+  "languages": [
+    "Common",
+    "Gnomish",
+    "Thieves' Cant"
+  ],
+  "proficiencies": {
+    "armor": ["light"],
+    "weapons": ["simple", "hand crossbows", "longswords", "rapiers", "shortswords"],
+    "tools": ["thieves' tools", "tinker's tools"]
+  },
+  "features": [
+    {
+      "name": "Darkvision",
+      "source": "Gnome",
+      "detail": "See in dim light within 60 ft as if bright, darkness as if dim"
+    },
+    {
+      "name": "Gnome Cunning",
+      "source": "Gnome",
+      "detail": "Advantage on INT, WIS, and CHA saves against magic"
+    },
+    {
+      "name": "Artificer's Lore",
+      "source": "Rock Gnome",
+      "detail": "Double proficiency on History checks about magical or mechanical devices"
+    },
+    {
+      "name": "Sneak Attack",
+      "source": "Rogue",
+      "detail": "+1d6 damage once per turn with a finesse/ranged weapon when you have advantage or an ally is adjacent to the target"
+    },
+    {
+      "name": "Expertise",
+      "source": "Rogue",
+      "detail": "Double proficiency: Stealth, Sleight of Hand"
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Shortsword",
+      "type": "melee",
+      "to_hit": "+5",
+      "damage": "1d6+3 piercing",
+      "properties": ["finesse", "light"]
+    },
+    {
+      "name": "Shortbow",
+      "type": "ranged",
+      "to_hit": "+5",
+      "damage": "1d6+3 piercing",
+      "range": "80/320"
+    }
+  ],
+  "spells": {
+    "ability": null,
+    "save_dc": null,
+    "attack_bonus": null,
+    "slots": {},
+    "known": []
+  },
+  "inventory": [
+    { "item": "Shortsword", "qty": 1 },
+    { "item": "Shortbow", "qty": 1 },
+    { "item": "Arrows", "qty": 20 },
+    { "item": "Leather armor", "qty": 1 },
+    { "item": "Thieves' tools", "qty": 1 },
+    { "item": "Burglar's pack", "qty": 1 },
+    { "item": "A small clockwork mouse he built himself", "qty": 1 }
+  ],
+  "gold": 10,
+  "conditions": [],
+  "exhaustion": 0,
+  "death_saves": { "successes": 0, "failures": 0 },
+  "personality": {
+    "traits": ["Pockets full of interesting junk; narrates his own lockpicking under his breath."],
+    "ideals": ["Nobody gets left behind — he knows what that feels like."],
+    "bonds": ["The clockwork mouse is the only thing he kept from before the streets."],
+    "flaws": ["If it isn't nailed down, it was clearly a gift."]
+  },
+  "notes": ""
+}

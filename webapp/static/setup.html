@@ -41,6 +41,27 @@
     #status { margin-top: 14px; min-height: 20px; font-size: 15px; text-align: center; }
     #status.err { color: #e88; }
     #status.ok { color: var(--accent); }
+    .heroes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .hero {
+      border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+      background: var(--surface-2); padding: 12px; text-align: left;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .hero.picked { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim); }
+    .hero img, .hero .noface {
+      width: 56px; height: 56px; border-radius: 5px; object-fit: cover;
+      background: var(--surface); flex: none;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-header); font-size: 24px; color: var(--accent);
+    }
+    .hero h3 { margin: 0 0 2px; font-size: 15px; color: var(--parchment); font-family: var(--font-header); }
+    .hero .kind { font-size: 13px; color: var(--accent); margin: 0 0 4px; }
+    .hero .blurb { font-size: 12.5px; color: var(--ink-dim); margin: 0; line-height: 1.4; }
+    .hero input {
+      margin-top: 8px; padding: 6px 8px; font-size: 13px; display: none;
+    }
+    .hero.picked input { display: block; }
+    @media (max-width: 540px) { .heroes { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -69,15 +90,24 @@
     <div class="step">
       <h2>2 · Name your campaign</h2>
       <p>
-        You'll start in the village of Emberwick with two ready-made heroes. Your
-        DM can change any of that once you're playing — just ask.
+        You'll start in the village of Emberwick. Your DM can change anything
+        once you're playing — just ask.
       </p>
       <label for="name">Campaign name</label>
       <input id="name" type="text" placeholder="Emberwick Nights" maxlength="80">
     </div>
 
     <div class="step">
-      <h2>3 · Pick the DM</h2>
+      <h2>3 · Choose your heroes</h2>
+      <p>
+        Pick one ready-made hero per player and add each player's name. You can
+        also make your own characters from scratch later — just tell the DM.
+      </p>
+      <div class="heroes" id="heroes"></div>
+    </div>
+
+    <div class="step">
+      <h2>4 · Pick the DM</h2>
       <p>Smarter models run better games and cost a bit more. You can change this later.</p>
       <label for="model">Model</label>
       <select id="model"></select>
@@ -93,10 +123,35 @@ const status = $('status');
 
 function setStatus(text, cls) { status.textContent = text; status.className = cls || ''; }
 
+function renderHeroes(pregens, party) {
+  $('heroes').innerHTML = pregens.map(c => `
+    <div class="hero${party.includes(c.id) ? ' picked' : ''}" data-id="${c.id}">
+      <img src="/api/portraits/${c.id}" alt=""
+           onerror="this.outerHTML='<div class=noface>${(c.name || '?')[0]}</div>'">
+      <div>
+        <h3>${c.name}</h3>
+        <p class="kind">${c.race} ${c.class}</p>
+        <p class="blurb">${c.blurb || ''}</p>
+        <input type="text" placeholder="Player's name" maxlength="40"
+               onclick="event.stopPropagation()">
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('.hero').forEach(el =>
+    el.addEventListener('click', () => el.classList.toggle('picked')));
+}
+
+function chosenParty() {
+  return [...document.querySelectorAll('.hero.picked')].map(el => ({
+    id: el.dataset.id,
+    player: el.querySelector('input').value.trim(),
+  }));
+}
+
 async function load() {
   const res = await fetch('/api/setup');
   const data = await res.json();
   $('name').value = data.campaign || '';
+  renderHeroes(data.pregens || [], data.party || []);
   $('model').innerHTML = data.models
     .map(m => `<option value="${m.id}">${m.label}</option>`).join('');
   $('model').value = data.model;
@@ -104,6 +159,8 @@ async function load() {
 }
 
 $('start').addEventListener('click', async () => {
+  const party = chosenParty();
+  if (!party.length) { setStatus('Pick at least one hero — one per player.', 'err'); return; }
   $('start').disabled = true;
   setStatus('Checking your key…');
   try {
@@ -114,6 +171,7 @@ $('start').addEventListener('click', async () => {
         api_key: $('key').value.trim(),
         campaign_name: $('name').value.trim(),
         model: $('model').value,
+        party,
         start_session: true,
       }),
     });

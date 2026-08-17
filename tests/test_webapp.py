@@ -218,6 +218,46 @@ class TestFeedReading(unittest.TestCase):
 
 
 @unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestPartySetup(unittest.TestCase):
+    """The setup screen's pregen listing and party seating."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        (self.tmp / "characters").mkdir()
+        self._orig = (server.CHARACTERS_DIR, server.CURRENT_FILE)
+        server.CHARACTERS_DIR = self.tmp / "characters"
+        server.CURRENT_FILE = self.tmp / "current.json"
+        for pc_id, name in (("pc-a", "Aye"), ("pc-b", "Bee")):
+            (self.tmp / "characters" / f"{pc_id}.json").write_text(json.dumps({
+                "id": pc_id, "name": name, "race": "Human", "class": "Fighter",
+                "player": "", "personality": {"traits": ["Checks the exits."]},
+            }))
+        server.CURRENT_FILE.write_text(json.dumps({"party": []}))
+
+    def tearDown(self):
+        server.CHARACTERS_DIR, server.CURRENT_FILE = self._orig
+        self._tmp.cleanup()
+
+    def test_pregens_listed_with_card_fields(self):
+        cards = server.list_pregens()
+        self.assertEqual([c["id"] for c in cards], ["pc-a", "pc-b"])
+        self.assertEqual(cards[0]["blurb"], "Checks the exits.")
+
+    def test_seat_party_writes_current_and_player_names(self):
+        server.seat_party([{"id": "pc-b", "player": "Olive"}, {"id": "pc-a"}])
+        current = json.loads(server.CURRENT_FILE.read_text())
+        self.assertEqual(current["party"], ["pc-b", "pc-a"])
+        sheet = json.loads((self.tmp / "characters" / "pc-b.json").read_text())
+        self.assertEqual(sheet["player"], "Olive")
+
+    def test_seat_party_refuses_unknown_id(self):
+        with self.assertRaises(Exception):
+            server.seat_party([{"id": "pc-ghost"}])
+        self.assertEqual(json.loads(server.CURRENT_FILE.read_text())["party"], [])
+
+
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
 class TestCharacterListing(unittest.TestCase):
     """Any sheet in characters/ shows (guests included), party order first."""
 
