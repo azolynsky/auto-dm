@@ -97,15 +97,16 @@ def char_display_subset(path: Path) -> dict | None:
 
 
 def load_characters() -> list[dict]:
-    """Every character sheet, party members first (in party order)."""
+    """Sheets of current party members only (in party order). Sheets for
+    departed guests stay on disk as history but don't render."""
     party = (read_json(CURRENT_FILE) or {}).get("party", [])
     chars = []
     for path in sorted(CHARACTERS_DIR.glob("*.json")):
         subset = char_display_subset(path)
-        if subset:
+        if subset and subset.get("id") in party:
             chars.append(subset)
     order = {pc_id: i for i, pc_id in enumerate(party)}
-    chars.sort(key=lambda c: (order.get(c.get("id"), len(order)), c.get("name", "")))
+    chars.sort(key=lambda c: order.get(c.get("id"), len(order)))
     return chars
 
 

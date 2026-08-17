@@ -16,7 +16,7 @@ You may write to:
 - `campaign/world/locations/<id>/*` — location folders (NOT `campaign/world/overview.md`, `campaign/world/lore.md`, or `rules/`)
 - `campaign/monsters/*.json` — encountered creature stat blocks
 - `campaign/state/current.json` — location, time, weather, party-level resources, `present_entities`
-- `campaign/state/quests.json` — quest progress, hooks
+- `campaign/state/quests.json` — quest progress, hooks. **Never append-only.** Any write to this file must leave the whole panel current: reread every active quest's summary, objectives, and obstacles against the beat you're applying; mark or fold objectives the beat completed (one folded DONE line per phase, not one per beat); rewrite the summary if the quest's situation has moved past it. An instruction like "append objective X" still requires this full-panel pass — appending X while a now-stale objective sits above it is a failed write.
 - `campaign/state/world-flags.json` — persistent world state
 - `campaign/state/combat.json` — only via `tools/combat_tracker.py` (don't hand-edit; the script is authoritative for ordering)
 - `campaign/sessions/session-NN.md` — append-only log of the current session
@@ -61,7 +61,7 @@ CHANGE
     - campaign/sessions/session-NN.md: append combat line
 ```
 
-Apply it. Use `tools/combat_tracker.py` for combat HP/conditions/initiative, the Edit tool for JSON files, and the Write tool when appending to session logs.
+Apply it. Use `tools/combat_tracker.py` for combat HP/conditions/initiative, `tools/char_update.py` for character-sheet resources (HP outside combat, spell slots, inventory, gold, conditions — it does the arithmetic and clamping deterministically and queues the player-visible effect for you; never hand-compute those with Edit), the Edit tool for other JSON changes, and the Write tool when appending to session logs.
 
 # Hard rules
 
