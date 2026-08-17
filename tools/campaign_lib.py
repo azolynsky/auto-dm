@@ -73,7 +73,8 @@ def _feed_context(root: Path) -> tuple[str, str]:
 
 
 def append_feed(root: Path, text: str, type: str = "narration",
-                effects: list[str] | None = None) -> dict:
+                effects: list[str] | None = None,
+                intent: str | None = None) -> dict:
     """Append one standardized entry to the player feed. Returns the entry."""
     loc, session = _feed_context(root)
     entry = {
@@ -86,6 +87,8 @@ def append_feed(root: Path, text: str, type: str = "narration",
     }
     if effects:
         entry["effects"] = effects
+    if intent:
+        entry["intent"] = intent
     feed = root / "state" / "player-feed.jsonl"
     feed.parent.mkdir(parents=True, exist_ok=True)
     with open(feed, "a", encoding="utf-8") as f:

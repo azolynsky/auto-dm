@@ -141,6 +141,9 @@ def main() -> int:
     )
     p.add_argument("--effect", action="append", default=[],
                    help="mechanical change to show as subtext; repeatable")
+    p.add_argument("--intent", default=None,
+                   help="what the players actually said/did that prompted this beat; "
+                        "stored in the archive for the end-of-campaign book, never shown in-game")
     p.add_argument("--force-style", action="store_true",
                    help="publish despite banned-style matches (deliberate use only)")
     args = p.parse_args()
@@ -165,7 +168,8 @@ def main() -> int:
 
     root = campaign_lib.resolve_root()
     effects = campaign_lib.drain_effects(root) + args.effect
-    entry = campaign_lib.append_feed(root, text, type=args.type, effects=effects)
+    entry = campaign_lib.append_feed(root, text, type=args.type, effects=effects,
+                                     intent=args.intent)
 
     out = {"entry": entry, "settings": campaign_lib.load_settings(root)}
     behind = entries_behind(root, "quests.json")
