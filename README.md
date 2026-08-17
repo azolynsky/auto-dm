@@ -19,6 +19,22 @@ Then say: **"Set me up — run onboarding."** The `onboarding` skill installs an
 
 To continue an existing campaign, just say: **"Let's continue the campaign."**
 
+## No terminal? Use the desktop app
+
+This branch also builds Auto-DM as a double-clickable app with the DM inside it —
+a [LangGraph](https://langchain-ai.github.io/langgraph/) agent on OpenRouter
+instead of the Claude Code CLI. The player needs one OpenRouter API key and
+nothing else: no Python, no clone, no `claude`.
+
+```bash
+pip install -r desktop/requirements.txt
+python desktop/app.py                    # native window, no browser needed
+pyinstaller --noconfirm desktop/autodm.spec   # → dist/Auto-DM.app
+```
+
+See [docs/desktop-app.md](docs/desktop-app.md) for where state lives, how to hand
+someone a build, developer mode, and the code-signing caveat.
+
 ## Code vs. campaign
 
 The engine and the table are separate. Generic, campaign-agnostic code and reference:

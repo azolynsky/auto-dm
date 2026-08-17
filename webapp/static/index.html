@@ -40,8 +40,9 @@
         <span class="section-label">Chronicle</span>
       </div>
       <div id="feed-entries"></div>
+      <div id="say-thinking" class="hidden"></div>
       <form id="say-form" autocomplete="off">
-        <input id="say-text" placeholder="Message the DM…" maxlength="2000" required>
+        <input id="say-text" placeholder="What do you do?" maxlength="2000" required>
         <button id="say-send" type="submit">➤</button>
       </form>
     </section>
@@ -116,12 +117,6 @@
         <span class="setting-desc">Keep violence and horror gentle</span></span>
       </label>
 
-      <label class="setting-row setting-check">
-        <input type="checkbox" id="set-web-input">
-        <span><span class="setting-label">Message the DM from here</span>
-        <span class="setting-desc">Show the chat input on desktop (phones always have it)</span></span>
-      </label>
-
       <label class="setting-row">
         <span class="setting-label">Narration style</span>
         <select id="set-narration-style">
@@ -141,6 +136,13 @@
         <span id="settings-status"></span>
         <button id="settings-save">Save</button>
       </div>
+
+      <!-- Developer section — hidden unless the URL carries #dev.
+           Prompt A/B testing and model choice; see prompts/README.md. -->
+      <section id="dev-section" class="hidden">
+        <h2 class="modal-title">Developer</h2>
+        <div id="dev-body"></div>
+      </section>
     </div>
   </div>
 

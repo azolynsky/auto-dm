@@ -17,11 +17,17 @@ Opens on: http://localhost:8765
 import asyncio
 import json
 import sys
+import traceback
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "desktop"))
 import campaign_lib
+import config as appconfig
+import prompts as prompt_registry
 
 try:
     import uvicorn
@@ -37,7 +43,9 @@ except ImportError as e:
     )
 
 ROOT = campaign_lib.resolve_root()
-STATIC = Path(__file__).resolve().parent / "static"
+# appconfig.BUNDLE is the repo root normally and the PyInstaller bundle when
+# frozen — where __file__ points at neither.
+STATIC = appconfig.BUNDLE / "webapp" / "static"
 CHARACTERS_DIR = ROOT / "characters"
 IMAGES_DIR = CHARACTERS_DIR / "images"
 STATE_DIR = ROOT / "state"
@@ -236,7 +244,127 @@ def build_sidebar_payload() -> dict:
 
 @app.get("/")
 async def index():
+    """First run has no API key yet, so the setup screen stands in for the table."""
+    if not appconfig.is_ready():
+        return FileResponse(str(STATIC / "setup.html"))
     return FileResponse(str(STATIC / "index.html"))
+
+
+# ── Setup (first run) ─────────────────────────────────────────────────────────
+
+def check_api_key(key: str) -> dict:
+    """Ask OpenRouter whether a key works, so setup fails here and not mid-scene."""
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/key",
+        headers={"Authorization": f"Bearer {key}"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read().decode("utf-8")).get("data") or {}
+        limit, usage = data.get("limit"), data.get("usage")
+        if limit is not None and usage is not None:
+            return {"ok": True, "credit": round(max(0.0, limit - usage), 2)}
+        return {"ok": True, "credit": None}
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403):
+            return {"ok": False,
+                    "error": "OpenRouter didn't accept that key. Copy it again from "
+                             "openrouter.ai/keys — it starts with 'sk-or-'."}
+        return {"ok": False, "error": f"OpenRouter returned {e.code} checking the key."}
+    except urllib.error.URLError:
+        return {"ok": False,
+                "error": "Couldn't reach OpenRouter. Check the internet connection."}
+
+
+@app.get("/api/setup")
+async def get_setup():
+    return JSONResponse({
+        "ready": appconfig.is_ready(),
+        "has_key": bool(appconfig.api_key()),
+        "campaign": (read_json(CURRENT_FILE) or {}).get("campaign", ""),
+        "model": appconfig.model(),
+        "models": [{"id": i, "label": label} for i, label in appconfig.MODEL_CHOICES],
+    })
+
+
+@app.post("/api/setup")
+async def post_setup(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    key = str(body.get("api_key", "")).strip()
+    if key:
+        result = await asyncio.to_thread(check_api_key, key)
+        if not result["ok"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+    elif not appconfig.api_key():
+        raise HTTPException(status_code=400, detail="An OpenRouter API key is required.")
+    else:
+        result = {"credit": None}
+
+    appconfig.save(api_key=key or None,
+                   model=str(body.get("model") or "").strip() or None)
+    name = str(body.get("campaign_name", "")).strip()
+    if name:
+        appconfig.set_campaign_name(name)
+
+    # Open the session so the players are greeted instead of facing a blank feed.
+    if body.get("start_session"):
+        await SAY_QUEUE.put(
+            "We're starting. Do the session start procedure, then greet us with a "
+            "short recap and ask what we want to do.")
+    return JSONResponse({"ok": True, "credit": result.get("credit")})
+
+
+# ── Developer settings (hidden behind #dev) ───────────────────────────────────
+
+@app.get("/api/dev")
+async def get_dev():
+    return JSONResponse({**appconfig.dev_settings(),
+                         "registry": prompt_registry.registry(),
+                         "models": [{"id": i, "label": label}
+                                    for i, label in appconfig.MODEL_CHOICES]})
+
+
+@app.post("/api/dev")
+async def post_dev(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    unknown = set(body) - set(appconfig.DEV_DEFAULTS)
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"unknown fields: {sorted(unknown)}")
+
+    if "prompts" in body:
+        chosen = body["prompts"]
+        if not isinstance(chosen, dict):
+            raise HTTPException(status_code=400, detail="prompts must be an object")
+        for role, variant in chosen.items():
+            if role not in prompt_registry.ROLES:
+                raise HTTPException(status_code=400, detail=f"unknown role: {role}")
+            if variant not in prompt_registry.variants(role):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{role} has no variant {variant!r} — add "
+                           f"prompts/{role}/{variant}.md first")
+    for field in ("history_tokens", "recursion_limit"):
+        if field in body and not (isinstance(body[field], int) and body[field] > 0):
+            raise HTTPException(status_code=400, detail=f"{field} must be a positive int")
+
+    appconfig.save(**body)
+    return JSONResponse({**appconfig.dev_settings(),
+                         "registry": prompt_registry.registry()})
+
+
+@app.post("/api/dev/reset-thread")
+async def reset_thread():
+    """Drop the DM's conversation, keeping all campaign state — a clean A/B arm."""
+    import agent
+    await asyncio.to_thread(agent.reset_thread)
+    campaign_lib.append_feed(ROOT, "The DM takes a moment to gather their notes.",
+                             type="system")
+    return JSONResponse({"ok": True})
 
 
 @app.get("/api/state")
@@ -320,42 +448,42 @@ async def portrait(pc_id: str):
     raise HTTPException(status_code=404, detail="Portrait not found")
 
 
-# ── Player input → headless Claude ────────────────────────────────────────────
-# Phone/browser sends a message; it lands in the feed immediately as a
-# "player" entry, then a single worker feeds it to `claude -p --continue`
-# (resuming the DM's most recent session in this repo) one turn at a time.
+# ── Player input → the DM ─────────────────────────────────────────────────────
+# The chat box sends a message; it lands in the feed immediately as a "player"
+# entry, then a single worker runs it through the LangGraph DM (desktop/agent.py)
+# one turn at a time. Serialising turns is what keeps two DMs from writing
+# campaign state at once.
 
 SAY_QUEUE: asyncio.Queue = asyncio.Queue()
 
-CLAUDE_CMD = ["claude", "-p", "--continue", "--permission-mode", "acceptEdits"]
+DM_BUSY = False
 
 
-async def claude_worker():
+async def dm_worker():
+    global DM_BUSY
     while True:
-        prompt = await SAY_QUEUE.get()
+        text = await SAY_QUEUE.get()
+        DM_BUSY = True
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *CLAUDE_CMD, prompt,
-                cwd=str(campaign_lib.REPO),
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            _, stderr = await proc.communicate()
-            if proc.returncode != 0:
-                campaign_lib.append_feed(
-                    ROOT, "The DM didn't hear that — try again in a moment.",
-                    type="system")
-                print(f"claude -p failed ({proc.returncode}): "
-                      f"{stderr.decode(errors='replace')[:500]}", file=sys.stderr)
-        except FileNotFoundError:
-            campaign_lib.append_feed(
-                ROOT, "The DM is away (claude CLI not found on the server).",
-                type="system")
+            import agent  # imported lazily: langgraph is slow to load
+            # The agent blocks on network and tool I/O, so keep it off the loop.
+            await asyncio.to_thread(agent.run_turn, text)
+        except Exception as e:
+            import agent
+            message = str(e) if isinstance(e, agent.DMError) else (
+                "The DM hit an unexpected problem and skipped that. "
+                "Try saying it again.")
+            campaign_lib.append_feed(ROOT, message, type="system")
+            if not isinstance(e, agent.DMError):
+                traceback.print_exc()
+        finally:
+            DM_BUSY = False
+            SAY_QUEUE.task_done()
 
 
 @app.on_event("startup")
 async def start_worker():
-    asyncio.create_task(claude_worker())
+    asyncio.create_task(dm_worker())
 
 
 @app.post("/api/say")
@@ -367,20 +495,18 @@ async def say(request: Request):
     text = str(body.get("text", "")).strip()[:2000]
     if not text:
         raise HTTPException(status_code=400, detail="text required")
+    if not appconfig.api_key():
+        raise HTTPException(status_code=503,
+                            detail="No OpenRouter API key set — open Settings.")
     campaign_lib.append_feed(ROOT, text, type="player")
-    # web_input=false: message still lands in the feed (a live DM session can
-    # watch it), but no headless DM is spawned — two DMs writing state at once
-    # is a conflict.
-    settings = read_json(SETTINGS_FILE) or {}
-    if not settings.get("web_input"):
-        return JSONResponse({"ok": True, "queued": 0})
-    await SAY_QUEUE.put(
-        f"[from the web companion] The players say: {text}\n"
-        f"(This message is already in the chronicle — don't repost it. It may be "
-        f"an in-game action, an out-of-character question, or a table request — "
-        f"treat it exactly as if typed at the terminal, and push any player-facing "
-        f"response via narrate.py.)")
+    await SAY_QUEUE.put(text)
     return JSONResponse({"ok": True, "queued": SAY_QUEUE.qsize()})
+
+
+@app.get("/api/dm")
+async def dm_status():
+    """Lets the chat box show that the DM is still thinking."""
+    return JSONResponse({"busy": DM_BUSY, "queued": SAY_QUEUE.qsize()})
 
 
 @app.get("/events")

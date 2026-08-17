@@ -877,14 +877,12 @@ const SETTING_CONTROLS = {
   kid_friendly: ['set-kid-friendly', 'checked'],
   narration_style: ['set-narration-style', 'value'],
   custom_rules: ['set-custom-rules', 'value'],
-  web_input: ['set-web-input', 'checked'],
 };
 
 function renderSettings(settings) {
   Object.entries(SETTING_CONTROLS).forEach(([key, [id, prop]]) => {
     if (key in settings) document.getElementById(id)[prop] = settings[key];
   });
-  document.body.classList.toggle('no-web-input', settings.web_input === false);
 }
 
 function collectSettings() {
@@ -911,6 +909,122 @@ async function saveSettings() {
     console.error('settings save failed:', err);
   }
   setTimeout(() => { status.textContent = ''; }, 5000);
+}
+
+// ── "The DM is thinking" ──────────────────────────────────────────────────────
+// A turn can take a while (the DM reads files and rolls dice before it writes),
+// so the chat says so rather than looking broken.
+
+function setThinking(busy, note) {
+  const el = document.getElementById('say-thinking');
+  el.textContent = note || (busy ? 'The DM is thinking…' : '');
+  el.classList.toggle('hidden', !busy && !note);
+  if (note) setTimeout(() => setThinking(false), 6000);
+}
+
+async function pollThinking() {
+  try {
+    const res = await fetch('/api/dm');
+    if (res.ok) {
+      const { busy, queued } = await res.json();
+      setThinking(busy || queued > 0);
+    }
+  } catch (err) { /* transient — the next poll covers it */ }
+  setTimeout(pollThinking, 2000);
+}
+
+// ── Developer settings (hidden unless the URL carries #dev) ────────────────────
+// Prompt A/B testing and model choice. Deliberately not in Table Settings:
+// these change how the DM is built, not how it plays.
+
+const DEV_HELP = {
+  dm: 'The harness prompt — how the model runs as DM',
+};
+
+function devEnabled() {
+  if (location.hash === '#dev') localStorage.setItem('devMode', '1');
+  if (location.hash === '#nodev') localStorage.removeItem('devMode');
+  return localStorage.getItem('devMode') === '1';
+}
+
+function renderDev(data) {
+  const rows = data.registry.map(entry => `
+    <label class="setting-row">
+      <span class="setting-label">${entry.role}</span>
+      <select data-role="${entry.role}" ${entry.variants.length < 2 ? 'disabled' : ''}>
+        ${entry.variants.map(v =>
+          `<option value="${v}" ${v === entry.selected ? 'selected' : ''}>${v}</option>`
+        ).join('')}
+      </select>
+      <span class="setting-desc">${DEV_HELP[entry.role] || entry.source}</span>
+    </label>`).join('');
+
+  document.getElementById('dev-body').innerHTML = `
+    <label class="setting-row">
+      <span class="setting-label">Model</span>
+      <select id="dev-model">
+        ${data.models.map(m =>
+          `<option value="${m.id}" ${m.id === data.model ? 'selected' : ''}>${m.id}</option>`
+        ).join('')}
+        ${data.models.some(m => m.id === data.model) ? ''
+          : `<option value="${data.model}" selected>${data.model}</option>`}
+      </select>
+    </label>
+    <p class="settings-hint">Prompt variant per role. Add
+      <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code> to get more choices —
+      see <code>prompts/README.md</code>.</p>
+    ${rows}
+    <div class="settings-actions">
+      <span id="dev-status"></span>
+      <button id="dev-reset">New DM thread</button>
+      <button id="dev-save">Save</button>
+    </div>`;
+
+  document.getElementById('dev-save').addEventListener('click', saveDev);
+  document.getElementById('dev-reset').addEventListener('click', resetThread);
+}
+
+async function saveDev() {
+  const chosen = {};
+  document.querySelectorAll('#dev-body select[data-role]').forEach(sel => {
+    chosen[sel.dataset.role] = sel.value;
+  });
+  const status = document.getElementById('dev-status');
+  try {
+    const res = await fetch('/api/dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompts: chosen, model: document.getElementById('dev-model').value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'save failed');
+    status.textContent = 'Saved — applies on the DM\'s next turn.';
+  } catch (err) {
+    status.textContent = String(err.message || err);
+  }
+  setTimeout(() => { status.textContent = ''; }, 5000);
+}
+
+async function resetThread() {
+  const status = document.getElementById('dev-status');
+  status.textContent = 'Starting a fresh thread…';
+  try {
+    await fetch('/api/dev/reset-thread', { method: 'POST' });
+    status.textContent = 'Thread cleared — campaign state untouched.';
+  } catch (err) {
+    status.textContent = 'Could not clear the thread.';
+  }
+  setTimeout(() => { status.textContent = ''; }, 5000);
+}
+
+async function initDev() {
+  if (!devEnabled()) return;
+  document.getElementById('dev-section').classList.remove('hidden');
+  try {
+    renderDev(await (await fetch('/api/dev')).json());
+  } catch (err) {
+    console.error('dev settings failed to load:', err);
+  }
 }
 
 // ── Modals (shared behavior) ──────────────────────────────────────────────────
@@ -949,11 +1063,18 @@ function initModals() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
-      if (res.ok) sayText.value = '';
+      if (res.ok) {
+        sayText.value = '';
+        setThinking(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setThinking(false, data.detail || 'The DM could not take that.');
+      }
     } finally {
       btn.disabled = false;
     }
   });
+  pollThinking();
 
   // Sidebar drawer — open by default on wide screens (it docks there, so the
   // chronicle keeps full width), collapsed on smaller ones. An explicit
@@ -1060,6 +1181,7 @@ function connectSSE() {
 
 async function init() {
   initModals();
+  initDev();
   try {
     applySnapshot(await fetch('/api/state').then(r => r.json()));
     connectSSE();

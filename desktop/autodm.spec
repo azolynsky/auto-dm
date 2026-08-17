@@ -1,0 +1,93 @@
+# -*- mode: python ; coding: utf-8 -*-
+"""
+PyInstaller spec for the Auto-DM desktop app.
+
+    pyinstaller desktop/autodm.spec
+
+The campaign tools are shipped as SOURCE files and executed in-process with
+runpy (see desktop/agent.py), because a frozen app has no python interpreter to
+subprocess out to. Reference content (rules/, .claude/, prompts/, CLAUDE.md, the
+starter campaign) ships read-only; the player's own campaign is created in their
+app-data directory on first launch.
+"""
+import os
+
+from PyInstaller.utils.hooks import collect_all
+
+# Paths in a spec resolve against the CWD, not the spec file, so anchor
+# everything to the repo root explicitly.
+HERE = os.path.abspath(SPECPATH)           # noqa: F821 — injected by PyInstaller
+ROOT = os.path.dirname(HERE)
+
+
+def repo(*parts):
+    return os.path.join(ROOT, *parts)
+
+
+datas = [
+    (repo("webapp", "static"), "webapp/static"),
+    (repo("tools"), "tools"),               # run via runpy, so keep the .py source
+    (repo("rules"), "rules"),
+    (repo("docs"), "docs"),
+    (repo("prompts"), "prompts"),
+    (repo(".claude", "agents"), ".claude/agents"),
+    (repo(".claude", "skills"), ".claude/skills"),
+    (repo("campaigns", "starter"), "campaigns/starter"),
+    (repo("CLAUDE.md"), "."),
+]
+binaries = []
+hiddenimports = [
+    "campaign_lib", "config", "prompts", "agent", "server",
+    "uvicorn.protocols.http.h11_impl", "uvicorn.protocols.websockets.auto",
+    "uvicorn.lifespan.on", "uvicorn.loops.auto",
+]
+
+# LangChain/LangGraph resolve providers and serializers dynamically, so let the
+# hooks pull in what static analysis misses.
+for package in ("langgraph", "langgraph_checkpoint", "langchain_core",
+                "langchain_openai", "openai", "webview"):
+    try:
+        pkg_datas, pkg_binaries, pkg_hidden = collect_all(package)
+    except Exception as e:
+        print(f"autodm.spec: collect_all({package}) skipped: {e}")
+        continue
+    datas += pkg_datas
+    binaries += pkg_binaries
+    hiddenimports += pkg_hidden
+
+a = Analysis(
+    [os.path.join(HERE, "app.py")],
+    pathex=[repo("tools"), repo("webapp"), HERE],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
+    hookspath=[],
+    runtime_hooks=[],
+    excludes=["tkinter", "matplotlib", "numpy", "pytest", "IPython"],
+    noarchive=False,
+)
+pyz = PYZ(a.pure)
+
+exe = EXE(
+    pyz, a.scripts, [],
+    exclude_binaries=True,
+    name="Auto-DM",
+    console=False,          # no terminal window
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+)
+coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name="Auto-DM")
+
+app = BUNDLE(                # a no-op off macOS
+    coll,
+    name="Auto-DM.app",
+    bundle_identifier="dev.autodm.app",
+    info_plist={
+        "CFBundleShortVersionString": "0.1.0",
+        "NSHighResolutionCapable": True,
+        # Talks to openrouter.ai, and serves itself over loopback HTTP.
+        "NSAppTransportSecurity": {"NSAllowsLocalNetworking": True},
+    },
+)

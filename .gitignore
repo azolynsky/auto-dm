@@ -10,3 +10,7 @@ __pycache__/
 # local tool debug logs
 .gstack/
 .obsidian/
+
+# PyInstaller output (desktop/autodm.spec)
+build/
+dist/

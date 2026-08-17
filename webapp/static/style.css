@@ -625,7 +625,30 @@ body.combat-active #main-grid {
 
 /* Desktop can turn the input off in Settings; phones always keep it
    (overridden in the phone block at the end of the file). */
-body.no-web-input #say-form { display: none; }
+/* The DM lives inside the app now, so the chat is always available directly
+   under the chronicle. */
+#say-thinking {
+  padding: 6px 16px 0;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--accent-dim);
+  flex-shrink: 0;
+}
+
+#dev-section {
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+#dev-section .modal-title { font-size: 17px; }
+#dev-section code {
+  font-size: 12px;
+  color: var(--accent-dim);
+  background: var(--surface-2);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
 
 .feed-location-marker {
   text-align: center;
@@ -1387,5 +1410,4 @@ body.combat-active .combatant:not(.active):not(.down) { opacity: 0.7; }
   blockquote.feed-entry { font-size: 17px; margin: 0; }
   #feed-entries { padding: 0; }
   #feed-header { display: none; }
-  body.no-web-input #say-form { display: flex; }
 }

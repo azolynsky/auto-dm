@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <title>Auto-DM — Setup</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body { display: block; overflow-y: auto; }
+    .setup-wrap { max-width: 620px; margin: 0 auto; padding: 48px 24px 64px; }
+    .setup-wrap h1 {
+      font-family: var(--font-header); color: var(--accent);
+      font-size: 34px; margin: 0 0 6px; letter-spacing: 0.04em;
+    }
+    .setup-lede { color: var(--ink-dim); margin: 0 0 28px; line-height: 1.55; }
+    .step {
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--surface); padding: 18px 20px; margin-bottom: 16px;
+    }
+    .step h2 {
+      font-family: var(--font-header); font-size: 17px; color: var(--parchment);
+      margin: 0 0 8px; letter-spacing: 0.03em;
+    }
+    .step p { margin: 0 0 12px; color: var(--ink-dim); line-height: 1.5; font-size: 15px; }
+    .step label { display: block; font-size: 14px; color: var(--ink-dim); margin-bottom: 5px; }
+    .step input, .step select {
+      font: inherit; width: 100%; box-sizing: border-box;
+      color: var(--parchment); background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 4px; padding: 9px 11px;
+    }
+    .step a { color: var(--accent); }
+    .hint { font-size: 13px; color: var(--ink-dim); margin: 8px 0 0; }
+    #start {
+      font: inherit; font-size: 16px; width: 100%; cursor: pointer;
+      color: var(--accent); background: var(--surface-2);
+      border: 1px solid var(--accent-dim); border-radius: 5px; padding: 13px;
+      letter-spacing: 0.03em;
+    }
+    #start:disabled { opacity: 0.55; cursor: default; }
+    #status { margin-top: 14px; min-height: 20px; font-size: 15px; text-align: center; }
+    #status.err { color: #e88; }
+    #status.ok { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="setup-wrap">
+    <h1>Auto-DM</h1>
+    <p class="setup-lede">
+      A Dungeons &amp; Dragons game master that runs your table. One thing to set
+      up, then you can play.
+    </p>
+
+    <div class="step">
+      <h2>1 · Connect the DM's brain</h2>
+      <p>
+        Auto-DM thinks using OpenRouter — you pay them directly for what you use,
+        usually a few cents a session. Make a free account, add a little credit,
+        then create a key and paste it below.
+      </p>
+      <p><a href="https://openrouter.ai/keys" target="_blank" rel="noopener">
+        Open openrouter.ai/keys →</a></p>
+      <label for="key">Your OpenRouter key</label>
+      <input id="key" type="password" placeholder="sk-or-v1-…" autocomplete="off"
+             spellcheck="false">
+      <p class="hint">Stored only on this computer, in this app's settings file.</p>
+    </div>
+
+    <div class="step">
+      <h2>2 · Name your campaign</h2>
+      <p>
+        You'll start in the village of Emberwick with two ready-made heroes. Your
+        DM can change any of that once you're playing — just ask.
+      </p>
+      <label for="name">Campaign name</label>
+      <input id="name" type="text" placeholder="Emberwick Nights" maxlength="80">
+    </div>
+
+    <div class="step">
+      <h2>3 · Pick the DM</h2>
+      <p>Smarter models run better games and cost a bit more. You can change this later.</p>
+      <label for="model">Model</label>
+      <select id="model"></select>
+    </div>
+
+    <button id="start">Start playing</button>
+    <div id="status"></div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+const status = $('status');
+
+function setStatus(text, cls) { status.textContent = text; status.className = cls || ''; }
+
+async function load() {
+  const res = await fetch('/api/setup');
+  const data = await res.json();
+  $('name').value = data.campaign || '';
+  $('model').innerHTML = data.models
+    .map(m => `<option value="${m.id}">${m.label}</option>`).join('');
+  $('model').value = data.model;
+  if (data.has_key) $('key').placeholder = 'Already saved — leave blank to keep it';
+}
+
+$('start').addEventListener('click', async () => {
+  $('start').disabled = true;
+  setStatus('Checking your key…');
+  try {
+    const res = await fetch('/api/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: $('key').value.trim(),
+        campaign_name: $('name').value.trim(),
+        model: $('model').value,
+        start_session: true,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setStatus(data.detail || 'Something went wrong.', 'err'); $('start').disabled = false; return; }
+    const credit = data.credit === null || data.credit === undefined
+      ? '' : ` You have $${data.credit} of credit.`;
+    setStatus(`Ready.${credit} Waking the DM…`, 'ok');
+    setTimeout(() => location.href = '/', 900);
+  } catch (err) {
+    setStatus('Could not reach the app. Try again.', 'err');
+    $('start').disabled = false;
+  }
+});
+
+$('key').addEventListener('keydown', e => { if (e.key === 'Enter') $('start').click(); });
+load();
+</script>
+</body>
+</html>

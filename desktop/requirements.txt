@@ -1,0 +1,7 @@
+# Desktop app: the companion server, the native webview shell, and the DM agent.
+-r ../webapp/requirements.txt
+
+pywebview>=5.1              # native OS webview — WKWebView / WebView2 / GTK
+langgraph>=1.2,<2           # the DM's agent loop
+langchain-openai>=1.5,<2    # OpenRouter (OpenAI-compatible) chat model
+langgraph-checkpoint-sqlite>=3.1,<4   # conversation survives closing the app
