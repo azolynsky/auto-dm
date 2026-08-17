@@ -237,17 +237,18 @@ class TestCharacterListing(unittest.TestCase):
         (self.tmp / "characters" / f"{cid}.json").write_text(
             json.dumps({"id": cid, "name": name, "hp": {"current": 1, "max": 1}}))
 
-    def test_guests_included_party_first(self):
-        self.write_char("guest-gundren", "Gundren")
+    def test_only_party_members_shown_in_party_order(self):
+        self.write_char("guest-gundren", "Gundren")  # on disk but no longer in party
         self.write_char("pc-b", "Bee")
         self.write_char("pc-a", "Aye")
         (self.tmp / "current.json").write_text(json.dumps({"party": ["pc-b", "pc-a"]}))
         ids = [c["id"] for c in server.load_characters()]
-        self.assertEqual(ids, ["pc-b", "pc-a", "guest-gundren"])
+        self.assertEqual(ids, ["pc-b", "pc-a"])
 
     def test_non_sheet_json_skipped(self):
         (self.tmp / "characters" / "junk.json").write_text(json.dumps({"whatever": 1}))
         self.write_char("pc-a", "Aye")
+        (self.tmp / "current.json").write_text(json.dumps({"party": ["pc-a"]}))
         self.assertEqual([c["id"] for c in server.load_characters()], ["pc-a"])
 
 
