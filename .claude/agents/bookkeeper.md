@@ -61,7 +61,7 @@ CHANGE
     - campaign/sessions/session-NN.md: append combat line
 ```
 
-Apply it. Use `tools/combat_tracker.py` for combat HP/conditions/initiative, the Edit tool for JSON files, and the Write tool when appending to session logs.
+Apply it. Use `tools/combat_tracker.py` for combat HP/conditions/initiative, `tools/char_update.py` for character-sheet resources (HP outside combat, spell slots, inventory, gold, conditions — it does the arithmetic and clamping deterministically and queues the player-visible effect for you; never hand-compute those with Edit), the Edit tool for other JSON changes, and the Write tool when appending to session logs.
 
 # Hard rules
 

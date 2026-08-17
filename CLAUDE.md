@@ -97,6 +97,9 @@ All tools print standardized JSON on stdout. They find the campaign via `CAMPAIG
   - `python tools/dice.py 1d20+7 1d8+3 --mode advantage --mode normal --label "longbow to-hit" --label "longbow damage"`
 - `check_resolver.py` — pulls modifiers from character JSON and rolls. Use for skill checks and saves.
   - `python tools/check_resolver.py --char campaign/characters/<id>.json --skill stealth --dc 15`
+- `char_update.py` — deterministic character-sheet mutations: HP outside combat (temp absorbs first, clamps to max/0), spell slots (`--use`/`--restore`/`--long-rest`), inventory add/remove, gold, conditions. Same invariant as dice: never do resource arithmetic in your head. Queues a player-visible effect automatically (`--quiet` to skip); refuses HP/condition changes for anyone in active combat (use `combat_tracker.py` there).
+  - `python tools/char_update.py hp --char Mira --damage 6`
+  - `python tools/char_update.py item --char Relthus --remove Arrows --qty 3`
 - `combat_tracker.py` — initiative order, HP, conditions. Authoritative during combat. Participants matching a character sheet by name auto-load HP from the sheet at `start`, and every `damage`/`heal`/`sethp` writes back to the sheet immediately — never start PCs with `hp: null`, and give companions/monsters explicit HP in the spec. Posts start/end banners to the player feed itself; damage/heal/condition changes are **queued as effects**, not posted (see narrate.py).
   - `python tools/combat_tracker.py start --participants "Torva:+1" "Goblin1:+2:7" "Goblin2:+2:7"` (third field = HP, so you don't need `sethp` per monster)
   - `python tools/combat_tracker.py damage --who Goblin1 --amount 6`

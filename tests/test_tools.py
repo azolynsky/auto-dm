@@ -345,6 +345,92 @@ class TestCombatTracker(TempRootMixin):
         self.assertNotEqual(proc.returncode, 0)
 
 
+class TestCharUpdate(TempRootMixin):
+    """Deterministic sheet mutations via char_update.py against a temp root."""
+
+    def setUp(self):
+        super().setUp()
+        (self.root / "characters").mkdir()
+        self.sheet = self.root / "characters" / "pc-test.json"
+        self.sheet.write_text(json.dumps({
+            "id": "pc-test", "name": "Mira",
+            "hp": {"max": 20, "current": 14, "temp": 0},
+            "spells": {"slots": {"1": {"max": 2, "remaining": 1}}},
+            "inventory": [{"item": "Arrows", "qty": 3}],
+            "gold": 10, "conditions": [],
+        }))
+
+    def run_cmd(self, *args, check=True):
+        proc = subprocess.run(
+            [sys.executable, str(TOOLS / "char_update.py"), *args],
+            env=self.env, capture_output=True, text=True,
+        )
+        if check:
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+        return proc
+
+    def read_sheet(self) -> dict:
+        return json.loads(self.sheet.read_text())
+
+    def pending(self) -> str:
+        p = self.root / "state" / "pending-effects.jsonl"
+        return p.read_text() if p.exists() else ""
+
+    def test_damage_hits_temp_first_and_floors_at_zero(self):
+        self.run_cmd("hp", "--char", "Mira", "--temp", "5")
+        self.run_cmd("hp", "--char", "mira", "--damage", "8")  # name is case-insensitive
+        hp = self.read_sheet()["hp"]
+        self.assertEqual((hp["temp"], hp["current"]), (0, 11))
+        self.run_cmd("hp", "--char", "pc-test", "--damage", "99")  # id works too
+        self.assertEqual(self.read_sheet()["hp"]["current"], 0)
+        self.assertIn("DOWN", self.pending())
+
+    def test_heal_clamps_to_max_and_queues_effect(self):
+        self.run_cmd("hp", "--char", "Mira", "--heal", "50")
+        self.assertEqual(self.read_sheet()["hp"]["current"], 20)
+        self.assertIn("regains 6 HP", self.pending())
+
+    def test_slot_use_fails_at_zero(self):
+        self.run_cmd("slot", "--char", "Mira", "--use", "1")
+        self.assertEqual(self.read_sheet()["spells"]["slots"]["1"]["remaining"], 0)
+        proc = self.run_cmd("slot", "--char", "Mira", "--use", "1", check=False)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("no level-1 slots remaining", proc.stderr)
+
+    def test_long_rest_restores_hp_and_slots(self):
+        self.run_cmd("slot", "--char", "Mira", "--long-rest")
+        sheet = self.read_sheet()
+        self.assertEqual(sheet["hp"]["current"], 20)
+        self.assertEqual(sheet["spells"]["slots"]["1"]["remaining"], 2)
+
+    def test_item_add_merge_remove_and_insufficient(self):
+        self.run_cmd("item", "--char", "Mira", "--add", "arrows", "--qty", "2")
+        inv = self.read_sheet()["inventory"]
+        self.assertEqual(inv, [{"item": "Arrows", "qty": 5}])
+        self.run_cmd("item", "--char", "Mira", "--remove", "Arrows", "--qty", "5")
+        self.assertEqual(self.read_sheet()["inventory"], [])
+        proc = self.run_cmd("item", "--char", "Mira", "--remove", "Arrows", check=False)
+        self.assertNotEqual(proc.returncode, 0)
+
+    def test_gold_refuses_overdraft(self):
+        self.run_cmd("gold", "--char", "Mira", "--amount", "-10")
+        self.assertEqual(self.read_sheet()["gold"], 0)
+        proc = self.run_cmd("gold", "--char", "Mira", "--amount", "-1", check=False)
+        self.assertNotEqual(proc.returncode, 0)
+
+    def test_hp_refused_during_active_combat(self):
+        (self.root / "state" / "combat.json").write_text(json.dumps(
+            {"active": True, "order": [{"name": "Mira"}]}))
+        proc = self.run_cmd("hp", "--char", "Mira", "--damage", "1", check=False)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("combat_tracker", proc.stderr)
+        self.assertEqual(self.read_sheet()["hp"]["current"], 14)
+
+    def test_quiet_skips_effect(self):
+        self.run_cmd("hp", "--char", "Mira", "--damage", "2", "--quiet")
+        self.assertEqual(self.pending(), "")
+
+
 class TestNarrate(TempRootMixin):
     def setUp(self):
         super().setUp()
