@@ -109,8 +109,18 @@ def model() -> str:
 
 
 def is_ready() -> bool:
-    """True once the app has a key and a campaign — i.e. setup is done."""
-    return bool(api_key()) and (CAMPAIGN / "state" / "current.json").exists()
+    """True once the app has a key and a campaign with a seated party — i.e.
+    setup is done. ensure_campaign() recreates the campaign files at every
+    boot, so their existence alone can't mean setup ran; an unseated party is
+    the mark of a table that hasn't picked its heroes yet."""
+    if not api_key():
+        return False
+    try:
+        current = json.loads(
+            (CAMPAIGN / "state" / "current.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return bool(current.get("party"))
 
 
 def ensure_campaign() -> Path:

@@ -52,6 +52,24 @@ class DesktopTestCase(unittest.TestCase):
             sys.modules.pop(name, None)
 
 
+class TestReadiness(DesktopTestCase):
+    """Setup shows until a party is seated — campaign files always exist
+    (ensure_campaign recreates them at boot), so they can't be the signal."""
+
+    def test_not_ready_until_party_seated(self):
+        self.config.APP_DIR.mkdir(parents=True)
+        self.config.save(api_key="sk-or-test")
+        self.assertFalse(self.config.is_ready())  # starter party is empty
+        current_file = self.campaign / "state" / "current.json"
+        current = json.loads(current_file.read_text())
+        current["party"] = ["pc-fighter"]
+        current_file.write_text(json.dumps(current))
+        self.assertTrue(self.config.is_ready())
+
+    def test_not_ready_without_key(self):
+        self.assertFalse(self.config.is_ready())
+
+
 class TestWriteGuard(DesktopTestCase):
     def test_campaign_writes_allowed(self):
         result = self.agent.write_file("campaign/state/scratch.md", "hello")
