@@ -1377,9 +1377,9 @@ body.combat-active .combatant:not(.active):not(.down) { opacity: 0.7; }
   margin-top: 4px;
 }
 
-#settings-status { font-size: 18px; color: var(--safe); font-style: italic; }
+#settings-status, #dev-status { font-size: 18px; color: var(--safe); font-style: italic; }
 
-#settings-save {
+.settings-actions button {
   background: var(--accent-dim);
   /* not var(--parchment): that goes dark in light mode while the button bg stays dark */
   color: #fff;
@@ -1392,7 +1392,7 @@ body.combat-active .combatant:not(.active):not(.down) { opacity: 0.7; }
   cursor: pointer;
 }
 
-#settings-save:hover { background: var(--accent); color: #fff; }
+.settings-actions button:hover { background: var(--accent); color: #fff; }
 
 /* ── Scrollbars ─────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
