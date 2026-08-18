@@ -21,8 +21,6 @@ from __future__ import annotations
 import io
 import json
 import re
-import re
-import runpy
 import sqlite3
 import sys
 from contextlib import redirect_stderr, redirect_stdout
@@ -231,7 +229,7 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
     script = config.BUNDLE / "tools" / tool
     # ponytail: swapping sys.argv/stdout in-process is fine while the queue
     # serialises turns. Needs a subprocess if turns ever overlap — but note a
-    # frozen app has no python interpreter to spawn, hence runpy.
+    # frozen app has no python interpreter to spawn, hence in-process exec.
     out, err = io.StringIO(), io.StringIO()
     saved_argv, saved_stdin = sys.argv, sys.stdin
     sys.argv = [tool] + [str(a) for a in (argv or [])]
@@ -241,7 +239,14 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
     try:
         with redirect_stdout(out), redirect_stderr(err):
             try:
-                runpy.run_path(str(script), run_name="__main__")
+                # Not runpy.run_path: in the frozen app PyInstaller's import
+                # finder claims every path under the bundle, so run_path hunts
+                # for a __main__ module inside the .py file and dies with
+                # "can't find '__main__' module". compile/exec sidesteps the
+                # import machinery entirely.
+                exec(compile(script.read_text(encoding="utf-8"),
+                             str(script), "exec"),
+                     {"__name__": "__main__", "__file__": str(script)})
             except SystemExit as e:   # every tool ends in sys.exit(main())
                 code = e.code if isinstance(e.code, int) else 0
     except Exception as e:

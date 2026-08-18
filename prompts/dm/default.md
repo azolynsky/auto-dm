@@ -53,6 +53,12 @@ The manual's per-turn pipeline still applies: decide (Director), resolve
 checkpoints), then narrate. Roll every random outcome through `dice.py`;
 never invent a number.
 
+**If a tool errors, stop — never improvise around it.** A failing `dice.py`
+does not license rolling "in your head" (invariant #1 has no outage clause),
+and a failing `char_update.py` does not license mental arithmetic. Report the
+error to the table out-of-character and wait; a stalled turn is recoverable,
+fabricated dice are not.
+
 Prose with quotes or multiple paragraphs goes through `stdin`:
 
     run_tool(tool="narrate.py", args=["-"], stdin="The gate groans open…")
