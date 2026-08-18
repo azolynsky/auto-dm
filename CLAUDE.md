@@ -82,7 +82,7 @@ You orchestrate. Subagents specialize. You don't always need all four — pure n
 Players control these from the web companion's ⚙ Settings tab. Every `narrate.py` call echoes the current values back to you — honor changes from the very next beat, and don't be surprised mid-session. What each one steers:
 
 - **`rules_strictness`** — `strict`: rules as written, dice fall where they fall, no softening. `flexible`: Director may soften per invariant #5 (log `[MERCY]`).
-- **`beginner_mode`** — when true, relax the "never suggest solutions" principle: remind players what their character can do, and offer 2–3 example options when they seem stuck. The world's difficulty doesn't change — only the guidance.
+- **`beginner_mode`** — when true, relax the "never suggest solutions" principle: remind players what their character can do, and offer 2–3 example options when they seem stuck. The world's difficulty doesn't change — only the guidance. Guidance is out-of-character (a `system`-type note or plain chat), NEVER inside narration: prose that ends in "What do you want to do next?" or a bullet menu of choices is banned in every mode, and the narrate.py style gate refuses it.
 - **`show_rolls`** — when true, labeled dice results are queued automatically as public effects and appear in the chronicle under the next narration. Nothing for you to do except keep labels player-readable ("Torva longsword vs Goblin1", not internal shorthand).
 - **`kid_friendly`** — keep violence and horror gentle: enemies are defeated/flee/collapse rather than gorily killed; fear beats dread; no cruelty lingered on.
 - **`narration_style`** — `brief`: mechanical outcome + one scene beat. `standard`: the Narrator default. `cinematic`: fuller sensory scenes; still no purple prose.

@@ -95,6 +95,13 @@ STYLE_PATTERNS = [
     (r"\bcracks? (?:his|her|their) knuckles\b|\brolls? (?:his|her|their) shoulders\b"
      r"|\bcocks? an eyebrow\b|\b(?:a|the) breath (?:he|she|they|it)\b",
      "stock body-language tic — give a gesture that's theirs, or none"),
+    (r"^[^\"“]*\bwhat (?:do you (?:want|wish) to do|would you like to do|"
+     r"do you do)\b",
+     "out-of-world prompt to the players — end on the scene, not a menu; "
+     "the table decides what to do without being asked (table request)"),
+    (r"(?:^\s*(?:[-•*]|\d+[.)])\s.+\n?){2,}\s*\Z",
+     "closing option menu — narration never ends in a bullet list of choices; "
+     "if beginner guidance is needed, give it out-of-character in one sentence"),
 ]
 
 
@@ -103,7 +110,7 @@ def style_violations(text: str) -> list:
     [{'match': ..., 'why': ...}] — used to block publishing until rewritten."""
     hits = []
     for pattern, why in STYLE_PATTERNS:
-        for m in re.finditer(pattern, text, re.IGNORECASE):
+        for m in re.finditer(pattern, text, re.IGNORECASE | re.MULTILINE):
             hits.append({"match": m.group(0), "why": why})
     return hits
 

@@ -16,6 +16,10 @@ class TestStyleViolations(unittest.TestCase):
             "She hits the door like a landslide.",
             "He cracks his knuckles and grins.",
             "Vhalak lets out a breath he seems to have held for years.",
+            "The hall falls silent.\n\nWhat do you want to do next?",
+            "The path splits ahead.\nWhat do you do?",
+            "The inn settles.\n\n- Head up the hill to the shrine.\n- Search the village.\n- Set up defenses.",
+            "Night falls.\n\n1. Rest until dawn.\n2) Press on in the dark.",
         ]
         for text in bad:
             self.assertTrue(narrate.style_violations(text), f"missed: {text}")
@@ -27,6 +31,9 @@ class TestStyleViolations(unittest.TestCase):
             "He reads the old words without stumbling once.",
             "The fog is lifting off the harbor. You hold the warehouse now.",
             "Relthus points the way to the water door.",
+            "\"What do you want to do about the rats?\" Maera asks, hands on hips.",
+            "The gnome squints. \"And what do you do, exactly, for coin?\"",
+            "On the shelf sit three jars:\n- pickled eggs\n- a gray powder\n- something moving\nThe stew bubbles on.",
         ]
         for text in clean:
             self.assertEqual(narrate.style_violations(text), [], f"false positive: {text}")
