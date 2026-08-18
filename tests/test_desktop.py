@@ -241,9 +241,15 @@ class TestRoleAgents(DesktopTestCase):
 
     def test_role_model_falls_back_to_global(self):
         self.config.APP_DIR.mkdir(parents=True)
-        self.config.save(model="global/model", role_models={"narrator": "cheap/model"})
+        self.config.save(model="global/model",
+                         role_models={"narrator": "cheap/model",
+                                      "director": "user/model"})
+        # user setting beats the role default beats the global model
         self.assertEqual(self.agent.role_model("narrator"), "cheap/model")
-        self.assertEqual(self.agent.role_model("director"), "global/model")
+        self.assertEqual(self.agent.role_model("director"), "user/model")
+        self.assertEqual(self.agent.role_model("rules-lawyer"),
+                         self.config.DEV_DEFAULTS["role_models"]["rules-lawyer"])
+        self.assertEqual(self.agent.role_model("dm"), "global/model")
 
 
 class TestPlayersText(DesktopTestCase):

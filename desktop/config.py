@@ -51,17 +51,16 @@ CONFIG_FILE = APP_DIR / "config.json"
 CAMPAIGN = Path(os.environ["CAMPAIGN_ROOT"]) if os.environ.get("CAMPAIGN_ROOT") \
     else APP_DIR / "campaign"
 
-DEFAULT_MODEL = "anthropic/claude-sonnet-5"
+DEFAULT_MODEL = "google/gemini-3.7-flash"
 
 # Shown on the setup screen. Ids verified against openrouter.ai/api/v1/models —
 # anything else can be typed in by hand, so this list never becomes a cage.
+# Lineup picked by head-to-head DM stress tests (2026-08-18): rules judgment,
+# dice honesty, secret-keeping, cost, and latency.
 MODEL_CHOICES = [
-    ("anthropic/claude-sonnet-5", "Claude Sonnet 5 — recommended, best balance"),
-    ("anthropic/claude-opus-5", "Claude Opus 5 — sharpest DM, costs more"),
-    ("anthropic/claude-haiku-4.5", "Claude Haiku 4.5 — cheapest, simpler scenes"),
-    ("google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite — very cheap, good for background roles"),
-    ("google/gemini-3.1-pro-preview", "Gemini 3.1 Pro"),
-    ("openai/gpt-5.2", "GPT-5.2"),
+    ("google/gemini-3.7-flash", "Gemini 3.7 Flash — recommended, fast live play"),
+    ("~deepseek/deepseek-v4-flash-latest", "DeepSeek V4 Flash — sharpest rulings, cheapest, slower"),
+    ("openai/gpt-5.6-luna-pro", "GPT-5.6 Luna Pro — careful, costs more"),
 ]
 
 
@@ -71,7 +70,20 @@ MODEL_CHOICES = [
 DEV_DEFAULTS = {
     "model": DEFAULT_MODEL,
     "prompts": {},            # {role: variant} — see desktop/prompts.py
-    "role_models": {},        # {role: model id} — empty/missing = the global model
+    # {role: model id} — per-role defaults; a user's saved role_models entry
+    # overrides, a role in neither falls back to the global model. Background
+    # roles take DeepSeek's judgment over its latency; the dm orchestrator
+    # stays on the global fast model. Narrator: DeepSeek won the table's prose
+    # bake-off (2026-08-18); Luna/Gemini-lite invented facts, Haiku was cliché.
+    "role_models": {
+        "narrator": "~deepseek/deepseek-v4-flash-latest",
+        "director": "~deepseek/deepseek-v4-flash-latest",
+        "rules-lawyer": "~deepseek/deepseek-v4-flash-latest",
+        "bookkeeper": "~deepseek/deepseek-v4-flash-latest",
+        "continuity-checker": "~deepseek/deepseek-v4-flash-latest",
+        "session-prep": "~deepseek/deepseek-v4-flash-latest",
+        "prose-editor": "google/gemini-3.7-flash",
+    },
     "history_tokens": 120_000,
     "recursion_limit": 80,
 }

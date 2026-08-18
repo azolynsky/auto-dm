@@ -269,7 +269,9 @@ SUB_RECURSION_LIMIT = 32
 
 
 def role_model(role: str) -> str:
-    return (config.load().get("role_models") or {}).get(role) or config.model()
+    return ((config.load().get("role_models") or {}).get(role)
+            or config.DEV_DEFAULTS["role_models"].get(role)
+            or config.model())
 
 
 def role_tools(role: str) -> list:
