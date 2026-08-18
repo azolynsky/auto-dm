@@ -65,10 +65,11 @@
       display: flex; align-items: center; justify-content: center;
       font-family: var(--font-header); font-size: 64px; color: var(--accent);
     }
-    .hero .card-body { padding: 12px 14px 14px; }
+    .hero .card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; }
     .hero h3 { margin: 0 0 2px; font-size: 17px; color: var(--parchment); font-family: var(--font-header); }
     .hero .kind { font-size: 13px; color: var(--accent); margin: 0 0 6px; }
-    .hero .blurb { font-size: 13px; color: var(--ink-dim); margin: 0; line-height: 1.45; }
+    /* blurb soaks up spare height so the player-name field sits at the bottom */
+    .hero .blurb { font-size: 13px; color: var(--ink-dim); margin: 0; line-height: 1.45; flex: 1; }
     .hero input {
       font: inherit; width: 100%; box-sizing: border-box; display: none;
       margin-top: 10px; padding: 7px 9px; font-size: 13px;
@@ -83,13 +84,21 @@
     }
     .hero.create .plus { font-size: 44px; color: var(--accent); line-height: 1; }
     .hero.create textarea {
-      font: inherit; width: 100%; box-sizing: border-box; min-height: 88px;
+      font: inherit; width: 100%; box-sizing: border-box; min-height: 160px;
       color: var(--parchment); background: var(--surface-2); resize: vertical;
-      border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px;
-      font-size: 13px;
+      border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px;
+      font-size: 14px; line-height: 1.5;
     }
     .hero.create .bigbtn { padding: 8px; font-size: 14px; }
     .hero.create .status { font-size: 13px; margin-top: 6px; min-height: 0; }
+    .hero.create.working {
+      border-style: solid;
+      animation: dm-thinking 1.4s ease-in-out infinite;
+    }
+    @keyframes dm-thinking {
+      0%, 100% { border-color: var(--border); box-shadow: none; }
+      50%      { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+    }
   </style>
 </head>
 <body>
@@ -200,6 +209,7 @@ function renderHeroes(pregens, party) {
     const st = $('hero-status');
     if (!description) { setStatus(st, 'Describe the hero first.', 'err'); return; }
     $('hero-make').disabled = true;
+    creator.classList.add('working');
     setStatus(st, 'The DM is writing the sheet… (about half a minute)');
     try {
       const res = await fetch('/api/heroes', {
@@ -208,14 +218,18 @@ function renderHeroes(pregens, party) {
         body: JSON.stringify({ description }),
       });
       const data = await res.json();
-      if (!res.ok) { setStatus(st, data.detail || 'Something went wrong.', 'err'); $('hero-make').disabled = false; return; }
-      creator.insertAdjacentHTML('beforebegin', heroCard(data, true));
-      bindHero(creator.previousElementSibling);
-      $('hero-desc').value = '';
-      setStatus(st, `${data.name} joins the roster!`, 'ok');
+      if (!res.ok) {
+        setStatus(st, data.detail || 'Something went wrong.', 'err');
+      } else {
+        creator.insertAdjacentHTML('beforebegin', heroCard(data, true));
+        bindHero(creator.previousElementSibling);
+        $('hero-desc').value = '';
+        setStatus(st, '');
+      }
     } catch (err) {
       setStatus(st, 'Could not reach the app. Try again.', 'err');
     }
+    creator.classList.remove('working');
     $('hero-make').disabled = false;
   });
 }
@@ -268,6 +282,7 @@ $('continue').addEventListener('click', async () => {
 $('start').addEventListener('click', async () => {
   const party = chosenParty();
   if (!party.length) { setStatus($('status2'), 'Pick at least one hero — one per player.', 'err'); return; }
+  if (party.some(p => !p.player)) { setStatus($('status2'), "Add each player's name to their hero.", 'err'); return; }
   $('start').disabled = true;
   setStatus($('status2'), 'Gathering the party…');
   try {
