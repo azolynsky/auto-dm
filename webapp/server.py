@@ -629,6 +629,14 @@ async def say(request: Request):
     if not appconfig.api_key():
         raise HTTPException(status_code=503,
                             detail="No OpenRouter API key set — open Settings.")
+    # One turn at a time, visibly: a message sent mid-turn used to queue
+    # silently and land after the reply, which read as the DM ignoring it
+    # (table request). The chat box disables itself while the DM works; this
+    # guard covers a second device or a stale page.
+    if DM_BUSY or SAY_QUEUE.qsize():
+        raise HTTPException(status_code=409,
+                            detail="The DM is still working on the last message "
+                                   "— wait for the reply.")
     campaign_lib.append_feed(ROOT, text, type="player")
     await SAY_QUEUE.put(text)
     return JSONResponse({"ok": True, "queued": SAY_QUEUE.qsize()})

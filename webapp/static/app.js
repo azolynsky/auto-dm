@@ -590,6 +590,7 @@ function showDmThinking() {
 // Live activity from the DM's turn (SSE dm_activity): which role is at work,
 // player-safe labels only. The last step spins; earlier ones get a check.
 function renderDmActivity(activity) {
+  setSayBusy(!!(activity && activity.busy));
   if (!activity || !activity.busy) {
     hideDmThinking();
     return;
@@ -919,6 +920,17 @@ async function saveSettings() {
 // A turn can take a while (the DM reads files and rolls dice before it writes),
 // so the chat says so rather than looking broken.
 
+// One turn at a time: the chat box locks while the DM works, so a second
+// message can't silently queue behind the first (table request). Lock on
+// send; the dm_activity stream (and the snapshot on reconnect) unlocks.
+function setSayBusy(busy) {
+  const box = document.getElementById('say-text');
+  box.disabled = busy;
+  box.placeholder = busy ? 'The DM is replying…' : 'What do you do?';
+  document.getElementById('say-send').disabled = busy;
+  if (!busy) box.focus();
+}
+
 // Error notes under the chat box. Busy state is the activity log in the feed
 // (SSE dm_activity) — no polling, no second "thinking" message.
 function sayNote(note) {
@@ -1082,8 +1094,7 @@ function initModals() {
     e.preventDefault();
     const text = sayText.value.trim();
     if (!text) return;
-    const btn = document.getElementById('say-send');
-    btn.disabled = true;
+    setSayBusy(true);
     try {
       const res = await fetch('/api/say', {
         method: 'POST',
@@ -1095,9 +1106,11 @@ function initModals() {
       } else {
         const data = await res.json().catch(() => ({}));
         sayNote(data.detail || 'The DM could not take that.');
+        setSayBusy(false);
       }
-    } finally {
-      btn.disabled = false;
+    } catch (err) {
+      sayNote('Could not reach the app. Try again.');
+      setSayBusy(false);
     }
   });
 

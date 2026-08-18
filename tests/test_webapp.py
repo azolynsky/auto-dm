@@ -390,5 +390,24 @@ class TestCombatVisibility(unittest.TestCase):
         self.assertEqual(server.load_combat()["round"], 2)
 
 
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestSayGuard(unittest.TestCase):
+    """One turn at a time: a message sent while the DM is working is refused
+    (409), never silently queued behind the running turn."""
+
+    def test_rejects_while_dm_busy(self):
+        from fastapi.testclient import TestClient
+        os.environ["OPENROUTER_API_KEY"] = "sk-or-test"
+        server.DM_BUSY = True
+        try:
+            with TestClient(server.app) as client:
+                res = client.post("/api/say", json={"text": "hi"})
+        finally:
+            server.DM_BUSY = False
+            os.environ.pop("OPENROUTER_API_KEY")
+        self.assertEqual(res.status_code, 409)
+        self.assertIn("still working", res.json()["detail"])
+
+
 if __name__ == "__main__":
     unittest.main()
