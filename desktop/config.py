@@ -91,7 +91,12 @@ DEV_DEFAULTS = {
 
 def dev_settings() -> dict:
     cfg = load()
-    return {k: cfg.get(k, default) for k, default in DEV_DEFAULTS.items()}
+    settings = {k: cfg.get(k, default) for k, default in DEV_DEFAULTS.items()}
+    # Show the effective per-role models (defaults merged under user picks) so
+    # the dev panel never claims "global" for a role that has its own default.
+    settings["role_models"] = {**DEV_DEFAULTS["role_models"],
+                               **(cfg.get("role_models") or {})}
+    return settings
 
 
 def load() -> dict:
