@@ -999,11 +999,11 @@ function renderDev(data) {
       <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code> for more prompt choices —
       see <code>prompts/README.md</code>.</p>
     ${rows}
-    <label class="setting-row">
-      <span class="setting-label">Verbose</span>
+    <label class="setting-row setting-check">
       <input type="checkbox" id="dev-verbose" ${data.verbose ? 'checked' : ''}>
+      <span><span class="setting-label">Verbose</span>
       <span class="setting-desc">Stream the DM's raw output, tool calls and
-        results into the thinking ticker. Spoils secrets — testing only.</span>
+        results into the thinking ticker. Spoils secrets — testing only.</span></span>
     </label>
     <div class="settings-actions">
       <span id="dev-status"></span>
