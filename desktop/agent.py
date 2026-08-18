@@ -21,6 +21,7 @@ from __future__ import annotations
 import io
 import json
 import re
+import re
 import runpy
 import sqlite3
 import sys
@@ -324,6 +325,59 @@ def players_text(text: str) -> str:
         return "\n".join(quoted).strip()
     return "\n".join(ln for ln in text.splitlines()
                      if ln.strip() and not LABEL_LINE.match(ln)).strip()
+
+
+def generate_character(description: str) -> dict:
+    """One-shot LLM call: a player's free-text concept → a level-1 sheet in
+    the campaign's exact JSON shape. Separate from the DM thread — this runs
+    on the setup screen, before the table exists."""
+    if not config.api_key():
+        raise DMError("No OpenRouter API key is set yet — open Settings and paste one.")
+    from langchain_core.messages import HumanMessage, SystemMessage
+    from langchain_openai import ChatOpenAI
+
+    sheets = sorted((config.CAMPAIGN / "characters").glob("pc-*.json"))
+    if not sheets:
+        raise DMError("No example character sheet found to model the new hero on.")
+    example = sheets[0].read_text(encoding="utf-8")
+
+    model = ChatOpenAI(
+        model=config.model(), api_key=config.api_key(), base_url=OPENROUTER_URL,
+        timeout=300,
+        default_headers={"HTTP-Referer": "https://github.com/auto-dm",
+                         "X-Title": "Auto-DM"},
+    )
+    system = (
+        "You create Dungeons & Dragons 5e LEVEL 1 player characters. Reply with "
+        "ONLY a JSON object — no prose, no markdown fences — in exactly the same "
+        "shape as this example sheet:\n" + example + "\n"
+        "Rules: level 1 with 0 xp; SRD 5.1 races, classes, and spells only; "
+        "standard array (15,14,13,12,10,8) plus racial bonuses; derived numbers "
+        "must be correct (AC, HP, saves, skills, initiative, passive perception, "
+        "attack to-hit and damage); casters get correct level-1 slots and spells; "
+        "personality.traits[0] is a single evocative sentence (it becomes the "
+        "character's card blurb); give real ideals, bonds, and flaws that create "
+        "adventure hooks; \"player\" is an empty string; set \"id\" to null — the "
+        "app assigns it. Honor the player's concept, including names and details "
+        "they specify; invent tastefully where they don't."
+    )
+    last_err = None
+    for _ in range(2):
+        try:
+            raw = model.invoke([SystemMessage(content=system),
+                                HumanMessage(content="Player's concept: " + description)])
+        except Exception as e:
+            raise _friendly(e) from e
+        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", str(raw.content).strip())
+        try:
+            sheet = json.loads(text)
+            if isinstance(sheet, dict):
+                return sheet
+            last_err = "not a JSON object"
+        except json.JSONDecodeError as e:
+            last_err = str(e)
+    raise DMError(f"The DM couldn't write a valid character sheet ({last_err}). "
+                  "Try describing the hero again.")
 
 
 def run_turn(player_message: str) -> dict:

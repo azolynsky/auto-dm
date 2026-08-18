@@ -76,6 +76,20 @@
       border: 1px solid var(--border); border-radius: 4px;
     }
     .hero.picked input { display: block; }
+    .hero.create {
+      border-style: dashed; cursor: pointer;
+      align-items: center; justify-content: center; text-align: center;
+      padding: 20px 16px; gap: 8px;
+    }
+    .hero.create .plus { font-size: 44px; color: var(--accent); line-height: 1; }
+    .hero.create textarea {
+      font: inherit; width: 100%; box-sizing: border-box; min-height: 88px;
+      color: var(--parchment); background: var(--surface-2); resize: vertical;
+      border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px;
+      font-size: 13px;
+    }
+    .hero.create .bigbtn { padding: 8px; font-size: 14px; }
+    .hero.create .status { font-size: 13px; margin-top: 6px; min-height: 0; }
   </style>
 </head>
 <body>
@@ -138,9 +152,9 @@ const $ = id => document.getElementById(id);
 
 function setStatus(el, text, cls) { el.textContent = text; el.className = 'status ' + (cls || ''); }
 
-function renderHeroes(pregens, party) {
-  $('heroes').innerHTML = pregens.map(c => `
-    <div class="hero${party.includes(c.id) ? ' picked' : ''}" data-id="${c.id}">
+function heroCard(c, picked) {
+  return `
+    <div class="hero${picked ? ' picked' : ''}" data-id="${c.id}">
       <img src="/api/portraits/${c.id}" alt=""
            onerror="this.outerHTML='<div class=noface>${(c.name || '?')[0]}</div>'">
       <div class="card-body">
@@ -150,9 +164,60 @@ function renderHeroes(pregens, party) {
         <input type="text" placeholder="Player's name" maxlength="40"
                onclick="event.stopPropagation()">
       </div>
-    </div>`).join('');
-  document.querySelectorAll('.hero').forEach(el =>
-    el.addEventListener('click', () => el.classList.toggle('picked')));
+    </div>`;
+}
+
+const CREATOR = `
+    <div class="hero create" id="creator">
+      <div class="plus">+</div>
+      <h3>Create your own hero</h3>
+      <p class="blurb">Describe them in a sentence or two — the DM writes the
+        full character sheet.</p>
+      <textarea id="hero-desc" hidden
+        placeholder="e.g. Rook, a towering dragonborn monk who took a vow of silence and speaks only through his fists…"></textarea>
+      <button id="hero-make" class="bigbtn" hidden>Create hero</button>
+      <p class="status" id="hero-status"></p>
+    </div>`;
+
+function bindHero(el) {
+  el.addEventListener('click', () => el.classList.toggle('picked'));
+}
+
+function renderHeroes(pregens, party) {
+  $('heroes').innerHTML =
+    pregens.map(c => heroCard(c, party.includes(c.id))).join('') + CREATOR;
+  document.querySelectorAll('.hero:not(.create)').forEach(bindHero);
+
+  const creator = $('creator');
+  creator.addEventListener('click', () => {
+    $('hero-desc').hidden = false;
+    $('hero-make').hidden = false;
+  });
+  $('hero-desc').addEventListener('click', e => e.stopPropagation());
+  $('hero-make').addEventListener('click', async e => {
+    e.stopPropagation();
+    const description = $('hero-desc').value.trim();
+    const st = $('hero-status');
+    if (!description) { setStatus(st, 'Describe the hero first.', 'err'); return; }
+    $('hero-make').disabled = true;
+    setStatus(st, 'The DM is writing the sheet… (about half a minute)');
+    try {
+      const res = await fetch('/api/heroes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setStatus(st, data.detail || 'Something went wrong.', 'err'); $('hero-make').disabled = false; return; }
+      creator.insertAdjacentHTML('beforebegin', heroCard(data, true));
+      bindHero(creator.previousElementSibling);
+      $('hero-desc').value = '';
+      setStatus(st, `${data.name} joins the roster!`, 'ok');
+    } catch (err) {
+      setStatus(st, 'Could not reach the app. Try again.', 'err');
+    }
+    $('hero-make').disabled = false;
+  });
 }
 
 function chosenParty() {

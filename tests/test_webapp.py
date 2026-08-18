@@ -251,6 +251,22 @@ class TestPartySetup(unittest.TestCase):
         sheet = json.loads((self.tmp / "characters" / "pc-b.json").read_text())
         self.assertEqual(sheet["player"], "Olive")
 
+    def test_save_new_hero_assigns_unique_id_and_returns_card(self):
+        sheet = {"name": "Aye", "race": "Elf", "class": "Monk",
+                 "abilities": {"str": 10}, "hp": {"max": 9, "current": 9},
+                 "personality": {"traits": ["Punches first."]}}
+        card = server.save_new_hero(dict(sheet))
+        self.assertEqual(card["id"], "pc-aye")
+        self.assertEqual(card["blurb"], "Punches first.")
+        card2 = server.save_new_hero(dict(sheet))
+        self.assertEqual(card2["id"], "pc-aye-2")  # same name → suffixed id
+        saved = json.loads((self.tmp / "characters" / "pc-aye.json").read_text())
+        self.assertEqual(saved["player"], "")
+
+    def test_save_new_hero_rejects_malformed_sheet(self):
+        with self.assertRaises(Exception):
+            server.save_new_hero({"name": "No Class"})
+
     def test_seat_party_refuses_unknown_id(self):
         with self.assertRaises(Exception):
             server.seat_party([{"id": "pc-ghost"}])

@@ -16,6 +16,7 @@ Opens on: http://localhost:8765
 """
 import asyncio
 import json
+import re
 import ssl
 import sys
 import traceback
@@ -296,6 +297,50 @@ def seat_party(party: list[dict]) -> list[str]:
     CURRENT_FILE.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n",
                             encoding="utf-8")
     return ids
+
+
+def save_new_hero(sheet: dict) -> dict:
+    """Validate a generated sheet, assign a unique id, write it, and return
+    its picker card. Raises HTTPException on a malformed sheet."""
+    if not isinstance(sheet, dict):
+        raise HTTPException(status_code=400, detail="generated sheet is not an object")
+    for key in ("name", "race", "class", "abilities", "hp"):
+        if not sheet.get(key):
+            raise HTTPException(status_code=400,
+                                detail=f"generated sheet is missing '{key}'")
+    slug = re.sub(r"[^a-z0-9]+", "-", sheet["name"].lower()).strip("-") or "hero"
+    pc_id, n = f"pc-{slug}", 2
+    while (CHARACTERS_DIR / f"{pc_id}.json").exists():
+        pc_id, n = f"pc-{slug}-{n}", n + 1
+    sheet["id"] = pc_id
+    sheet.setdefault("player", "")
+    (CHARACTERS_DIR / f"{pc_id}.json").write_text(
+        json.dumps(sheet, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {
+        "id": pc_id,
+        "name": sheet["name"],
+        "race": sheet.get("race", ""),
+        "class": sheet.get("class", ""),
+        "blurb": (sheet.get("personality", {}).get("traits") or [""])[0],
+    }
+
+
+@app.post("/api/heroes")
+async def create_hero(request: Request):
+    """Setup-screen character creation: free-text concept → saved sheet."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    description = str(body.get("description", "")).strip()
+    if not description:
+        raise HTTPException(status_code=400, detail="Describe the hero first.")
+    import agent
+    try:
+        sheet = await asyncio.to_thread(agent.generate_character, description)
+    except agent.DMError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return JSONResponse(save_new_hero(sheet))
 
 
 def check_api_key(key: str) -> dict:
