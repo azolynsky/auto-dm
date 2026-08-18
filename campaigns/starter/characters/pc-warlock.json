@@ -1,0 +1,150 @@
+{
+  "id": "pc-warlock",
+  "name": "Ember Vex",
+  "player": "",
+  "race": "Tiefling",
+  "class": "Warlock",
+  "subclass": null,
+  "level": 1,
+  "xp": 0,
+  "alignment": "Neutral Good",
+  "background": "Hermit",
+  "abilities": {
+    "str": 8,
+    "dex": 12,
+    "con": 14,
+    "int": 14,
+    "wis": 10,
+    "cha": 17
+  },
+  "proficiency_bonus": 2,
+  "save_proficiencies": [
+    "wis",
+    "cha"
+  ],
+  "skills": {
+    "arcana": "proficient",
+    "deception": "proficient",
+    "medicine": "proficient",
+    "religion": "proficient"
+  },
+  "ac": 12,
+  "hp": {
+    "max": 10,
+    "current": 10,
+    "temp": 0
+  },
+  "hit_dice": {
+    "size": "d8",
+    "total": 1,
+    "remaining": 1
+  },
+  "speed": 30,
+  "initiative_bonus": 1,
+  "passive_perception": 10,
+  "languages": [
+    "Common",
+    "Infernal"
+  ],
+  "proficiencies": {
+    "armor": ["light"],
+    "weapons": ["simple"],
+    "tools": ["herbalism kit"]
+  },
+  "features": [
+    {
+      "name": "Darkvision",
+      "source": "Tiefling",
+      "detail": "See in dim light within 60 ft as if bright, darkness as if dim"
+    },
+    {
+      "name": "Hellish Resistance",
+      "source": "Tiefling",
+      "detail": "Resistance to fire damage"
+    },
+    {
+      "name": "Infernal Legacy",
+      "source": "Tiefling",
+      "detail": "Knows the thaumaturgy cantrip (CHA)"
+    },
+    {
+      "name": "Otherworldly Patron",
+      "source": "Warlock",
+      "detail": "Her magic comes from a pact with something ancient that speaks to her in dreams — she is still learning what it wants"
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Eldritch Blast",
+      "type": "ranged spell",
+      "to_hit": "+5",
+      "damage": "1d10 force",
+      "range": "120"
+    },
+    {
+      "name": "Dagger",
+      "type": "melee or thrown",
+      "to_hit": "+3",
+      "damage": "1d4+1 piercing",
+      "range": "20/60",
+      "properties": ["finesse", "light", "thrown"]
+    }
+  ],
+  "spells": {
+    "ability": "cha",
+    "save_dc": 13,
+    "attack_bonus": "+5",
+    "slots": {
+      "1": {
+        "max": 1,
+        "remaining": 1
+      }
+    },
+    "known": [
+      {
+        "name": "Eldritch Blast",
+        "level": 0,
+        "detail": "Ranged spell attack, 120 ft, 1d10 force"
+      },
+      {
+        "name": "Minor Illusion",
+        "level": 0,
+        "detail": "A sound or a small image for 1 minute, 30 ft"
+      },
+      {
+        "name": "Thaumaturgy",
+        "level": 0,
+        "detail": "Minor wonder — booming voice, flickering flames, trembling ground (Tiefling)"
+      },
+      {
+        "name": "Hex",
+        "level": 1,
+        "detail": "Bonus action curse: +1d6 necrotic on her hits, target disadvantage on one ability; concentration"
+      },
+      {
+        "name": "Charm Person",
+        "level": 1,
+        "detail": "WIS save DC 13 or charmed as a friendly acquaintance for 1 hour"
+      }
+    ]
+  },
+  "inventory": [
+    { "item": "Dagger", "qty": 1 },
+    { "item": "Leather armor", "qty": 1 },
+    { "item": "Arcane focus (a ring of dark glass)", "qty": 1 },
+    { "item": "Scholar's pack", "qty": 1 },
+    { "item": "Herbalism kit", "qty": 1 },
+    { "item": "A journal of dreams she doesn't remember having", "qty": 1 }
+  ],
+  "gold": 10,
+  "conditions": [],
+  "exhaustion": 0,
+  "death_saves": { "successes": 0, "failures": 0 },
+  "personality": {
+    "traits": ["Quiet until she isn't; when she speaks, the room listens whether it wants to or not."],
+    "ideals": ["Power you're afraid of is power someone else will use on you."],
+    "bonds": ["The voice in her dreams saved her life once. She intends to find out why."],
+    "flaws": ["Keeps exactly one secret too many, always."]
+  },
+  "notes": ""
+}

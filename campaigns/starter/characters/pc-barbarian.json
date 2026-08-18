@@ -1,0 +1,132 @@
+{
+  "id": "pc-barbarian",
+  "name": "Yara Stonefang",
+  "player": "",
+  "race": "Half-Orc",
+  "class": "Barbarian",
+  "subclass": null,
+  "level": 1,
+  "xp": 0,
+  "alignment": "Chaotic Good",
+  "background": "Outlander",
+  "abilities": {
+    "str": 17,
+    "dex": 13,
+    "con": 15,
+    "int": 8,
+    "wis": 12,
+    "cha": 10
+  },
+  "proficiency_bonus": 2,
+  "save_proficiencies": [
+    "str",
+    "con"
+  ],
+  "skills": {
+    "athletics": "proficient",
+    "survival": "proficient",
+    "intimidation": "proficient",
+    "animal_handling": "proficient"
+  },
+  "ac": 13,
+  "hp": {
+    "max": 14,
+    "current": 14,
+    "temp": 0
+  },
+  "hit_dice": {
+    "size": "d12",
+    "total": 1,
+    "remaining": 1
+  },
+  "speed": 30,
+  "initiative_bonus": 1,
+  "passive_perception": 11,
+  "languages": [
+    "Common",
+    "Orc"
+  ],
+  "proficiencies": {
+    "armor": ["light", "medium", "shields"],
+    "weapons": ["simple", "martial"],
+    "tools": []
+  },
+  "features": [
+    {
+      "name": "Darkvision",
+      "source": "Half-Orc",
+      "detail": "See in dim light within 60 ft as if bright, darkness as if dim"
+    },
+    {
+      "name": "Relentless Endurance",
+      "source": "Half-Orc",
+      "detail": "When reduced to 0 HP but not killed outright, drop to 1 HP instead",
+      "uses": {
+        "max": 1,
+        "remaining": 1,
+        "per": "long rest"
+      }
+    },
+    {
+      "name": "Savage Attacks",
+      "source": "Half-Orc",
+      "detail": "On a melee weapon crit, roll one extra weapon damage die"
+    },
+    {
+      "name": "Rage",
+      "source": "Barbarian",
+      "detail": "Bonus action: +2 melee damage, advantage on STR checks/saves, resistance to bludgeoning/piercing/slashing; lasts 1 minute",
+      "uses": {
+        "max": 2,
+        "remaining": 2,
+        "per": "long rest"
+      }
+    },
+    {
+      "name": "Unarmored Defense",
+      "source": "Barbarian",
+      "detail": "No armor: AC = 10 + DEX mod + CON mod"
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Greataxe",
+      "type": "melee",
+      "to_hit": "+5",
+      "damage": "1d12+3 slashing",
+      "properties": ["heavy", "two-handed"]
+    },
+    {
+      "name": "Handaxe",
+      "type": "melee or thrown",
+      "to_hit": "+5",
+      "damage": "1d6+3 slashing",
+      "range": "20/60"
+    }
+  ],
+  "spells": {
+    "ability": null,
+    "save_dc": null,
+    "attack_bonus": null,
+    "slots": {},
+    "known": []
+  },
+  "inventory": [
+    { "item": "Greataxe", "qty": 1 },
+    { "item": "Handaxes", "qty": 2 },
+    { "item": "Explorer's pack", "qty": 1 },
+    { "item": "Hunting trap", "qty": 1 },
+    { "item": "A wolf-fang necklace, one fang for every mountain she's climbed", "qty": 1 }
+  ],
+  "gold": 10,
+  "conditions": [],
+  "exhaustion": 0,
+  "death_saves": { "successes": 0, "failures": 0 },
+  "personality": {
+    "traits": ["Laughs loudest, hits hardest, and is impossibly gentle with small animals."],
+    "ideals": ["The strongest person in the room should be the safest to stand next to."],
+    "bonds": ["Her mountain clan sent her out to find what the thunder on the horizon means; she won't return without an answer."],
+    "flaws": ["Believes every problem has a wall she can break through it — sometimes there isn't a wall."]
+  },
+  "notes": ""
+}

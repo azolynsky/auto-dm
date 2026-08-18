@@ -1,0 +1,133 @@
+{
+  "id": "pc-paladin",
+  "name": "Balasar Dawnshield",
+  "player": "",
+  "race": "Gold Dragonborn",
+  "class": "Paladin",
+  "subclass": null,
+  "level": 1,
+  "xp": 0,
+  "alignment": "Lawful Good",
+  "background": "Squire",
+  "abilities": {
+    "str": 16,
+    "dex": 10,
+    "con": 13,
+    "int": 8,
+    "wis": 12,
+    "cha": 16
+  },
+  "proficiency_bonus": 2,
+  "save_proficiencies": [
+    "wis",
+    "cha"
+  ],
+  "skills": {
+    "athletics": "proficient",
+    "intimidation": "proficient",
+    "persuasion": "proficient",
+    "religion": "proficient"
+  },
+  "ac": 18,
+  "hp": {
+    "max": 11,
+    "current": 11,
+    "temp": 0
+  },
+  "hit_dice": {
+    "size": "d10",
+    "total": 1,
+    "remaining": 1
+  },
+  "speed": 30,
+  "initiative_bonus": 0,
+  "passive_perception": 11,
+  "languages": [
+    "Common",
+    "Draconic"
+  ],
+  "proficiencies": {
+    "armor": ["light", "medium", "heavy", "shields"],
+    "weapons": ["simple", "martial"],
+    "tools": []
+  },
+  "features": [
+    {
+      "name": "Fire Breath",
+      "source": "Gold Dragonborn",
+      "detail": "Action: 15-ft cone of fire, DEX save DC 11, 2d6 fire (half on save)",
+      "uses": {
+        "max": 1,
+        "remaining": 1,
+        "per": "short rest"
+      }
+    },
+    {
+      "name": "Fire Resistance",
+      "source": "Gold Dragonborn",
+      "detail": "Resistance to fire damage"
+    },
+    {
+      "name": "Divine Sense",
+      "source": "Paladin",
+      "detail": "Action: sense celestials, fiends, and undead within 60 ft until end of next turn",
+      "uses": {
+        "max": 4,
+        "remaining": 4,
+        "per": "long rest"
+      }
+    },
+    {
+      "name": "Lay on Hands",
+      "source": "Paladin",
+      "detail": "Touch: restore HP from a pool of 5 per day (5 x paladin level)",
+      "uses": {
+        "max": 5,
+        "remaining": 5,
+        "per": "long rest"
+      }
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Longsword",
+      "type": "melee",
+      "to_hit": "+5",
+      "damage": "1d8+3 slashing (1d10+3 two-handed)",
+      "properties": ["versatile"]
+    },
+    {
+      "name": "Javelin",
+      "type": "melee or thrown",
+      "to_hit": "+5",
+      "damage": "1d6+3 piercing",
+      "range": "30/120"
+    }
+  ],
+  "spells": {
+    "ability": null,
+    "save_dc": null,
+    "attack_bonus": null,
+    "slots": {},
+    "known": []
+  },
+  "inventory": [
+    { "item": "Longsword", "qty": 1 },
+    { "item": "Shield (sunburst emblem)", "qty": 1 },
+    { "item": "Chain mail", "qty": 1 },
+    { "item": "Javelins", "qty": 3 },
+    { "item": "Explorer's pack", "qty": 1 },
+    { "item": "A knight's gauntlet that isn't his — yet", "qty": 1 }
+  ],
+  "gold": 10,
+  "conditions": [],
+  "exhaustion": 0,
+  "death_saves": { "successes": 0, "failures": 0 },
+  "personality": {
+    "traits": ["Stands between danger and everyone else without being asked."],
+    "ideals": ["An oath isn't words — it's what you do when it costs you."],
+    "bonds": ["The knight who trained him fell protecting a village; he carries her gauntlet until he's earned it."],
+    "flaws": ["Cannot walk past someone in trouble, even when it's obviously a trap."]
+  },
+  "notes": ""
+}
