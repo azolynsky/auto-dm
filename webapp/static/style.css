@@ -719,12 +719,6 @@ blockquote.feed-entry.feed-type-player {
   font-style: italic;
 }
 
-.dm-thinking-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .dm-steps {
   display: flex;
   flex-direction: column;
@@ -748,13 +742,6 @@ blockquote.feed-entry.feed-type-player {
   display: inline-block;
   color: var(--accent);
   animation: dm-die-spin 1.2s linear infinite;
-}
-
-.dm-die {
-  display: inline-block;
-  font-size: 24px;
-  color: var(--accent);
-  animation: dm-die-spin 1.6s linear infinite;
 }
 
 @keyframes dm-die-spin {

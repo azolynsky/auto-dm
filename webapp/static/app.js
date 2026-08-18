@@ -572,18 +572,14 @@ function buildFullSheet(char) {
 let _lastFeedLocation = null;
 const _seenFeedIds = new Set();
 
-// "DM is thinking" indicator — shown while the last feed entry is a player
-// message (the DM mirrors player input immediately, then responds later).
-// The real work log (renderDmActivity) fills in underneath.
+// Work-log row at the foot of the feed — empty until the first activity step
+// lands (renderDmActivity fills it), so it never says anything the step list
+// doesn't.
 function showDmThinking() {
   const container = document.getElementById('feed-entries');
   if (document.getElementById('dm-thinking')) return;
   const row = el('div', 'dm-thinking');
   row.id = 'dm-thinking';
-  const head = el('div', 'dm-thinking-head');
-  head.appendChild(el('span', 'dm-die', '↻'));
-  head.appendChild(el('span', 'dm-phrase', 'The DM is thinking…'));
-  row.appendChild(head);
   const steps = el('div', 'dm-steps');
   steps.id = 'dm-steps';
   row.appendChild(steps);
@@ -923,22 +919,13 @@ async function saveSettings() {
 // A turn can take a while (the DM reads files and rolls dice before it writes),
 // so the chat says so rather than looking broken.
 
-function setThinking(busy, note) {
+// Error notes under the chat box. Busy state is the activity log in the feed
+// (SSE dm_activity) — no polling, no second "thinking" message.
+function sayNote(note) {
   const el = document.getElementById('say-thinking');
-  el.textContent = note || (busy ? 'The DM is thinking…' : '');
-  el.classList.toggle('hidden', !busy && !note);
-  if (note) setTimeout(() => setThinking(false), 6000);
-}
-
-async function pollThinking() {
-  try {
-    const res = await fetch('/api/dm');
-    if (res.ok) {
-      const { busy, queued } = await res.json();
-      setThinking(busy || queued > 0);
-    }
-  } catch (err) { /* transient — the next poll covers it */ }
-  setTimeout(pollThinking, 2000);
+  el.textContent = note || '';
+  el.classList.toggle('hidden', !note);
+  if (note) setTimeout(() => sayNote(''), 6000);
 }
 
 // ── Developer settings (hidden unless the URL carries #dev) ────────────────────
@@ -1105,16 +1092,14 @@ function initModals() {
       });
       if (res.ok) {
         sayText.value = '';
-        setThinking(true);
       } else {
         const data = await res.json().catch(() => ({}));
-        setThinking(false, data.detail || 'The DM could not take that.');
+        sayNote(data.detail || 'The DM could not take that.');
       }
     } finally {
       btn.disabled = false;
     }
   });
-  pollThinking();
 
   // Sidebar drawer — open by default on wide screens (it docks there, so the
   // chronicle keeps full width), collapsed on smaller ones. An explicit
