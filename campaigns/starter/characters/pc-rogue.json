@@ -1,21 +1,21 @@
 {
   "id": "pc-rogue",
-  "name": "Dax Tumblestone",
+  "name": "Kestrel Vane",
   "player": "",
-  "race": "Rock Gnome",
+  "race": "Half-Elf",
   "class": "Rogue",
   "subclass": null,
   "level": 1,
   "xp": 0,
   "alignment": "Chaotic Good",
-  "background": "Urchin",
+  "background": "Charlatan",
   "abilities": {
-    "str": 8,
+    "str": 9,
     "dex": 16,
     "con": 12,
     "int": 13,
     "wis": 12,
-    "cha": 14
+    "cha": 15
   },
   "proficiency_bonus": 2,
   "save_proficiencies": [
@@ -24,10 +24,11 @@
   ],
   "skills": {
     "stealth": "expertise",
-    "sleight_of_hand": "expertise",
+    "deception": "expertise",
     "acrobatics": "proficient",
+    "sleight_of_hand": "proficient",
     "perception": "proficient",
-    "deception": "proficient",
+    "persuasion": "proficient",
     "insight": "proficient"
   },
   "ac": 14,
@@ -41,34 +42,29 @@
     "total": 1,
     "remaining": 1
   },
-  "speed": 25,
+  "speed": 30,
   "initiative_bonus": 3,
   "passive_perception": 13,
   "languages": [
     "Common",
-    "Gnomish",
+    "Elvish",
     "Thieves' Cant"
   ],
   "proficiencies": {
     "armor": ["light"],
     "weapons": ["simple", "hand crossbows", "longswords", "rapiers", "shortswords"],
-    "tools": ["thieves' tools", "tinker's tools"]
+    "tools": ["thieves' tools", "disguise kit", "forgery kit"]
   },
   "features": [
     {
       "name": "Darkvision",
-      "source": "Gnome",
+      "source": "Half-Elf",
       "detail": "See in dim light within 60 ft as if bright, darkness as if dim"
     },
     {
-      "name": "Gnome Cunning",
-      "source": "Gnome",
-      "detail": "Advantage on INT, WIS, and CHA saves against magic"
-    },
-    {
-      "name": "Artificer's Lore",
-      "source": "Rock Gnome",
-      "detail": "Double proficiency on History checks about magical or mechanical devices"
+      "name": "Fey Ancestry",
+      "source": "Half-Elf",
+      "detail": "Advantage on saves vs being charmed; magic can't put him to sleep"
     },
     {
       "name": "Sneak Attack",
@@ -78,23 +74,29 @@
     {
       "name": "Expertise",
       "source": "Rogue",
-      "detail": "Double proficiency: Stealth, Sleight of Hand"
+      "detail": "Double proficiency: Stealth, Deception"
+    },
+    {
+      "name": "False Identity",
+      "source": "Charlatan",
+      "detail": "A second, documented identity — papers, contacts, and a name that opens doors his own can't"
     }
   ],
   "attacks": [
     {
-      "name": "Shortsword",
+      "name": "Rapier",
       "type": "melee",
       "to_hit": "+5",
-      "damage": "1d6+3 piercing",
-      "properties": ["finesse", "light"]
+      "damage": "1d8+3 piercing",
+      "properties": ["finesse"]
     },
     {
-      "name": "Shortbow",
-      "type": "ranged",
+      "name": "Dagger",
+      "type": "melee or thrown",
       "to_hit": "+5",
-      "damage": "1d6+3 piercing",
-      "range": "80/320"
+      "damage": "1d4+3 piercing",
+      "range": "20/60",
+      "properties": ["finesse", "light", "thrown"]
     }
   ],
   "spells": {
@@ -105,23 +107,23 @@
     "known": []
   },
   "inventory": [
-    { "item": "Shortsword", "qty": 1 },
-    { "item": "Shortbow", "qty": 1 },
-    { "item": "Arrows", "qty": 20 },
+    { "item": "Rapier", "qty": 1 },
+    { "item": "Daggers", "qty": 2 },
     { "item": "Leather armor", "qty": 1 },
     { "item": "Thieves' tools", "qty": 1 },
+    { "item": "Disguise kit", "qty": 1 },
     { "item": "Burglar's pack", "qty": 1 },
-    { "item": "A small clockwork mouse he built himself", "qty": 1 }
+    { "item": "A sealed letter he has never opened, addressed in his mother's hand", "qty": 1 }
   ],
-  "gold": 10,
+  "gold": 15,
   "conditions": [],
   "exhaustion": 0,
   "death_saves": { "successes": 0, "failures": 0 },
   "personality": {
-    "traits": ["Pockets full of interesting junk; narrates his own lockpicking under his breath."],
-    "ideals": ["Nobody gets left behind — he knows what that feels like."],
-    "bonds": ["The clockwork mouse is the only thing he kept from before the streets."],
-    "flaws": ["If it isn't nailed down, it was clearly a gift."]
+    "traits": ["Says less than he knows; smiles like he's already three moves ahead."],
+    "ideals": ["Take from those who'd never miss it; never from those who would."],
+    "bonds": ["Someone erased his family's name from the city records. He's going to find out who."],
+    "flaws": ["Can't resist a locked door or a rigged game — especially when he should walk away."]
   },
   "notes": ""
 }
