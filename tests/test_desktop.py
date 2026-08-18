@@ -232,6 +232,13 @@ class TestRoleAgents(DesktopTestCase):
         self.assertIn("error: unknown role", self.agent.consult_role("dm", "x"))
         self.assertIn("error: unknown role", self.agent.consult_role("wizard", "x"))
 
+    def test_env_model_override(self):
+        os.environ["AUTODM_MODEL"] = "sandbox/model"
+        try:
+            self.assertEqual(self.config.model(), "sandbox/model")
+        finally:
+            os.environ.pop("AUTODM_MODEL")
+
     def test_role_model_falls_back_to_global(self):
         self.config.APP_DIR.mkdir(parents=True)
         self.config.save(model="global/model", role_models={"narrator": "cheap/model"})

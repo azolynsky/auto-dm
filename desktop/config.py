@@ -106,7 +106,9 @@ def api_key() -> str:
 
 
 def model() -> str:
-    return load().get("model") or DEFAULT_MODEL
+    # AUTODM_MODEL mirrors OPENROUTER_API_KEY: an env override so tools like
+    # tools/sandbox.py can pit models against each other without touching config.
+    return os.environ.get("AUTODM_MODEL") or load().get("model") or DEFAULT_MODEL
 
 
 def is_ready() -> bool:
