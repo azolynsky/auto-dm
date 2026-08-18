@@ -574,18 +574,7 @@ const _seenFeedIds = new Set();
 
 // "DM is thinking" indicator — shown while the last feed entry is a player
 // message (the DM mirrors player input immediately, then responds later).
-const DM_PHRASES = [
-  'The DM consults the ancient tomes...',
-  'The dice are tumbling...',
-  'The DM peers into the crystal ball...',
-  'Somewhere, a goblin is deciding what to do...',
-  'The fates are being consulted...',
-  'The DM strokes an imaginary beard...',
-  'Rolling behind the screen...',
-  'The world holds its breath...',
-];
-let _dmPhraseTimer = null;
-
+// The real work log (renderDmActivity) fills in underneath.
 function showDmThinking() {
   const container = document.getElementById('feed-entries');
   if (document.getElementById('dm-thinking')) return;
@@ -593,19 +582,13 @@ function showDmThinking() {
   row.id = 'dm-thinking';
   const head = el('div', 'dm-thinking-head');
   head.appendChild(el('span', 'dm-die', '⟡'));
-  const phrase = el('span', 'dm-phrase', DM_PHRASES[0]);
-  head.appendChild(phrase);
+  head.appendChild(el('span', 'dm-phrase', 'The DM is thinking…'));
   row.appendChild(head);
   const steps = el('div', 'dm-steps');
   steps.id = 'dm-steps';
   row.appendChild(steps);
   container.appendChild(row);
   container.scrollTop = container.scrollHeight;
-  let i = 1;
-  _dmPhraseTimer = setInterval(() => {
-    phrase.textContent = DM_PHRASES[i % DM_PHRASES.length];
-    i++;
-  }, 4000);
 }
 
 // Live activity from the DM's turn (SSE dm_activity): which role is at work,
@@ -635,10 +618,6 @@ function renderDmActivity(activity) {
 function hideDmThinking() {
   const row = document.getElementById('dm-thinking');
   if (row) row.remove();
-  if (_dmPhraseTimer) {
-    clearInterval(_dmPhraseTimer);
-    _dmPhraseTimer = null;
-  }
 }
 
 function appendFeedEntry(entry) {
