@@ -86,6 +86,9 @@ DEV_DEFAULTS = {
     },
     "history_tokens": 120_000,
     "recursion_limit": 80,
+    # Stream the DM's raw output, tool calls and results into the activity
+    # ticker. Spoils secrets on the shared screen — for testing only.
+    "verbose": False,
 }
 
 

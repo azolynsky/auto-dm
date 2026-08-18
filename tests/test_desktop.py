@@ -101,6 +101,34 @@ class TestActivity(DesktopTestCase):
         self.assertFalse(data["busy"])
         self.assertEqual(data["steps"], [])
 
+    def test_verbose_traces_messages(self):
+        from types import SimpleNamespace
+        self.config.APP_DIR.mkdir(parents=True)
+        self.config.save(verbose=True)
+        self.agent._trace(SimpleNamespace(
+            type="ai", content="I weigh the goblin's options.",
+            tool_calls=[{"name": "run_tool",
+                         "args": {"tool": "dice.py", "argv": ["1d20"]},
+                         "id": "call1"}]))
+        self.agent._trace(SimpleNamespace(type="tool", content='{"total": 14}',
+                                          tool_calls=None))
+        steps = self._read()["steps"]
+        self.assertIn("DM: I weigh the goblin's options.", steps)
+        self.assertTrue(any(s.startswith("→ run_tool") and "dice.py" in s
+                            for s in steps))
+        self.assertIn('← {"total": 14}', steps)
+
+    def test_verbose_off_by_default(self):
+        from types import SimpleNamespace
+        self.agent._trace(SimpleNamespace(type="ai", content="hidden",
+                                          tool_calls=None))
+        # _trace itself doesn't gate on verbose — _stream_invoke does — but the
+        # ticker window must stay at 8 canned steps when verbose is off.
+        for _ in range(12):
+            self.agent.run_tool("dice.py", ["1d20"])
+            self.agent.read_file("rules/README.md")
+        self.assertLessEqual(len(self._read()["steps"]), 8)
+
 
 class TestWriteGuard(DesktopTestCase):
     def test_campaign_writes_allowed(self):

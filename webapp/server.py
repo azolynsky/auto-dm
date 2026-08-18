@@ -476,6 +476,8 @@ async def post_dev(request: Request):
     for field in ("history_tokens", "recursion_limit"):
         if field in body and not (isinstance(body[field], int) and body[field] > 0):
             raise HTTPException(status_code=400, detail=f"{field} must be a positive int")
+    if "verbose" in body and not isinstance(body["verbose"], bool):
+        raise HTTPException(status_code=400, detail="verbose must be a boolean")
 
     appconfig.save(**body)
     return JSONResponse({**appconfig.dev_settings(),

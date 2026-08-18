@@ -601,7 +601,9 @@ function renderDmActivity(activity) {
   const nearBottom =
     container.scrollHeight - container.scrollTop - container.clientHeight < 120;
   stepsEl.innerHTML = '';
-  const recent = (activity.steps || []).slice(-4);
+  // Verbose dev mode streams raw model/tool lines — show them all, not just 4.
+  const steps = activity.steps || [];
+  const recent = steps.some(s => /^(DM:|→|←)/.test(s)) ? steps : steps.slice(-4);
   recent.forEach((s, i) => {
     const current = i === recent.length - 1;
     const row = el('div', `dm-step ${current ? 'current' : 'done'}`);
@@ -997,6 +999,12 @@ function renderDev(data) {
       <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code> for more prompt choices —
       see <code>prompts/README.md</code>.</p>
     ${rows}
+    <label class="setting-row">
+      <span class="setting-label">Verbose</span>
+      <input type="checkbox" id="dev-verbose" ${data.verbose ? 'checked' : ''}>
+      <span class="setting-desc">Stream the DM's raw output, tool calls and
+        results into the thinking ticker. Spoils secrets — testing only.</span>
+    </label>
     <div class="settings-actions">
       <span id="dev-status"></span>
       <button id="dev-reset">New DM thread</button>
@@ -1022,7 +1030,8 @@ async function saveDev() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompts: chosen, role_models: roleModels,
-                             model: document.getElementById('dev-model').value }),
+                             model: document.getElementById('dev-model').value,
+                             verbose: document.getElementById('dev-verbose').checked }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'save failed');

@@ -101,6 +101,45 @@ TOOL_ACTIVITY = {
 _steps: list[str] = []
 
 
+def _verbose() -> bool:
+    """Dev setting: mirror raw model output, tool calls and results into the
+    activity ticker. Spoils secrets on the shared screen — testing only."""
+    return bool(config.load().get("verbose"))
+
+
+def _clip(value) -> str:
+    return " ".join(str(value).split())[:400]
+
+
+def _trace(message) -> None:
+    """One activity line per streamed message when verbose is on."""
+    kind = getattr(message, "type", "")
+    if kind == "ai":
+        content = message.content
+        if not isinstance(content, str):
+            content = " ".join(p.get("text", "") for p in content
+                               if isinstance(p, dict))
+        if content.strip():
+            _activity(f"DM: {_clip(content)}")
+        for tc in getattr(message, "tool_calls", None) or []:
+            _activity(f"→ {tc['name']} {_clip(json.dumps(tc['args'], ensure_ascii=False))}")
+    elif kind == "tool":
+        _activity(f"← {_clip(message.content)}")
+
+
+def _stream_invoke(graph, inputs, cfg, baseline: int):
+    """graph.invoke, but when verbose each message past `baseline` (the count
+    already in the thread, input included) is traced as it lands."""
+    if not _verbose():
+        return graph.invoke(inputs, config=cfg)
+    state, seen = None, baseline
+    for state in graph.stream(inputs, config=cfg, stream_mode="values"):
+        for m in state["messages"][seen:]:
+            _trace(m)
+        seen = max(seen, len(state["messages"]))
+    return state
+
+
 def _activity(step: str | None, *, busy: bool = True) -> None:
     global _steps
     if not busy:
@@ -113,7 +152,8 @@ def _activity(step: str | None, *, busy: bool = True) -> None:
     try:
         path = config.CAMPAIGN / "state" / "dm-activity.json"
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps({"busy": busy, "steps": _steps[-8:]}),
+        shown = _steps[-30:] if _verbose() else _steps[-8:]
+        path.write_text(json.dumps({"busy": busy, "steps": shown}),
                         encoding="utf-8")
     except OSError:
         pass  # cosmetics only — never fail a turn over the spinner
@@ -354,9 +394,11 @@ def consult_role(role: str, task: str) -> str:
         return "error: task is empty — tell the specialist what you need"
     _activity(ROLE_ACTIVITY.get(role, "The DM is consulting a specialist"))
     try:
-        result = _build_sub_agent(role).invoke(
+        result = _stream_invoke(
+            _build_sub_agent(role),
             {"messages": [{"role": "user", "content": task}]},
-            config={"recursion_limit": SUB_RECURSION_LIMIT})
+            {"recursion_limit": SUB_RECURSION_LIMIT},
+            baseline=1)
     except Exception as e:
         if type(e).__name__ == "GraphRecursionError":
             return f"error: the {role} got stuck — break the task into smaller pieces"
@@ -649,7 +691,13 @@ def run_turn(player_message: str) -> dict:
     _activity("The DM is thinking it over")
     try:
         try:
-            result = agent.invoke({"messages": turn}, config=run_config)
+            # Baseline = what's already in the thread plus this turn's input,
+            # so verbose tracing starts at the first new AI message. Re-read
+            # after the dangling-call heal above, which edits the thread.
+            baseline = len((agent.get_state(run_config).values or {})
+                           .get("messages") or []) + len(turn)
+            result = _stream_invoke(agent, {"messages": turn}, run_config,
+                                    baseline)
         except DMError:
             raise
         except Exception as e:
