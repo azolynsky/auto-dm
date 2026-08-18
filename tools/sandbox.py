@@ -36,6 +36,8 @@ import config  # noqa: E402
 DEFAULT_MODELS = [
     "~deepseek/deepseek-v4-flash-latest",
     "openai/gpt-5.6-luna-pro",
+    "google/gemini-3.1-flash-lite",
+    "anthropic/claude-haiku-4.5",
 ]
 
 TURN_TIMEOUT = 600  # seconds per model

@@ -59,6 +59,7 @@ MODEL_CHOICES = [
     ("anthropic/claude-sonnet-5", "Claude Sonnet 5 — recommended, best balance"),
     ("anthropic/claude-opus-5", "Claude Opus 5 — sharpest DM, costs more"),
     ("anthropic/claude-haiku-4.5", "Claude Haiku 4.5 — cheapest, simpler scenes"),
+    ("google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite — very cheap, good for background roles"),
     ("google/gemini-3.1-pro-preview", "Gemini 3.1 Pro"),
     ("openai/gpt-5.2", "GPT-5.2"),
 ]
