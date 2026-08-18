@@ -166,6 +166,49 @@ class TestToolWhitelist(DesktopTestCase):
         self.assertEqual(json.loads(feed[-1])["text"], "The gate groans open.")
 
 
+try:
+    import langchain_core  # noqa: F401
+    HAVE_LANGCHAIN = True
+except ImportError:
+    HAVE_LANGCHAIN = False
+
+
+@unittest.skipUnless(HAVE_LANGCHAIN, "langchain not installed")
+class TestPromptCache(DesktopTestCase):
+    """Cache breakpoints: placed on the newest markable messages, never on
+    empty content, and surviving serialization into the request payload —
+    a marker langchain silently drops caches nothing."""
+
+    def _msgs(self):
+        from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+        return [HumanMessage(content="attack the goblin"),
+                AIMessage(content="", tool_calls=[
+                    {"name": "run_tool", "args": {}, "id": "c1"}]),
+                ToolMessage(content="rolled 17", tool_call_id="c1")]
+
+    def test_marks_newest_two_and_skips_empty(self):
+        msgs = self._msgs()
+        marked = self.agent._mark_cache(msgs)
+        self.assertEqual(marked[2].content[-1]["cache_control"],
+                         self.agent.CACHE_CONTROL)   # tool result
+        self.assertEqual(marked[0].content[-1]["cache_control"],
+                         self.agent.CACHE_CONTROL)   # human, skipping empty AI
+        self.assertEqual(marked[1].content, "")      # empty AIMessage untouched
+        self.assertEqual(msgs[0].content, "attack the goblin")  # originals intact
+
+    def test_cache_control_reaches_the_payload(self):
+        from langchain_openai import ChatOpenAI
+        model = ChatOpenAI(model="x", api_key="k", base_url="http://localhost")
+        payload = model._get_request_payload(
+            [self.agent._cached_system("manual")] +
+            self.agent._mark_cache(self._msgs()))
+        system, human = payload["messages"][0], payload["messages"][1]
+        self.assertEqual(system["content"][0]["cache_control"],
+                         self.agent.CACHE_CONTROL)
+        self.assertEqual(human["content"][0]["cache_control"],
+                         self.agent.CACHE_CONTROL)
+
+
 class TestRoleAgents(DesktopTestCase):
     """consult_role subagents: the narrator's tool-level motivations firewall,
     per-role write access, and per-role model resolution."""

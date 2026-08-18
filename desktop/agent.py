@@ -309,7 +309,13 @@ def _build_sub_agent(role: str):
                              "X-Title": "Auto-DM"})
         _sub_agents[key] = create_react_agent(
             model, role_tools(role),
-            prompt=prompts.resolve(role).read_text(encoding="utf-8"))
+            prompt=_cached_system(prompts.resolve(role).read_text(encoding="utf-8")),
+            # No trimming (consults are one-shot), but the same rolling cache
+            # breakpoints: a consult that reads five entity files re-sends
+            # them on every step, and repeat consults of the same role within
+            # the cache TTL start from a warm system prompt.
+            pre_model_hook=lambda state: {
+                "llm_input_messages": _mark_cache(state["messages"])})
     return _sub_agents[key]
 
 
@@ -361,6 +367,48 @@ def system_prompt() -> str:
     adapter = prompts.resolve("dm").read_text(encoding="utf-8")
     manual = (config.BUNDLE / "CLAUDE.md").read_text(encoding="utf-8")
     return adapter + "\n" + manual
+
+
+# ── Prompt caching ────────────────────────────────────────────────────────────
+# A ReAct turn re-sends the whole prompt on every tool round trip, so caching
+# is the difference between paying for CLAUDE.md + history once per turn and
+# once per step. OpenRouter forwards Anthropic-style cache_control breakpoints
+# (reads bill at ~10% of input); providers with automatic prefix caching
+# (OpenAI, Gemini) ignore the markers, so one code path serves every model.
+
+CACHE_CONTROL = {"type": "ephemeral"}
+
+
+def _cached_system(text: str):
+    """A system message whose whole text sits behind a cache breakpoint."""
+    from langchain_core.messages import SystemMessage
+    return SystemMessage(content=[
+        {"type": "text", "text": text, "cache_control": CACHE_CONTROL}])
+
+
+def _mark_cache(messages: list, spots: int = 2) -> list:
+    """Copy `messages` with cache breakpoints on the newest `spots` markable
+    ones (non-empty text content). Two rolling breakpoints let Anthropic's
+    backward prefix lookup find last step's cache even after a long tool
+    result lands between them. Never mutates the checkpointed originals."""
+    marked = list(messages)
+    left = spots
+    for i in range(len(marked) - 1, -1, -1):
+        if left == 0:
+            break
+        content = marked[i].content
+        if isinstance(content, str) and content.strip():
+            new = [{"type": "text", "text": content,
+                    "cache_control": CACHE_CONTROL}]
+        elif (isinstance(content, list) and content
+                and isinstance(content[-1], dict)
+                and content[-1].get("type") == "text" and content[-1].get("text")):
+            new = content[:-1] + [{**content[-1], "cache_control": CACHE_CONTROL}]
+        else:
+            continue  # empty content (e.g. a pure tool-call AIMessage) — skip
+        marked[i] = marked[i].model_copy(update={"content": new})
+        left -= 1
+    return marked
 
 
 BRIEF_FILES = ("sessions/recap.md", "state/current.json", "state/quests.json",
@@ -432,19 +480,30 @@ def build_agent():
     budget = int(cfg.get("history_tokens") or HISTORY_TOKENS)
 
     def keep_recent(state):
-        """Trim history to the token budget without orphaning a tool result.
+        """Trim history to the token budget without orphaning a tool result,
+        then place the rolling cache breakpoints.
+
+        Hysteresis, not a hard ceiling: trimming every call moves the window
+        forward a little each turn, which changes the prompt prefix and voids
+        the provider's prompt cache on the entire history. Instead history
+        grows untouched until it exceeds the budget, then gets cut hard to
+        half — one cache re-write, then a long stable stretch.
 
         end_on=("human","tool") plus start_on="human" is what keeps every tool
         message attached to the assistant turn that requested it — a dangling
         tool result is a 400 from every provider.
         """
-        return {"llm_input_messages": trim_messages(
-            state["messages"], max_tokens=budget,
-            token_counter=count_tokens_approximately,
-            strategy="last", start_on="human", end_on=("human", "tool"),
-            include_system=False, allow_partial=False)}
+        messages = state["messages"]
+        if count_tokens_approximately(messages) > budget:
+            messages = trim_messages(
+                messages, max_tokens=budget // 2,
+                token_counter=count_tokens_approximately,
+                strategy="last", start_on="human", end_on=("human", "tool"),
+                include_system=False, allow_partial=False)
+        return {"llm_input_messages": _mark_cache(messages)}
 
-    _agent = create_react_agent(model, DM_TOOLS, prompt=system_prompt(),
+    _agent = create_react_agent(model, DM_TOOLS,
+                                prompt=_cached_system(system_prompt()),
                                 pre_model_hook=keep_recent,
                                 checkpointer=_checkpointer())
     _agent_key = key
@@ -495,7 +554,7 @@ def generate_character(description: str) -> dict:
     on the setup screen, before the table exists."""
     if not config.api_key():
         raise DMError("No OpenRouter API key is set yet — open Settings and paste one.")
-    from langchain_core.messages import HumanMessage, SystemMessage
+    from langchain_core.messages import HumanMessage
     from langchain_openai import ChatOpenAI
 
     sheets = sorted((config.CAMPAIGN / "characters").glob("pc-*.json"))
@@ -526,7 +585,7 @@ def generate_character(description: str) -> dict:
     last_err = None
     for _ in range(2):
         try:
-            raw = model.invoke([SystemMessage(content=system),
+            raw = model.invoke([_cached_system(system),
                                 HumanMessage(content="Player's concept: " + description)])
         except Exception as e:
             raise _friendly(e) from e
