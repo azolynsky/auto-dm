@@ -75,6 +75,67 @@ def resolve_path(path: str, *, write: bool) -> Path:
     return target
 
 
+# ── Live activity (player-safe) ───────────────────────────────────────────────
+# While a turn runs, every tool call publishes a fixed label to
+# state/dm-activity.json; the server streams it to the chat so the table sees
+# which role is working. Labels are canned strings only — never file paths,
+# dice labels, or arguments — so nothing here can leak a secret or an outcome.
+
+ROLE_ACTIVITY = {
+    "director": "The Director is deciding what the world does",
+    "rules-lawyer": "The Rules Lawyer is checking the rules",
+    "narrator": "The Narrator is finding the words",
+    "bookkeeper": "The Bookkeeper is opening the ledger",
+    "continuity-checker": "The Continuity Checker is comparing notes",
+    "session-prep": "The DM is sketching what comes next",
+    "prose-editor": "The Prose Editor is polishing the wording",
+}
+
+TOOL_ACTIVITY = {
+    "dice.py": "Rolling dice",
+    "check_resolver.py": "Rolling a check",
+    "combat_tracker.py": "Running the combat tracker",
+    "char_update.py": "Updating a character sheet",
+    "narrate.py": "Writing the scene",
+    "budget_recap.py": "Reviewing the story so far",
+}
+
+_steps: list[str] = []
+
+
+def _activity(step: str | None, *, busy: bool = True) -> None:
+    global _steps
+    if not busy:
+        _steps = []
+    elif step and (not _steps or _steps[-1] != step):
+        _steps.append(step)
+        del _steps[:-30]
+    else:
+        return  # nothing new to show
+    try:
+        path = config.CAMPAIGN / "state" / "dm-activity.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"busy": busy, "steps": _steps[-8:]}),
+                        encoding="utf-8")
+    except OSError:
+        pass  # cosmetics only — never fail a turn over the spinner
+
+
+def _read_activity(path: str) -> str | None:
+    p = config.norm_path(path)
+    if p.startswith(".claude/agents/"):
+        return ROLE_ACTIVITY.get(Path(p).stem, "The DM is consulting a specialist")
+    if p.startswith(".claude/skills/"):
+        return "The DM is checking a procedure"
+    if p.startswith("rules/"):
+        return "Consulting the rulebooks"
+    if p.startswith("campaign/characters/"):
+        return "Reviewing a character sheet"
+    if p.startswith("campaign/"):
+        return "Reading the campaign notes"
+    return None
+
+
 # ── Tools ─────────────────────────────────────────────────────────────────────
 # Docstrings are what the model sees, so they carry the usage rules.
 
@@ -88,6 +149,7 @@ def _tool_error(e: Exception) -> str:
 def read_file(path: str) -> str:
     """Read a text file, e.g. campaign/state/current.json, rules/srd-reference.md,
     or .claude/agents/director.md. Paths are repo-relative, never absolute."""
+    _activity(_read_activity(path))
     try:
         target = prompts.override_for(path) or resolve_path(path, write=False)
         text = target.read_text(encoding="utf-8", errors="replace")
@@ -101,6 +163,7 @@ def read_file(path: str) -> str:
 def write_file(path: str, content: str) -> str:
     """Write a file under campaign/, creating or replacing it whole. For a small
     state change prefer edit_file, which won't clobber the rest of the file."""
+    _activity("The Bookkeeper is updating the records")
     try:
         target = resolve_path(path, write=True)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -113,6 +176,7 @@ def write_file(path: str, content: str) -> str:
 def edit_file(path: str, old_text: str, new_text: str) -> str:
     """Replace one exact, unique string in a file under campaign/. old_text must
     match the file byte for byte and appear exactly once."""
+    _activity("The Bookkeeper is updating the records")
     try:
         target = resolve_path(path, write=True)
         text = target.read_text(encoding="utf-8")
@@ -163,6 +227,7 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
     global _narrated
     if tool not in TOOL_SCRIPTS:
         return f"error: unknown tool {tool!r}; available: {', '.join(TOOL_SCRIPTS)}"
+    _activity(TOOL_ACTIVITY.get(tool))
     script = config.BUNDLE / "tools" / tool
     # ponytail: swapping sys.argv/stdout in-process is fine while the queue
     # serialises turns. Needs a subprocess if turns ever overlap — but note a
@@ -418,30 +483,34 @@ def run_turn(player_message: str) -> dict:
         + [HumanMessage(content=player_message)]
 
     _narrated = False
+    _activity("The DM is thinking it over")
     try:
-        result = agent.invoke({"messages": turn}, config=run_config)
-    except DMError:
-        raise
-    except Exception as e:
-        if type(e).__name__ == "GraphRecursionError":
-            raise DMError("The DM got stuck working on that. Try saying it again, "
-                          "more simply.") from e
-        raise _friendly(e) from e
+        try:
+            result = agent.invoke({"messages": turn}, config=run_config)
+        except DMError:
+            raise
+        except Exception as e:
+            if type(e).__name__ == "GraphRecursionError":
+                raise DMError("The DM got stuck working on that. Try saying it "
+                              "again, more simply.") from e
+            raise _friendly(e) from e
 
-    final = ""
-    for message in reversed(result.get("messages", [])):
-        if message.__class__.__name__ == "AIMessage":
-            final = message.text() if callable(getattr(message, "text", None)) \
-                else str(message.content or "")
-            break
+        final = ""
+        for message in reversed(result.get("messages", [])):
+            if message.__class__.__name__ == "AIMessage":
+                final = message.text() if callable(getattr(message, "text", None)) \
+                    else str(message.content or "")
+                break
 
-    # A turn that never reached the chronicle is a blank screen for the players.
-    if not _narrated:
-        prose = players_text(final)
-        if prose:
-            campaign_lib.append_feed(config.CAMPAIGN, prose, type="narration")
+        # A turn that never reached the chronicle is a blank screen for the players.
+        if not _narrated:
+            prose = players_text(final)
+            if prose:
+                campaign_lib.append_feed(config.CAMPAIGN, prose, type="narration")
 
-    return {"narrated": _narrated, "fresh_session": fresh, "reply": final[:2000]}
+        return {"narrated": _narrated, "fresh_session": fresh, "reply": final[:2000]}
+    finally:
+        _activity(None, busy=False)
 
 
 def reset_thread() -> None:

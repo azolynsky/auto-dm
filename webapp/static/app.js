@@ -591,9 +591,14 @@ function showDmThinking() {
   if (document.getElementById('dm-thinking')) return;
   const row = el('div', 'dm-thinking');
   row.id = 'dm-thinking';
-  row.appendChild(el('span', 'dm-die', '⟡'));
+  const head = el('div', 'dm-thinking-head');
+  head.appendChild(el('span', 'dm-die', '⟡'));
   const phrase = el('span', 'dm-phrase', DM_PHRASES[0]);
-  row.appendChild(phrase);
+  head.appendChild(phrase);
+  row.appendChild(head);
+  const steps = el('div', 'dm-steps');
+  steps.id = 'dm-steps';
+  row.appendChild(steps);
   container.appendChild(row);
   container.scrollTop = container.scrollHeight;
   let i = 1;
@@ -601,6 +606,30 @@ function showDmThinking() {
     phrase.textContent = DM_PHRASES[i % DM_PHRASES.length];
     i++;
   }, 4000);
+}
+
+// Live activity from the DM's turn (SSE dm_activity): which role is at work,
+// player-safe labels only. The last step spins; earlier ones get a check.
+function renderDmActivity(activity) {
+  if (!activity || !activity.busy) {
+    hideDmThinking();
+    return;
+  }
+  showDmThinking();
+  const stepsEl = document.getElementById('dm-steps');
+  const container = document.getElementById('feed-entries');
+  const nearBottom =
+    container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+  stepsEl.innerHTML = '';
+  const recent = (activity.steps || []).slice(-4);
+  recent.forEach((s, i) => {
+    const current = i === recent.length - 1;
+    const row = el('div', `dm-step ${current ? 'current' : 'done'}`);
+    row.appendChild(el('span', 'dm-step-mark', current ? '◈' : '✓'));
+    row.appendChild(el('span', null, s));
+    stepsEl.appendChild(row);
+  });
+  if (nearBottom) container.scrollTop = container.scrollHeight;
 }
 
 function hideDmThinking() {
@@ -1124,6 +1153,7 @@ function applySnapshot(data) {
   renderSidebar(data.quests || [], data.world_flags || {}, data.current || {}, data.dramatis || [], data.quest_hooks || []);
   renderCombat(data.combat);
   if (data.settings) renderSettings(data.settings);
+  renderDmActivity(data.dm_activity);
 }
 
 function connectSSE() {
@@ -1165,6 +1195,10 @@ function connectSSE() {
 
   es.addEventListener('settings_update', e => {
     renderSettings(JSON.parse(e.data));
+  });
+
+  es.addEventListener('dm_activity', e => {
+    renderDmActivity(JSON.parse(e.data));
   });
 
   es.addEventListener('portrait_update', () => {

@@ -61,6 +61,7 @@ COMBAT_FILE = STATE_DIR / "combat.json"
 FLAGS_FILE = STATE_DIR / "world-flags.json"
 DRAMATIS_FILE = STATE_DIR / "dramatis-personae.json"
 SETTINGS_FILE = STATE_DIR / "settings.json"
+ACTIVITY_FILE = STATE_DIR / "dm-activity.json"  # written by desktop/agent.py
 
 DISPLAY_KEYS = {
     "id", "name", "player", "race", "class", "subclass", "level", "xp",
@@ -197,8 +198,17 @@ def load_settings() -> dict:
     return campaign_lib.load_settings(ROOT)
 
 
+def load_dm_activity() -> dict:
+    """What the DM is doing right now — player-safe labels from desktop/agent.py."""
+    data = read_json(ACTIVITY_FILE)
+    if not isinstance(data, dict):
+        return {"busy": False, "steps": []}
+    return {"busy": bool(data.get("busy")), "steps": data.get("steps") or []}
+
+
 def build_state_snapshot() -> dict:
     return {
+        "dm_activity": load_dm_activity(),
         "characters": load_characters(),
         "current": read_json(CURRENT_FILE) or {},
         "quests": load_quests(),
@@ -587,6 +597,12 @@ async def dm_worker():
 
 @app.on_event("startup")
 async def start_worker():
+    # An app killed mid-turn leaves dm-activity.json claiming busy forever.
+    try:
+        ACTIVITY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        ACTIVITY_FILE.write_text('{"busy": false, "steps": []}\n', encoding="utf-8")
+    except OSError:
+        pass
     asyncio.create_task(dm_worker())
 
 
@@ -675,6 +691,12 @@ async def events(request: Request):
                         yield {
                             "event": "state_update",
                             "data": json.dumps(current),
+                        }
+
+                    elif path.name == "dm-activity.json":
+                        yield {
+                            "event": "dm_activity",
+                            "data": json.dumps(load_dm_activity()),
                         }
 
                     elif path.name == "settings.json":

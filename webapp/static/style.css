@@ -710,12 +710,44 @@ blockquote.feed-entry.feed-type-player {
 /* DM thinking indicator */
 .dm-thinking {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   padding: 8px 14px;
   color: var(--accent-dim);
   font-size: 21px;
   font-style: italic;
+}
+
+.dm-thinking-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 10px;
+  font-size: 17px;
+  font-style: normal;
+}
+
+.dm-step {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  color: var(--parchment);
+}
+
+.dm-step.done { opacity: 0.5; }
+.dm-step.done .dm-step-mark { color: var(--accent-dim); }
+
+.dm-step.current .dm-step-mark {
+  display: inline-block;
+  color: var(--accent);
+  animation: dm-die-spin 1.2s linear infinite;
 }
 
 .dm-die {

@@ -70,6 +70,38 @@ class TestReadiness(DesktopTestCase):
         self.assertFalse(self.config.is_ready())
 
 
+class TestActivity(DesktopTestCase):
+    """Tool calls publish player-safe progress labels to dm-activity.json —
+    fixed strings only, never paths or arguments that could spoil a secret."""
+
+    def _read(self):
+        return json.loads((self.campaign / "state" / "dm-activity.json").read_text())
+
+    def test_tool_calls_publish_steps(self):
+        self.agent.run_tool("dice.py", ["1d20"])
+        data = self._read()
+        self.assertTrue(data["busy"])
+        self.assertIn("Rolling dice", data["steps"])
+
+    def test_role_reads_name_the_role(self):
+        self.agent.read_file(".claude/agents/director.md")
+        self.assertIn("The Director is deciding what the world does",
+                      self._read()["steps"])
+
+    def test_labels_never_leak_paths(self):
+        self.agent.read_file("campaign/npcs/recurring/villain/motivations.md")
+        for step in self._read()["steps"]:
+            self.assertNotIn("motivations", step)
+            self.assertNotIn("villain", step)
+
+    def test_turn_end_clears(self):
+        self.agent.run_tool("dice.py", ["1d20"])
+        self.agent._activity(None, busy=False)
+        data = self._read()
+        self.assertFalse(data["busy"])
+        self.assertEqual(data["steps"], [])
+
+
 class TestWriteGuard(DesktopTestCase):
     def test_campaign_writes_allowed(self):
         result = self.agent.write_file("campaign/state/scratch.md", "hello")
