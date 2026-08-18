@@ -64,7 +64,7 @@
     {
       "name": "Fey Ancestry",
       "source": "Half-Elf",
-      "detail": "Advantage on saves vs being charmed; magic can't put him to sleep"
+      "detail": "Advantage on saves vs being charmed; magic can't put her to sleep"
     },
     {
       "name": "Sneak Attack",
@@ -79,7 +79,7 @@
     {
       "name": "False Identity",
       "source": "Charlatan",
-      "detail": "A second, documented identity — papers, contacts, and a name that opens doors his own can't"
+      "detail": "A second, documented identity — papers, contacts, and a name that opens doors her own can't"
     }
   ],
   "attacks": [
@@ -113,17 +113,17 @@
     { "item": "Thieves' tools", "qty": 1 },
     { "item": "Disguise kit", "qty": 1 },
     { "item": "Burglar's pack", "qty": 1 },
-    { "item": "A sealed letter he has never opened, addressed in his mother's hand", "qty": 1 }
+    { "item": "A sealed letter she has never opened, addressed in her mother's hand", "qty": 1 }
   ],
   "gold": 15,
   "conditions": [],
   "exhaustion": 0,
   "death_saves": { "successes": 0, "failures": 0 },
   "personality": {
-    "traits": ["Says less than he knows; smiles like he's already three moves ahead."],
+    "traits": ["Says less than she knows; smiles like she's already three moves ahead."],
     "ideals": ["Take from those who'd never miss it; never from those who would."],
-    "bonds": ["Someone erased his family's name from the city records. He's going to find out who."],
-    "flaws": ["Can't resist a locked door or a rigged game — especially when he should walk away."]
+    "bonds": ["Someone erased her family's name from the city records. She's going to find out who."],
+    "flaws": ["Can't resist a locked door or a rigged game — especially when she should walk away."]
   },
   "notes": ""
 }
