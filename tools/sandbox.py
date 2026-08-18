@@ -63,26 +63,41 @@ def new_entries(root: Path, before: int) -> list[dict]:
 def start_run(model: str, prompt: str, src: Path) -> dict:
     copy = Path(tempfile.mkdtemp(prefix="autodm-sandbox-")) / "campaign"
     shutil.copytree(src, copy)
+    # Effects queued by the live session but not yet narrated would drain onto
+    # the first model that uses narrate.py properly, framing it for subtext it
+    # never produced. Every contender starts with a clean queue.
+    (copy / "state" / "pending-effects.jsonl").unlink(missing_ok=True)
     env = {**os.environ, "CAMPAIGN_ROOT": str(copy), "AUTODM_MODEL": model}
     proc = subprocess.Popen(
         [sys.executable, str(REPO / "desktop" / "agent.py"), prompt],
         env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return {"model": model, "copy": copy, "before": len(feed_entries(copy)),
-            "proc": proc, "t0": time.monotonic()}
+            "proc": proc, "t0": time.monotonic(), "error": None}
 
 
-def finish_run(run: dict) -> dict:
-    try:
-        _out, err = run["proc"].communicate(timeout=TURN_TIMEOUT)
-    except subprocess.TimeoutExpired:
-        run["proc"].kill()
-        run["proc"].communicate()
-        err = f"timed out after {TURN_TIMEOUT}s"
-    run["seconds"] = time.monotonic() - run["t0"]
-    run["entries"] = new_entries(run["copy"], run["before"])
-    run["error"] = None if run["proc"].returncode == 0 else \
-        (err or "").strip().splitlines()[-1][:300] if err else "nonzero exit"
-    return run
+def finish_runs(runs: list[dict]) -> list[dict]:
+    """Wait on all runs at once, stamping each one's real finish time —
+    communicate() in sequence would report reap time, not run time."""
+    # ponytail: output rides the pipe until reaped; fine while agent.py prints
+    # one small JSON line — switch to reader threads if output ever grows.
+    pending = set(range(len(runs)))
+    deadline = time.monotonic() + TURN_TIMEOUT
+    while pending and time.monotonic() < deadline:
+        for i in list(pending):
+            if runs[i]["proc"].poll() is not None:
+                runs[i]["seconds"] = time.monotonic() - runs[i]["t0"]
+                pending.discard(i)
+        time.sleep(0.25)
+    for i in pending:
+        runs[i]["proc"].kill()
+        runs[i]["seconds"] = time.monotonic() - runs[i]["t0"]
+        runs[i]["error"] = f"timed out after {TURN_TIMEOUT}s"
+    for run in runs:
+        _out, err = run["proc"].communicate()
+        run["entries"] = new_entries(run["copy"], run["before"])
+        if run["error"] is None and run["proc"].returncode != 0:
+            run["error"] = ((err or "").strip().splitlines() or ["nonzero exit"])[-1][:300]
+    return runs
 
 
 def report(runs: list[dict]) -> None:
@@ -126,7 +141,7 @@ def main() -> int:
     models = args.models or DEFAULT_MODELS
     print(f"Racing {len(models)} models on: {args.prompt!r}")
     runs = [start_run(m, args.prompt, args.campaign) for m in models]
-    report([finish_run(r) for r in runs])
+    report(finish_runs(runs))
     return 0
 
 
