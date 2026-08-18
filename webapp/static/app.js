@@ -581,7 +581,7 @@ function showDmThinking() {
   const row = el('div', 'dm-thinking');
   row.id = 'dm-thinking';
   const head = el('div', 'dm-thinking-head');
-  head.appendChild(el('span', 'dm-die', '⟡'));
+  head.appendChild(el('span', 'dm-die', '↻'));
   head.appendChild(el('span', 'dm-phrase', 'The DM is thinking…'));
   row.appendChild(head);
   const steps = el('div', 'dm-steps');
@@ -608,7 +608,7 @@ function renderDmActivity(activity) {
   recent.forEach((s, i) => {
     const current = i === recent.length - 1;
     const row = el('div', `dm-step ${current ? 'current' : 'done'}`);
-    row.appendChild(el('span', 'dm-step-mark', current ? '◈' : '✓'));
+    row.appendChild(el('span', 'dm-step-mark', current ? '↻' : '✓'));
     row.appendChild(el('span', null, s));
     stepsEl.appendChild(row);
   });
