@@ -31,11 +31,11 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "desktop"))
 import config  # noqa: E402
 
+# qwen3.7-flash and nemotron-3.5-lightning were cut after round one: neither
+# followed the DM protocol (no narrate.py, no world response).
 DEFAULT_MODELS = [
     "~deepseek/deepseek-v4-flash-latest",
     "openai/gpt-5.6-luna-pro",
-    "qwen/qwen3.7-flash",
-    "nvidia/nemotron-3.5-lightning",
 ]
 
 TURN_TIMEOUT = 600  # seconds per model
