@@ -132,12 +132,18 @@
           placeholder="Free text — the DM treats these as active house rules."></textarea>
       </label>
 
+      <label class="setting-row">
+        <span class="setting-label">Developer mode</span>
+        <input type="checkbox" id="set-dev-mode">
+        <span class="setting-desc">Model and prompt tuning per DM role — applies instantly, saved on this device</span>
+      </label>
+
       <div class="settings-actions">
         <span id="settings-status"></span>
         <button id="settings-save">Save</button>
       </div>
 
-      <!-- Developer section — hidden unless the URL carries #dev.
+      <!-- Developer section — shown by the Developer mode toggle above.
            Prompt A/B testing and model choice; see prompts/README.md. -->
       <section id="dev-section" class="hidden">
         <h2 class="modal-title">Developer</h2>

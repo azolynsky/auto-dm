@@ -1067,14 +1067,25 @@ async function resetThread() {
   setTimeout(() => { status.textContent = ''; }, 5000);
 }
 
-async function initDev() {
-  if (!devEnabled()) return;
-  document.getElementById('dev-section').classList.remove('hidden');
-  try {
-    renderDev(await (await fetch('/api/dev')).json());
-  } catch (err) {
-    console.error('dev settings failed to load:', err);
+async function toggleDev(on) {
+  document.getElementById('dev-section').classList.toggle('hidden', !on);
+  if (on && !document.getElementById('dev-body').childElementCount) {
+    try {
+      renderDev(await (await fetch('/api/dev')).json());
+    } catch (err) {
+      console.error('dev settings failed to load:', err);
+    }
   }
+}
+
+function initDev() {
+  const box = document.getElementById('set-dev-mode');
+  box.checked = devEnabled();
+  box.addEventListener('change', () => {
+    localStorage.setItem('devMode', box.checked ? '1' : '');
+    toggleDev(box.checked);
+  });
+  toggleDev(box.checked);
 }
 
 // ── Modals (shared behavior) ──────────────────────────────────────────────────
