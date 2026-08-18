@@ -391,6 +391,47 @@ class TestCombatVisibility(unittest.TestCase):
 
 
 @unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestIdleGap(unittest.TestCase):
+    """Coming back after a long gap nudges the DM to wrap the previous
+    sitting; an empty feed (brand-new campaign) never nudges."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.saved = server.FEED_FILE
+        server.FEED_FILE = self.tmp / "player-feed.jsonl"
+
+    def tearDown(self):
+        server.FEED_FILE = self.saved
+
+    def _write(self, ts):
+        server.FEED_FILE.write_text(
+            json.dumps({"text": "x", "ts": ts}) + "\n", encoding="utf-8")
+
+    def test_empty_feed_is_no_gap(self):
+        self.assertIsNone(server.idle_gap_hours())
+
+    def test_old_entry_measures_the_gap(self):
+        from datetime import datetime, timedelta
+        self._write((datetime.now() - timedelta(hours=30)).isoformat())
+        self.assertAlmostEqual(server.idle_gap_hours(), 30, delta=0.1)
+
+    def test_real_feed_format_with_z_suffix(self):
+        from datetime import datetime, timedelta, timezone
+        ts = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat()
+        self._write(ts.replace("+00:00", "Z"))  # campaign_lib's exact format
+        self.assertAlmostEqual(server.idle_gap_hours(), 30, delta=0.1)
+
+    def test_recent_entry_is_under_threshold(self):
+        from datetime import datetime
+        self._write(datetime.now().isoformat())
+        self.assertLess(server.idle_gap_hours(), server.IDLE_GAP_HOURS)
+
+    def test_bad_timestamp_is_no_gap(self):
+        self._write("not-a-date")
+        self.assertIsNone(server.idle_gap_hours())
+
+
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
 class TestSayGuard(unittest.TestCase):
     """One turn at a time: a message sent while the DM is working is refused
     (409), never silently queued behind the running turn."""

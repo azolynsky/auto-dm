@@ -583,6 +583,35 @@ SAY_QUEUE: asyncio.Queue = asyncio.Queue()
 
 DM_BUSY = False
 
+# A sitting that ends by closing the laptop never says "let's wrap". When the
+# table comes back after a long gap, the DM's next turn is nudged to do the
+# session-wrap bookkeeping quietly and reopen with a short recap.
+IDLE_GAP_HOURS = 6
+
+
+def idle_gap_hours() -> float | None:
+    """Hours since the newest chronicle entry; None for an empty feed."""
+    entries = load_feed(1)
+    ts = entries[-1].get("ts") if entries else None
+    if not ts:
+        return None
+    from datetime import datetime
+    try:
+        # campaign_lib stamps "...Z"; fromisoformat only takes that on 3.11+
+        last = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        return (datetime.now(last.tzinfo) - last).total_seconds() / 3600
+    except ValueError:
+        return None
+
+
+def idle_nudge(gap: float) -> str:
+    return (f"(Out of character, from the app: the table is back after about "
+            f"{int(gap)} hours away. If the previous sitting was never wrapped, "
+            "quietly do the session-wrap bookkeeping first — session log, "
+            "rolling recap, XP; see .claude/skills/session-wrap/SKILL.md — "
+            "then greet the players with a 2-3 sentence recap before answering "
+            "what they say below.)\n\n")
+
 
 async def dm_worker():
     global DM_BUSY
@@ -637,7 +666,10 @@ async def say(request: Request):
         raise HTTPException(status_code=409,
                             detail="The DM is still working on the last message "
                                    "— wait for the reply.")
+    gap = idle_gap_hours()  # before the append below becomes the newest entry
     campaign_lib.append_feed(ROOT, text, type="player")
+    if gap and gap > IDLE_GAP_HOURS:
+        text = idle_nudge(gap) + text
     await SAY_QUEUE.put(text)
     return JSONResponse({"ok": True, "queued": SAY_QUEUE.qsize()})
 
