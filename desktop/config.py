@@ -70,6 +70,7 @@ MODEL_CHOICES = [
 DEV_DEFAULTS = {
     "model": DEFAULT_MODEL,
     "prompts": {},            # {role: variant} — see desktop/prompts.py
+    "role_models": {},        # {role: model id} — empty/missing = the global model
     "history_tokens": 120_000,
     "recursion_limit": 80,
 }

@@ -166,6 +166,36 @@ class TestToolWhitelist(DesktopTestCase):
         self.assertEqual(json.loads(feed[-1])["text"], "The gate groans open.")
 
 
+class TestRoleAgents(DesktopTestCase):
+    """consult_role subagents: the narrator's tool-level motivations firewall,
+    per-role write access, and per-role model resolution."""
+
+    def test_narrator_read_is_firewalled(self):
+        secret = self.campaign / "npcs" / "x" / "motivations.md"
+        secret.parent.mkdir(parents=True)
+        secret.write_text("the mayor is the villain")
+        (secret.parent / "summary.md").write_text("the mayor")
+        narrator_read = self.agent.role_tools("narrator")[0]
+        for path in ("campaign/npcs/x/motivations.md", "campaign/npcs/x/secrets.md"):
+            self.assertIn("GM-eyes-only", narrator_read(path), path)
+        self.assertEqual(narrator_read("campaign/npcs/x/summary.md"), "the mayor")
+
+    def test_only_bookkeeper_writes(self):
+        self.assertIn(self.agent.write_file, self.agent.role_tools("bookkeeper"))
+        for role in ("narrator", "director", "rules-lawyer"):
+            self.assertNotIn(self.agent.write_file, self.agent.role_tools(role), role)
+
+    def test_unknown_role_refused(self):
+        self.assertIn("error: unknown role", self.agent.consult_role("dm", "x"))
+        self.assertIn("error: unknown role", self.agent.consult_role("wizard", "x"))
+
+    def test_role_model_falls_back_to_global(self):
+        self.config.APP_DIR.mkdir(parents=True)
+        self.config.save(model="global/model", role_models={"narrator": "cheap/model"})
+        self.assertEqual(self.agent.role_model("narrator"), "cheap/model")
+        self.assertEqual(self.agent.role_model("director"), "global/model")
+
+
 class TestPlayersText(DesktopTestCase):
     """Fallback prose for a turn that forgot to call narrate.py — the DM layer
     ([DIRECTOR], roll:, result:) must never reach the players."""

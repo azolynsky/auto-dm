@@ -462,6 +462,17 @@ async def post_dev(request: Request):
                     status_code=400,
                     detail=f"{role} has no variant {variant!r} — add "
                            f"prompts/{role}/{variant}.md first")
+    if "role_models" in body:
+        role_models = body["role_models"]
+        if not isinstance(role_models, dict):
+            raise HTTPException(status_code=400, detail="role_models must be an object")
+        for role, model_id in role_models.items():
+            if role not in prompt_registry.ROLES:
+                raise HTTPException(status_code=400, detail=f"unknown role: {role}")
+            if not isinstance(model_id, str):
+                raise HTTPException(status_code=400,
+                                    detail=f"model for {role} must be a string")
+
     for field in ("history_tokens", "recursion_limit"):
         if field in body and not (isinstance(body[field], int) and body[field] > 0):
             raise HTTPException(status_code=400, detail=f"{field} must be a positive int")

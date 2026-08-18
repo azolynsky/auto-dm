@@ -977,6 +977,19 @@ function devEnabled() {
 }
 
 function renderDev(data) {
+  const roleModels = data.role_models || {};
+  // Model dropdown for one role: '' = inherit the global model. A hand-typed
+  // model id that isn't in MODEL_CHOICES still round-trips as an extra option.
+  const modelSelect = (role, current) => role === 'dm' ? '' : `
+      <select data-model-role="${role}" title="Model for this role">
+        <option value="">↑ global model</option>
+        ${data.models.map(m =>
+          `<option value="${m.id}" ${m.id === current ? 'selected' : ''}>${m.id}</option>`
+        ).join('')}
+        ${!current || data.models.some(m => m.id === current) ? ''
+          : `<option value="${current}" selected>${current}</option>`}
+      </select>`;
+
   const rows = data.registry.map(entry => `
     <label class="setting-row">
       <span class="setting-label">${entry.role}</span>
@@ -985,6 +998,7 @@ function renderDev(data) {
           `<option value="${v}" ${v === entry.selected ? 'selected' : ''}>${v}</option>`
         ).join('')}
       </select>
+      ${modelSelect(entry.role, roleModels[entry.role] || '')}
       <span class="setting-desc">${DEV_HELP[entry.role] || entry.source}</span>
     </label>`).join('');
 
@@ -999,8 +1013,10 @@ function renderDev(data) {
           : `<option value="${data.model}" selected>${data.model}</option>`}
       </select>
     </label>
-    <p class="settings-hint">Prompt variant per role. Add
-      <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code> to get more choices —
+    <p class="settings-hint">Per role: prompt variant, then the model that role's
+      subagent runs on (roles are separate agents the DM consults — "↑ global
+      model" inherits the dropdown above). Add
+      <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code> for more prompt choices —
       see <code>prompts/README.md</code>.</p>
     ${rows}
     <div class="settings-actions">
@@ -1018,12 +1034,17 @@ async function saveDev() {
   document.querySelectorAll('#dev-body select[data-role]').forEach(sel => {
     chosen[sel.dataset.role] = sel.value;
   });
+  const roleModels = {};
+  document.querySelectorAll('#dev-body select[data-model-role]').forEach(sel => {
+    if (sel.value) roleModels[sel.dataset.modelRole] = sel.value;
+  });
   const status = document.getElementById('dev-status');
   try {
     const res = await fetch('/api/dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompts: chosen, model: document.getElementById('dev-model').value }),
+      body: JSON.stringify({ prompts: chosen, role_models: roleModels,
+                             model: document.getElementById('dev-model').value }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'save failed');

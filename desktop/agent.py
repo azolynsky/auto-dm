@@ -257,6 +257,103 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
 TOOLS = [read_file, write_file, edit_file, list_files, run_tool]
 
 
+# ── Role subagents ────────────────────────────────────────────────────────────
+# The manual's Director/Narrator/Rules-Lawyer/Bookkeeper pipeline as actual
+# separate agents: each consult_role call runs a one-shot ReAct agent on that
+# role's prompt file and (optionally) its own model, with no chat history —
+# which is the point: the orchestrator's context stops absorbing every file
+# the specialists read.
+
+SUB_ROLES = tuple(r for r in prompts.ROLES if r != "dm")
+SUB_RECURSION_LIMIT = 32
+
+
+def role_model(role: str) -> str:
+    return (config.load().get("role_models") or {}).get(role) or config.model()
+
+
+def role_tools(role: str) -> list:
+    """Bookkeeper is the only role that writes; the Narrator's reads are
+    firewalled (invariant #7); everyone else reads and runs tools."""
+    if role == "bookkeeper":
+        return TOOLS
+    if role == "narrator":
+        base_read = read_file
+
+        def read_file_safe(path: str) -> str:
+            """Read a text file, e.g. campaign/state/current.json or an entity's
+            summary.md/voice.md. Paths are repo-relative. motivations.md and
+            secrets.md are GM-eyes-only and will be refused."""
+            if Path(config.norm_path(path)).name in ("motivations.md", "secrets.md"):
+                return ("error: that file is GM-eyes-only (the motivations "
+                        "firewall) — narrate from what the players have earned "
+                        "on screen")
+            return base_read(path)
+
+        return [read_file_safe, list_files, run_tool]
+    return [read_file, list_files, run_tool]
+
+
+_sub_agents: dict = {}
+
+
+def _build_sub_agent(role: str):
+    key = (role, role_model(role), prompts.selected(role), config.api_key()[-6:])
+    if key not in _sub_agents:
+        from langchain_openai import ChatOpenAI
+        from langgraph.prebuilt import create_react_agent
+        model = ChatOpenAI(
+            model=role_model(role), api_key=config.api_key(),
+            base_url=OPENROUTER_URL, timeout=600,
+            default_headers={"HTTP-Referer": "https://github.com/auto-dm",
+                             "X-Title": "Auto-DM"})
+        _sub_agents[key] = create_react_agent(
+            model, role_tools(role),
+            prompt=prompts.resolve(role).read_text(encoding="utf-8"))
+    return _sub_agents[key]
+
+
+def _final_text(result: dict) -> str:
+    for message in reversed(result.get("messages", [])):
+        if message.__class__.__name__ == "AIMessage":
+            return message.text() if callable(getattr(message, "text", None)) \
+                else str(message.content or "")
+    return ""
+
+
+def consult_role(role: str, task: str) -> str:
+    """Delegate to a specialist role agent — this harness's native subagent
+    mechanism from the manual. Roles: director, narrator, rules-lawyer,
+    bookkeeper, continuity-checker, session-prep, prose-editor. Each runs on
+    its role prompt from .claude/agents/ (and its own model, if configured)
+    with file and campaign-tool access, and returns its final answer.
+
+    The specialist has NO chat history and NO memory between calls — put
+    everything it needs in `task`: the beat, what the player said, relevant
+    entity paths, dice results, and decisions already made. The narrator
+    cannot read motivations.md/secrets.md; the bookkeeper is the only role
+    that can write files. Independent consults can happen in parallel by
+    calling this tool multiple times in one response.
+    """
+    if role not in SUB_ROLES:
+        return f"error: unknown role {role!r}; available: {', '.join(SUB_ROLES)}"
+    if not task.strip():
+        return "error: task is empty — tell the specialist what you need"
+    _activity(ROLE_ACTIVITY.get(role, "The DM is consulting a specialist"))
+    try:
+        result = _build_sub_agent(role).invoke(
+            {"messages": [{"role": "user", "content": task}]},
+            config={"recursion_limit": SUB_RECURSION_LIMIT})
+    except Exception as e:
+        if type(e).__name__ == "GraphRecursionError":
+            return f"error: the {role} got stuck — break the task into smaller pieces"
+        return f"error consulting {role}: {_friendly(e)}"
+    return _final_text(result) or "(no reply)"
+
+
+DM_TOOLS = TOOLS + [consult_role]
+
+
 # ── Prompt and briefing ───────────────────────────────────────────────────────
 
 def system_prompt() -> str:
@@ -347,7 +444,7 @@ def build_agent():
             strategy="last", start_on="human", end_on=("human", "tool"),
             include_system=False, allow_partial=False)}
 
-    _agent = create_react_agent(model, TOOLS, prompt=system_prompt(),
+    _agent = create_react_agent(model, DM_TOOLS, prompt=system_prompt(),
                                 pre_model_hook=keep_recent,
                                 checkpointer=_checkpointer())
     _agent_key = key
@@ -495,12 +592,7 @@ def run_turn(player_message: str) -> dict:
                               "again, more simply.") from e
             raise _friendly(e) from e
 
-        final = ""
-        for message in reversed(result.get("messages", [])):
-            if message.__class__.__name__ == "AIMessage":
-                final = message.text() if callable(getattr(message, "text", None)) \
-                    else str(message.content or "")
-                break
+        final = _final_text(result)
 
         # A turn that never reached the chronicle is a blank screen for the players.
         if not _narrated:
