@@ -31,41 +31,55 @@
     }
     .step a { color: var(--accent); }
     .hint { font-size: 13px; color: var(--ink-dim); margin: 8px 0 0; }
-    #start {
+    .bigbtn {
       font: inherit; font-size: 16px; width: 100%; cursor: pointer;
       color: var(--accent); background: var(--surface-2);
       border: 1px solid var(--accent-dim); border-radius: 5px; padding: 13px;
       letter-spacing: 0.03em;
     }
-    #start:disabled { opacity: 0.55; cursor: default; }
-    #status { margin-top: 14px; min-height: 20px; font-size: 15px; text-align: center; }
-    #status.err { color: #e88; }
-    #status.ok { color: var(--accent); }
-    .heroes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .bigbtn:disabled { opacity: 0.55; cursor: default; }
+    .status { margin-top: 14px; min-height: 20px; font-size: 15px; text-align: center; }
+    .status.err { color: #e88; }
+    .status.ok { color: var(--accent); }
+
+    /* Phase 2 — the hero gallery gets the whole stage */
+    #phase2 { max-width: 1020px; }
+    .heroes {
+      display: grid; gap: 16px; margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
     .hero {
-      border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
-      background: var(--surface-2); padding: 12px; text-align: left;
-      display: flex; gap: 12px; align-items: flex-start;
+      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      background: var(--surface); overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: border-color 0.12s, box-shadow 0.12s;
     }
-    .hero.picked { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim); }
+    .hero.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
     .hero img, .hero .noface {
-      width: 56px; height: 56px; border-radius: 5px; object-fit: cover;
-      background: var(--surface); flex: none;
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-header); font-size: 24px; color: var(--accent);
+      width: 100%; aspect-ratio: 4 / 5; object-fit: cover;
+      /* crop from the top — faces live there, chests don't sell a hero */
+      object-position: top center;
+      background: var(--surface-2); display: block;
     }
-    .hero h3 { margin: 0 0 2px; font-size: 15px; color: var(--parchment); font-family: var(--font-header); }
-    .hero .kind { font-size: 13px; color: var(--accent); margin: 0 0 4px; }
-    .hero .blurb { font-size: 12.5px; color: var(--ink-dim); margin: 0; line-height: 1.4; }
+    .hero .noface {
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-header); font-size: 64px; color: var(--accent);
+    }
+    .hero .card-body { padding: 12px 14px 14px; }
+    .hero h3 { margin: 0 0 2px; font-size: 17px; color: var(--parchment); font-family: var(--font-header); }
+    .hero .kind { font-size: 13px; color: var(--accent); margin: 0 0 6px; }
+    .hero .blurb { font-size: 13px; color: var(--ink-dim); margin: 0; line-height: 1.45; }
     .hero input {
-      margin-top: 8px; padding: 6px 8px; font-size: 13px; display: none;
+      font: inherit; width: 100%; box-sizing: border-box; display: none;
+      margin-top: 10px; padding: 7px 9px; font-size: 13px;
+      color: var(--parchment); background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 4px;
     }
     .hero.picked input { display: block; }
-    @media (max-width: 540px) { .heroes { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <div class="setup-wrap">
+  <div class="setup-wrap" id="phase1">
     <h1>Auto-DM</h1>
     <p class="setup-lede">
       A Dungeons &amp; Dragons game master that runs your table. One thing to set
@@ -98,37 +112,38 @@
     </div>
 
     <div class="step">
-      <h2>3 · Choose your heroes</h2>
-      <p>
-        Pick one ready-made hero per player and add each player's name. You can
-        also make your own characters from scratch later — just tell the DM.
-      </p>
-      <div class="heroes" id="heroes"></div>
-    </div>
-
-    <div class="step">
-      <h2>4 · Pick the DM</h2>
+      <h2>3 · Pick the DM</h2>
       <p>Smarter models run better games and cost a bit more. You can change this later.</p>
       <label for="model">Model</label>
       <select id="model"></select>
     </div>
 
-    <button id="start">Start playing</button>
-    <div id="status"></div>
+    <button id="continue" class="bigbtn">Continue</button>
+    <div id="status1" class="status"></div>
+  </div>
+
+  <div class="setup-wrap" id="phase2" hidden>
+    <h1>Choose your heroes</h1>
+    <p class="setup-lede">
+      Pick one hero per player and add each player's name. You can also make your
+      own characters from scratch later — just tell the DM.
+    </p>
+    <div class="heroes" id="heroes"></div>
+    <button id="start" class="bigbtn">Begin the adventure</button>
+    <div id="status2" class="status"></div>
   </div>
 
 <script>
 const $ = id => document.getElementById(id);
-const status = $('status');
 
-function setStatus(text, cls) { status.textContent = text; status.className = cls || ''; }
+function setStatus(el, text, cls) { el.textContent = text; el.className = 'status ' + (cls || ''); }
 
 function renderHeroes(pregens, party) {
   $('heroes').innerHTML = pregens.map(c => `
     <div class="hero${party.includes(c.id) ? ' picked' : ''}" data-id="${c.id}">
       <img src="/api/portraits/${c.id}" alt=""
            onerror="this.outerHTML='<div class=noface>${(c.name || '?')[0]}</div>'">
-      <div>
+      <div class="card-body">
         <h3>${c.name}</h3>
         <p class="kind">${c.race} ${c.class}</p>
         <p class="blurb">${c.blurb || ''}</p>
@@ -158,11 +173,9 @@ async function load() {
   if (data.has_key) $('key').placeholder = 'Already saved — leave blank to keep it';
 }
 
-$('start').addEventListener('click', async () => {
-  const party = chosenParty();
-  if (!party.length) { setStatus('Pick at least one hero — one per player.', 'err'); return; }
-  $('start').disabled = true;
-  setStatus('Checking your key…');
+$('continue').addEventListener('click', async () => {
+  $('continue').disabled = true;
+  setStatus($('status1'), 'Checking your key…');
   try {
     const res = await fetch('/api/setup', {
       method: 'POST',
@@ -171,23 +184,44 @@ $('start').addEventListener('click', async () => {
         api_key: $('key').value.trim(),
         campaign_name: $('name').value.trim(),
         model: $('model').value,
-        party,
-        start_session: true,
       }),
     });
     const data = await res.json();
-    if (!res.ok) { setStatus(data.detail || 'Something went wrong.', 'err'); $('start').disabled = false; return; }
+    if (!res.ok) { setStatus($('status1'), data.detail || 'Something went wrong.', 'err'); $('continue').disabled = false; return; }
     const credit = data.credit === null || data.credit === undefined
       ? '' : ` You have $${data.credit} of credit.`;
-    setStatus(`Ready.${credit} Waking the DM…`, 'ok');
+    setStatus($('status1'), `Connected.${credit}`, 'ok');
+    $('phase1').hidden = true;
+    $('phase2').hidden = false;
+    window.scrollTo(0, 0);
+  } catch (err) {
+    setStatus($('status1'), 'Could not reach the app. Try again.', 'err');
+    $('continue').disabled = false;
+  }
+});
+
+$('start').addEventListener('click', async () => {
+  const party = chosenParty();
+  if (!party.length) { setStatus($('status2'), 'Pick at least one hero — one per player.', 'err'); return; }
+  $('start').disabled = true;
+  setStatus($('status2'), 'Gathering the party…');
+  try {
+    const res = await fetch('/api/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ party, start_session: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setStatus($('status2'), data.detail || 'Something went wrong.', 'err'); $('start').disabled = false; return; }
+    setStatus($('status2'), 'Ready. Waking the DM…', 'ok');
     setTimeout(() => location.href = '/', 900);
   } catch (err) {
-    setStatus('Could not reach the app. Try again.', 'err');
+    setStatus($('status2'), 'Could not reach the app. Try again.', 'err');
     $('start').disabled = false;
   }
 });
 
-$('key').addEventListener('keydown', e => { if (e.key === 'Enter') $('start').click(); });
+$('key').addEventListener('keydown', e => { if (e.key === 'Enter') $('continue').click(); });
 load();
 </script>
 </body>
