@@ -11,9 +11,9 @@
   "weather": "clear, cool morning",
   "party": [],
   "party_resources": {
-    "gold": 0,
-    "rations": 0,
-    "torches": 0
+    "gold": 25,
+    "rations": 10,
+    "torches": 10
   },
   "present_entities": [
     "npcs/recurring/maera-thistle",
