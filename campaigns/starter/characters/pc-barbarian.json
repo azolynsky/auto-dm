@@ -116,17 +116,17 @@
     { "item": "Handaxes", "qty": 2 },
     { "item": "Explorer's pack", "qty": 1 },
     { "item": "Hunting trap", "qty": 1 },
-    { "item": "A wolf-fang necklace, one fang for every mountain she's climbed", "qty": 1 }
+    { "item": "A wolf-fang necklace, one fang for every beast that tested her", "qty": 1 }
   ],
   "gold": 10,
   "conditions": [],
   "exhaustion": 0,
   "death_saves": { "successes": 0, "failures": 0 },
   "personality": {
-    "traits": ["Laughs loudest, hits hardest, and is impossibly gentle with small animals."],
-    "ideals": ["The strongest person in the room should be the safest to stand next to."],
+    "traits": ["Speaks in growls and short sentences; the only thing that makes her smile is a worthy fight."],
+    "ideals": ["Respect is taken, not asked for — and anything that threatens her pack answers to her."],
     "bonds": ["Her mountain clan sent her out to find what the thunder on the horizon means; she won't return without an answer."],
-    "flaws": ["Believes every problem has a wall she can break through it — sometimes there isn't a wall."]
+    "flaws": ["Hears an insult in every raised eyebrow, and answers most of them."]
   },
   "notes": ""
 }
