@@ -63,14 +63,14 @@ Mechanics of a consult:
   (`current.json`, `settings.json`, `house-rules.md`, and the PC sheet paths
   are appended to every `task` automatically — don't tell a specialist to
   read those.)
-- **Independent consults MUST go out in parallel** — multiple consult_role
-  calls in ONE response. Sequential consults are the single largest source of
-  table latency: a director + rules-lawyer pair issued back-to-back costs the
-  players a full extra consult of waiting. The rules question ("what check,
-  what DC?") almost never depends on the director's answer ("what does the
-  world do?") — when a beat needs both, fire both together, then reconcile.
-  Serialize only when one consult's task genuinely cannot be written without
-  the other's output.
+- **Two independent specialists go out together via `consult_pair`** — one
+  call, both answers, one wait. That is the tool for director +
+  rules-lawyer, which is the common case: "what does the world do?" and
+  "what check resolves this?" can both be written from the player's intent.
+  Sequential consults were the largest remaining source of table latency.
+  Use plain `consult_role` for a single specialist, or when the second task
+  genuinely cannot be written until the first answers — the narrator, which
+  needs the decision and the roll outcomes.
 
 **The motivations firewall is now physical** (invariant #7): the narrator
 specialist is refused `motivations.md` / `secrets.md` at the tool level. When

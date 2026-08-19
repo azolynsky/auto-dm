@@ -368,6 +368,34 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
     return body if code == 0 else f"exit {code}\n{body}"
 
 
+def consult_pair(first_role: str, first_task: str,
+                 second_role: str, second_task: str) -> str:
+    """Consult TWO specialists at the same time and get both answers back.
+
+    Use this whenever a beat needs two independent specialists — almost always
+    director + rules-lawyer, where "what does the world do?" and "what check
+    resolves this?" can both be written from the player's intent. Running them
+    together costs the table one wait instead of two.
+
+    Only serialize (two separate consult_role calls) when the second task
+    genuinely cannot be written until the first answers — e.g. the narrator,
+    which needs the Director's decision and the roll outcomes.
+    """
+    out: dict = {}
+
+    def run(slot: str, role: str, task: str) -> None:
+        out[slot] = consult_role(role, task)
+
+    threads = [threading.Thread(target=run, args=("first", first_role, first_task)),
+               threading.Thread(target=run, args=("second", second_role, second_task))]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    return (f"=== {first_role} ===\n{out.get('first', '(no reply)')}\n\n"
+            f"=== {second_role} ===\n{out.get('second', '(no reply)')}")
+
+
 TOOLS = [read_file, write_file, edit_file, list_files, run_tool]
 
 
@@ -590,6 +618,29 @@ def _consult_brief(role: str = "", task: str = "") -> str:
     if manifest:
         parts.append("--- Entities on file (read only if this beat needs one "
                      "not pre-loaded above)\n" + "\n".join(manifest))
+    if role == "rules-lawyer":
+        # It opened srd-reference.md and then globbed rules/srd/** on every
+        # consult. The three table-level rules files are small; ship them, and
+        # index the rule directories so a lookup is one read, not a hunt.
+        for rel in ("srd-reference.md", "skill-checks.md", "combat-flow.md"):
+            try:
+                text = (config.BUNDLE / "rules" / rel).read_text(encoding="utf-8")
+                parts.append(f"--- rules/{rel}\n{text.strip()}")
+            except OSError:
+                continue
+        index = []
+        for group in sorted((config.BUNDLE / "rules" / "srd").glob("*")):
+            if not group.is_dir():
+                continue
+            files = sorted(f.name for f in group.glob("*.md"))
+            # Spells/monsters/items are one-file-per-entry: name the hub, not
+            # the thousand leaves.
+            index.append(f"rules/srd/{group.name}/: " + (
+                ", ".join(files) if len(files) <= 12
+                else f"{len(files)} files incl. " + ", ".join(files[:6]) + " …"))
+        if index:
+            parts.append("--- rules/srd index (exact paths — no globbing)\n"
+                         + "\n".join(index))
     return "\n\n".join(parts)
 
 
@@ -648,7 +699,7 @@ def consult_role(role: str, task: str) -> str:
     return _final_text(result) or "(no reply)"
 
 
-DM_TOOLS = TOOLS + [consult_role]
+DM_TOOLS = TOOLS + [consult_role, consult_pair]
 
 
 # ── Prompt and briefing ───────────────────────────────────────────────────────

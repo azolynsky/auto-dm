@@ -183,6 +183,35 @@ class TestConsultBrief(DesktopTestCase):
         self.assertNotIn("maera-thistle/summary.md",
                          self.agent._consult_brief("narrator", "an empty road"))
 
+    def test_consult_pair_runs_both_concurrently(self):
+        import time
+        calls, real = [], self.agent.consult_role
+
+        def slow(role, task):
+            calls.append(role)
+            time.sleep(0.4)
+            return f"{role} says ok"
+        self.agent.consult_role = slow
+        try:
+            start = time.time()
+            out = self.agent.consult_pair("director", "a", "rules-lawyer", "b")
+        finally:
+            self.agent.consult_role = real
+        self.assertLess(time.time() - start, 0.7)  # 0.8s if serialized
+        self.assertIn("=== director ===", out)
+        self.assertIn("=== rules-lawyer ===", out)
+        self.assertEqual(sorted(calls), ["director", "rules-lawyer"])
+
+    def test_rules_lawyer_brief_carries_the_rules(self):
+        brief = self.agent._consult_brief("rules-lawyer", "does a potion revive?")
+        self.assertIn("--- rules/srd-reference.md", brief)
+        self.assertIn("--- rules/skill-checks.md", brief)
+        self.assertIn("rules/srd index", brief)
+        self.assertIn("rules/srd/06_Gameplay/", brief)
+        # other roles don't carry the rules payload
+        self.assertNotIn("rules/srd index",
+                         self.agent._consult_brief("narrator", "x"))
+
     def test_narrator_cannot_run_tools(self):
         names = [t.__name__ for t in self.agent.role_tools("narrator")]
         self.assertNotIn("run_tool", names)  # it double-posted via narrate.py
