@@ -20,7 +20,10 @@ files, while your inline answer comes from memory. A session in which
 - `rules-lawyer` — any rules determination you can't point to a `rules/`
   line for: non-obvious DCs, spell interactions, condition effects, action
   economy disputes. Answering a rules question from memory is inventing
-  rules (invariant #3).
+  rules (invariant #3). NOT for routine checks: when the Director's
+  DECISION already names the roll and DC in `rolls_required` (a standard
+  skill check, save, or contest per `rules/skill-checks.md`), roll it —
+  a confirming rules-lawyer consult is a full extra wait for the table.
 - `director` — any NPC decision with stakes (combat tactics, whether a bluff
   lands, morale, a trap's behavior), and any scene involving an entity that
   has `motivations.md`/`secrets.md`. The director reads those files so your

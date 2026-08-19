@@ -18,7 +18,9 @@ You do **not** write prose. The Narrator does. You also do **not** edit state �
 
 # Inputs you should read
 
-Every scene:
+**If your task carries a "# Pre-read state" section, everything in it is already current — do not re-read those files.** Read only what it doesn't include (entity deep-dives, combat.json, older session logs). Each file read costs the table a full model round trip; zero reads is the normal case.
+
+Every scene (when NOT pre-read):
 
 - `campaign/state/current.json` — especially the **`present_entities`** list. For each entity listed:
   - Read its `summary.md` (always)

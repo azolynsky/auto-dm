@@ -90,7 +90,30 @@ class TestConsultBrief(DesktopTestCase):
         (self.campaign / "state" / "current.json").unlink()
         brief = self.agent._consult_brief()  # must not raise
         self.assertIn("campaign/state/settings.json", brief)
-        self.assertNotIn("characters", brief)
+        self.assertNotIn("--- PC sheets", brief)
+
+    def test_entity_pack_respects_motivations_firewall(self):
+        # starter current.json lists world/locations/emberwick, which has
+        # summary.md + secrets.md — everyone gets the summary, only the
+        # director gets the secrets (invariant #7).
+        for role in ("director", "narrator", "rules-lawyer"):
+            brief = self.agent._consult_brief(role)
+            self.assertIn("world/locations/emberwick/summary.md", brief, role)
+        # "--- campaign/<ent>/<file>" headers mark actual inclusion; bare
+        # "secrets.md" mentions in summary prose are fine.
+        self.assertIn("--- campaign/world/locations/emberwick/secrets.md",
+                      self.agent._consult_brief("director"))
+        for role in ("narrator", "rules-lawyer", "bookkeeper", ""):
+            brief = self.agent._consult_brief(role)
+            self.assertNotIn("/secrets.md\n", brief, role)
+            self.assertNotIn("/motivations.md\n", brief, role)
+
+    def test_free_text_entities_are_skipped(self):
+        cur_path = self.campaign / "state" / "current.json"
+        cur = json.loads(cur_path.read_text())
+        cur["present_entities"] = ["a nervous gnome at the bar (no file)"]
+        cur_path.write_text(json.dumps(cur))
+        self.agent._consult_brief("director")  # must not raise
 
 
 class TestActivity(DesktopTestCase):

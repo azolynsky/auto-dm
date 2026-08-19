@@ -424,20 +424,49 @@ def _final_text(result: dict) -> str:
     return ""
 
 
-def _consult_brief() -> str:
+def _consult_brief(role: str = "") -> str:
     """State every consult otherwise re-reads cold (specialists are stateless).
 
     Injected into each consult's task so a Director/Rules-Lawyer round doesn't
     spend 30s+ rediscovering the scene file by file — the measured worst case
     was a consult burning ~70s guessing PC sheet paths (campaign/pcs/*.md …).
+    Role-aware: present_entities' files ride along too — motivations.md and
+    secrets.md ONLY for the director (invariant #7, the motivations firewall).
     """
     parts = []
-    for rel in ("state/current.json", "state/settings.json", "house-rules.md"):
+    for rel in ("state/current.json", "state/settings.json", "house-rules.md",
+                "state/quests.json", "state/world-flags.json",
+                "state/dramatis-personae.json", "sessions/recap.md"):
         try:
             text = (config.CAMPAIGN / rel).read_text(encoding="utf-8").strip()
             parts.append(f"--- campaign/{rel}\n{text}")
         except OSError:
             continue
+    logs = sorted((config.CAMPAIGN / "sessions").glob("session-*.md"))
+    if logs:
+        tail = logs[-1].read_text(encoding="utf-8")[-4000:]
+        parts.append(f"--- campaign/sessions/{logs[-1].name} (tail)\n…{tail}")
+    try:
+        current = json.loads(
+            (config.CAMPAIGN / "state" / "current.json").read_text(encoding="utf-8"))
+        entities = current.get("present_entities") or []
+    except (OSError, json.JSONDecodeError):
+        entities = []
+    names = ["summary.md"]
+    if role == "director":
+        names += ["motivations.md", "secrets.md"]
+    elif role == "narrator":
+        names.append("voice.md")
+    for ent in entities:
+        folder = config.CAMPAIGN / str(ent)
+        if not isinstance(ent, str) or not folder.is_dir():
+            continue  # free-text entry ("nervous gnome at the bar…")
+        for name in names:
+            try:
+                text = (folder / name).read_text(encoding="utf-8").strip()
+                parts.append(f"--- campaign/{ent}/{name}\n{text}")
+            except OSError:
+                continue
     chars = config.CAMPAIGN / "characters"
     roster = []
     for p in sorted(chars.glob("*.json")) if chars.is_dir() else []:
@@ -480,7 +509,7 @@ def consult_role(role: str, task: str) -> str:
     if not task.strip():
         return "error: task is empty — tell the specialist what you need"
     _activity(ROLE_ACTIVITY.get(role, "The DM is consulting a specialist"))
-    brief = _consult_brief()
+    brief = _consult_brief(role)
     if brief:
         task = (f"{task}\n\n# Pre-read state (current as of this consult — "
                 f"do NOT re-read these files)\n{brief}")
