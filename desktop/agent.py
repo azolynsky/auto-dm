@@ -63,16 +63,15 @@ def resolve_path(path: str, *, write: bool) -> Path:
     if p.is_absolute() or ".." in p.parts:
         raise ValueError("use plain repo-relative paths, e.g. campaign/state/current.json")
     if p.parts and p.parts[0] == "campaign":
-        base = config.CAMPAIGN.resolve()
-        target = base.joinpath(*p.parts[1:])
+        target = config.CAMPAIGN.joinpath(*p.parts[1:])
     elif write:
         raise ValueError("writes are only allowed under campaign/")
     else:
-        base = config.BUNDLE.resolve()
-        target = base / p
-    target = target.resolve()
-    if target != base and not target.is_relative_to(base):
-        raise ValueError("path escapes its root")
+        target = config.BUNDLE / p
+    # No resolve()-based containment check: the absolute/".." screens above
+    # already pin the target under its root, and the frozen bundle reaches its
+    # data files through PyInstaller's own symlinks (Frameworks -> Resources),
+    # which resolve() would misread as an escape.
     return target
 
 

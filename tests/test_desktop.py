@@ -139,6 +139,23 @@ class TestActivity(DesktopTestCase):
 
 
 class TestWriteGuard(DesktopTestCase):
+    def test_reads_follow_bundle_symlinks(self):
+        # The frozen app reaches its data through PyInstaller's symlinks
+        # (Contents/Frameworks/rules -> ../Resources/rules). resolve_path must
+        # not treat following them as an escape.
+        resources = self.tmp / "Resources"
+        (resources / "rules").mkdir(parents=True)
+        (resources / "rules" / "poison.md").write_text("ouch")
+        bundle = self.tmp / "Frameworks"
+        bundle.mkdir()
+        (bundle / "rules").symlink_to(resources / "rules")
+        old = self.config.BUNDLE
+        self.config.BUNDLE = bundle
+        try:
+            self.assertEqual(self.agent.read_file("rules/poison.md"), "ouch")
+        finally:
+            self.config.BUNDLE = old
+
     def test_campaign_writes_allowed(self):
         result = self.agent.write_file("campaign/state/scratch.md", "hello")
         self.assertIn("wrote", result)
