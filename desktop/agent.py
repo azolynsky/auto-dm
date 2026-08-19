@@ -18,6 +18,7 @@ Self-check:  python desktop/agent.py --selftest
 """
 from __future__ import annotations
 
+import contextvars
 import datetime
 import functools
 import inspect
@@ -26,6 +27,7 @@ import json
 import re
 import sqlite3
 import sys
+import threading
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
@@ -103,45 +105,6 @@ TOOL_ACTIVITY = {
 _steps: list[str] = []
 
 
-def _verbose() -> bool:
-    """Dev setting: mirror raw model output, tool calls and results into the
-    activity ticker. Spoils secrets on the shared screen — testing only."""
-    return bool(config.load().get("verbose"))
-
-
-def _clip(value) -> str:
-    return " ".join(str(value).split())[:400]
-
-
-def _trace(message) -> None:
-    """One activity line per streamed message when verbose is on."""
-    kind = getattr(message, "type", "")
-    if kind == "ai":
-        content = message.content
-        if not isinstance(content, str):
-            content = " ".join(p.get("text", "") for p in content
-                               if isinstance(p, dict))
-        if content.strip():
-            _activity(f"DM: {_clip(content)}")
-        for tc in getattr(message, "tool_calls", None) or []:
-            _activity(f"→ {tc['name']} {_clip(json.dumps(tc['args'], ensure_ascii=False))}")
-    elif kind == "tool":
-        _activity(f"← {_clip(message.content)}")
-
-
-def _stream_invoke(graph, inputs, cfg, baseline: int):
-    """graph.invoke, but when verbose each message past `baseline` (the count
-    already in the thread, input included) is traced as it lands."""
-    if not _verbose():
-        return graph.invoke(inputs, config=cfg)
-    state, seen = None, baseline
-    for state in graph.stream(inputs, config=cfg, stream_mode="values"):
-        for m in state["messages"][seen:]:
-            _trace(m)
-        seen = max(seen, len(state["messages"]))
-    return state
-
-
 def _activity(step: str | None, *, busy: bool = True) -> None:
     global _steps
     if not busy:
@@ -154,7 +117,7 @@ def _activity(step: str | None, *, busy: bool = True) -> None:
     try:
         path = config.CAMPAIGN / "state" / "dm-activity.json"
         path.parent.mkdir(parents=True, exist_ok=True)
-        shown = _steps[-30:] if _verbose() else _steps[-8:]
+        shown = _steps[-8:]
         path.write_text(json.dumps({"busy": busy, "steps": shown}),
                         encoding="utf-8")
     except OSError:
@@ -192,21 +155,53 @@ def _tool_error(e: Exception) -> str:
 DEVLOG_MAX_BYTES = 400_000
 DEVLOG_KEEP = 200
 
+# Which agent is at the keyboard, named for the log's "thread" column: a role
+# name inside a consult_role subagent, "main" for the DM orchestrator. A
+# ContextVar, not a global, because langgraph runs a response's tool calls in a
+# thread pool that copies the calling context per task — so two consults running
+# at once each see their own value.
+_thread = contextvars.ContextVar("devlog_thread", default="main")
 
-def _devlog(tool: str, args: dict, result) -> None:
+# ponytail: one lock for the whole log file. Parallel consults append here from
+# several threads, and the size trim rewrites the file wholesale — without this,
+# a 6KB entry can interleave mid-line or a trim can drop a concurrent append.
+# A few writes a second, so contention is noise.
+_log_lock = threading.Lock()
+
+# run_tool swaps process-global sys.argv/sys.stdin (see its comment).
+_tool_lock = threading.Lock()
+
+
+def _utcnow() -> datetime.datetime:
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+def _stamp(t: datetime.datetime) -> str:
+    # Milliseconds, not seconds: parallel calls inside one turn are the whole
+    # reason for the timestamps, and they overlap well under a second.
+    return t.isoformat(timespec="milliseconds")
+
+
+def _devlog(tool: str, args: dict, result,
+            started: datetime.datetime | None = None) -> None:
     try:
+        finished = _utcnow()
+        started = started or finished
         path = config.CAMPAIGN / "state" / "dev-log.jsonl"
         path.parent.mkdir(parents=True, exist_ok=True)
-        entry = {"ts": datetime.datetime.now(datetime.timezone.utc)
-                 .isoformat(timespec="seconds"),
+        entry = {"started": _stamp(started),
+                 "finished": _stamp(finished),
+                 "ms": round((finished - started).total_seconds() * 1000),
+                 "thread": _thread.get(),
                  "tool": tool,
                  "args": {k: str(v)[:2000] for k, v in args.items()},
                  "result": str(result)[:4000]}
-        with path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        if path.stat().st_size > DEVLOG_MAX_BYTES:
-            lines = path.read_text(encoding="utf-8").splitlines()[-DEVLOG_KEEP:]
-            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        with _log_lock:
+            with path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            if path.stat().st_size > DEVLOG_MAX_BYTES:
+                lines = path.read_text(encoding="utf-8").splitlines()[-DEVLOG_KEEP:]
+                path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     except OSError:
         pass  # diagnostics only — never fail a turn over the log
 
@@ -218,12 +213,13 @@ def _logged(fn):
 
     @functools.wraps(fn)
     def wrapper(*a, **kw):
+        started = _utcnow()
         result = fn(*a, **kw)
         try:
             bound = sig.bind(*a, **kw)
-            _devlog(fn.__name__, dict(bound.arguments), result)
+            _devlog(fn.__name__, dict(bound.arguments), result, started)
         except TypeError:
-            _devlog(fn.__name__, {"raw": [*a, kw]}, result)
+            _devlog(fn.__name__, {"raw": [*a, kw]}, result, started)
         return result
     return wrapper
 
@@ -309,6 +305,8 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
       run_tool("narrate.py", ["-"], stdin="The gate groans open…")
       run_tool("combat_tracker.py", ["damage", "--who", "Goblin1", "--amount", "6"])
       run_tool("char_update.py", ["hp", "--char", "Mira", "--heal", "7"])
+      run_tool("check_resolver.py", ["--char", "Mira", "--save", "con", "--dc", "10"])
+    --char takes a character id or name, not a file path.
     Pass multi-paragraph or quote-bearing prose through stdin with args ["-"].
     """
     global _narrated
@@ -316,32 +314,36 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
         return f"error: unknown tool {tool!r}; available: {', '.join(TOOL_SCRIPTS)}"
     _activity(TOOL_ACTIVITY.get(tool))
     script = config.BUNDLE / "tools" / tool
-    # ponytail: swapping sys.argv/stdout in-process is fine while the queue
-    # serialises turns. Needs a subprocess if turns ever overlap — but note a
-    # frozen app has no python interpreter to spawn, hence in-process exec.
+    # ponytail: the tool scripts run in-process because a frozen app has no
+    # python interpreter to subprocess out to — which means swapping the
+    # process-global sys.argv/sys.stdin/stdout. Parallel consults can each call
+    # a tool at once, so the swap window is serialised under _tool_lock; the
+    # scripts are milliseconds, and it's the model calls that need to overlap.
+    # A subprocess per call is the upgrade if tool runtime ever dominates.
     out, err = io.StringIO(), io.StringIO()
-    saved_argv, saved_stdin = sys.argv, sys.stdin
-    sys.argv = [tool] + [str(a) for a in (argv or [])]
-    if stdin is not None:
-        sys.stdin = io.StringIO(stdin)
     code = 0
-    try:
-        with redirect_stdout(out), redirect_stderr(err):
-            try:
-                # Not runpy.run_path: in the frozen app PyInstaller's import
-                # finder claims every path under the bundle, so run_path hunts
-                # for a __main__ module inside the .py file and dies with
-                # "can't find '__main__' module". compile/exec sidesteps the
-                # import machinery entirely.
-                exec(compile(script.read_text(encoding="utf-8"),
-                             str(script), "exec"),
-                     {"__name__": "__main__", "__file__": str(script)})
-            except SystemExit as e:   # every tool ends in sys.exit(main())
-                code = e.code if isinstance(e.code, int) else 0
-    except Exception as e:
-        return f"error running {tool}: {type(e).__name__}: {e}"
-    finally:
-        sys.argv, sys.stdin = saved_argv, saved_stdin
+    with _tool_lock:
+        saved_argv, saved_stdin = sys.argv, sys.stdin
+        sys.argv = [tool] + [str(a) for a in (argv or [])]
+        if stdin is not None:
+            sys.stdin = io.StringIO(stdin)
+        try:
+            with redirect_stdout(out), redirect_stderr(err):
+                try:
+                    # Not runpy.run_path: in the frozen app PyInstaller's import
+                    # finder claims every path under the bundle, so run_path
+                    # hunts for a __main__ module inside the .py file and dies
+                    # with "can't find '__main__' module". compile/exec
+                    # sidesteps the import machinery entirely.
+                    exec(compile(script.read_text(encoding="utf-8"),
+                                 str(script), "exec"),
+                         {"__name__": "__main__", "__file__": str(script)})
+                except SystemExit as e:   # every tool ends in sys.exit(main())
+                    code = e.code if isinstance(e.code, int) else 0
+        except Exception as e:
+            return f"error running {tool}: {type(e).__name__}: {e}"
+        finally:
+            sys.argv, sys.stdin = saved_argv, saved_stdin
     body = out.getvalue().strip() or err.getvalue().strip() or "(no output)"
     if tool == "narrate.py" and code == 0:
         _narrated = True
@@ -362,10 +364,7 @@ SUB_ROLES = tuple(r for r in prompts.ROLES if r != "dm")
 SUB_RECURSION_LIMIT = 32
 
 
-def role_model(role: str) -> str:
-    return ((config.load().get("role_models") or {}).get(role)
-            or config.DEV_DEFAULTS["role_models"].get(role)
-            or config.model())
+role_model = config.role_model
 
 
 def role_tools(role: str) -> list:
@@ -381,9 +380,11 @@ def role_tools(role: str) -> list:
             summary.md/voice.md. Paths are repo-relative. motivations.md and
             secrets.md are GM-eyes-only and will be refused."""
             if Path(config.norm_path(path)).name in ("motivations.md", "secrets.md"):
-                return ("error: that file is GM-eyes-only (the motivations "
-                        "firewall) — narrate from what the players have earned "
-                        "on screen")
+                refusal = ("error: that file is GM-eyes-only (the motivations "
+                           "firewall) — narrate from what the players have "
+                           "earned on screen")
+                _devlog("read_file", {"path": path}, refusal, _utcnow())
+                return refusal
             return base_read(path)
 
         return [read_file_safe, list_files, run_tool]
@@ -423,6 +424,36 @@ def _final_text(result: dict) -> str:
     return ""
 
 
+def _consult_brief() -> str:
+    """State every consult otherwise re-reads cold (specialists are stateless).
+
+    Injected into each consult's task so a Director/Rules-Lawyer round doesn't
+    spend 30s+ rediscovering the scene file by file — the measured worst case
+    was a consult burning ~70s guessing PC sheet paths (campaign/pcs/*.md …).
+    """
+    parts = []
+    for rel in ("state/current.json", "state/settings.json", "house-rules.md"):
+        try:
+            text = (config.CAMPAIGN / rel).read_text(encoding="utf-8").strip()
+            parts.append(f"--- campaign/{rel}\n{text}")
+        except OSError:
+            continue
+    chars = config.CAMPAIGN / "characters"
+    roster = []
+    for p in sorted(chars.glob("*.json")) if chars.is_dir() else []:
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        roster.append(f"campaign/characters/{p.name} — {d.get('name', '?')}"
+                      f" ({d.get('race', '?')} {d.get('class', '?')}"
+                      f" {d.get('level', '?')})")
+    if roster:
+        parts.append("--- PC sheets (exact paths — read for full stats)\n"
+                     + "\n".join(roster))
+    return "\n\n".join(parts)
+
+
 @_logged
 def consult_role(role: str, task: str) -> str:
     """Delegate to a specialist role agent — this harness's native subagent
@@ -433,26 +464,37 @@ def consult_role(role: str, task: str) -> str:
 
     The specialist has NO chat history and NO memory between calls — put
     everything it needs in `task`: the beat, what the player said, relevant
-    entity paths, dice results, and decisions already made. The narrator
+    entity paths, dice results, and decisions already made. Say explicitly
+    which state changes are ALREADY APPLIED vs still to apply — a recap of
+    resolved beats must not read as a change request. The narrator
     cannot read motivations.md/secrets.md; the bookkeeper is the only role
-    that can write files. Independent consults can happen in parallel by
-    calling this tool multiple times in one response.
+    that can write files. current.json, settings.json, house-rules.md, and
+    the PC sheet paths are appended to `task` automatically — don't ask the
+    specialist to read those. Independent consults MUST go out in parallel:
+    multiple consult_role calls in one response. In particular, a rules
+    question (DC, save type, condition effect) almost never depends on the
+    Director's answer — fire director + rules-lawyer together.
     """
     if role not in SUB_ROLES:
         return f"error: unknown role {role!r}; available: {', '.join(SUB_ROLES)}"
     if not task.strip():
         return "error: task is empty — tell the specialist what you need"
     _activity(ROLE_ACTIVITY.get(role, "The DM is consulting a specialist"))
+    brief = _consult_brief()
+    if brief:
+        task = (f"{task}\n\n# Pre-read state (current as of this consult — "
+                f"do NOT re-read these files)\n{brief}")
+    token = _thread.set(role)
     try:
-        result = _stream_invoke(
-            _build_sub_agent(role),
+        result = _build_sub_agent(role).invoke(
             {"messages": [{"role": "user", "content": task}]},
-            {"recursion_limit": SUB_RECURSION_LIMIT},
-            baseline=1)
+            config={"recursion_limit": SUB_RECURSION_LIMIT})
     except Exception as e:
         if type(e).__name__ == "GraphRecursionError":
             return f"error: the {role} got stuck — break the task into smaller pieces"
         return f"error consulting {role}: {_friendly(e)}"
+    finally:
+        _thread.reset(token)
     return _final_text(result) or "(no reply)"
 
 
@@ -730,8 +772,15 @@ def run_turn(player_message: str) -> dict:
                       for tc in (getattr(m, "tool_calls", None) or [])
                       if tc["id"] not in answered]
         if unanswered:
+            # Truthful, not "the tool never ran": run_tool mutates state BEFORE
+            # the result is checkpointed, so a killed app may have applied the
+            # change already. Telling the model it never ran invites a re-apply
+            # (that's how a PC once took the same poison damage twice).
             agent.update_state(run_config, {"messages": [
-                ToolMessage(content="(interrupted — the tool never ran)",
+                ToolMessage(content="(the app was closed mid-turn — this call "
+                                    "was interrupted and may or may not have "
+                                    "taken effect; re-read campaign state "
+                                    "before redoing any state change)",
                             tool_call_id=tc["id"])
                 for tc in unanswered
             ]}, as_node="tools")
@@ -741,13 +790,7 @@ def run_turn(player_message: str) -> dict:
             + [HumanMessage(content=player_message)]
 
         try:
-            # Baseline = what's already in the thread plus this turn's input,
-            # so verbose tracing starts at the first new AI message. Re-read
-            # after the dangling-call heal above, which edits the thread.
-            baseline = len((agent.get_state(run_config).values or {})
-                           .get("messages") or []) + len(turn)
-            result = _stream_invoke(agent, {"messages": turn}, run_config,
-                                    baseline)
+            result = agent.invoke({"messages": turn}, config=run_config)
         except DMError:
             raise
         except Exception as e:

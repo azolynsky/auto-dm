@@ -43,17 +43,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import campaign_lib
 
 
-def find_sheet(root: Path, who: str) -> Path:
-    chars = root / "characters"
-    for path in sorted(chars.glob("*.json")) if chars.is_dir() else []:
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
-        if who.lower() in (str(data.get("id", "")).lower(),
-                           str(data.get("name", "")).lower()):
-            return path
-    raise SystemExit(f"no character sheet matches: {who}")
+find_sheet = campaign_lib.find_sheet
 
 
 def in_active_combat(root: Path, name: str) -> bool:

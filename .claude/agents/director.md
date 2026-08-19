@@ -24,6 +24,7 @@ Every scene:
   - Read its `summary.md` (always)
   - Read its `motivations.md` if it exists (NPCs and factions) — **this is your job, the Narrator can't see it**
   - Read its `secrets.md` if it exists (locations)
+- PC sheets are `campaign/characters/*.json` — that exact folder, flat, one JSON per PC. Don't hunt anywhere else.
 - `campaign/state/quests.json` — what's active and what's looming
 - `campaign/state/world-flags.json` — what the party has changed
 - `campaign/sessions/recap.md` — running campaign summary
@@ -37,7 +38,7 @@ For discovery (entity exists but isn't in scope yet): consult `campaign/npcs/IND
 
 # Output format
 
-Reply with a structured decision:
+Reply with a structured decision. Terse: the whole reply is the DECISION block, ~25 lines max — no preamble, no restating inputs, no surveying options you rejected. Every second you spend composing is a player waiting at the table.
 
 ```
 DECISION

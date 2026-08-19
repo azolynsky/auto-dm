@@ -83,7 +83,6 @@ Players control these from the web companion's ⚙ Settings tab. Every `narrate.
 
 - **`rules_strictness`** — `strict`: rules as written, dice fall where they fall, no softening. `flexible`: Director may soften per invariant #5 (log `[MERCY]`).
 - **`beginner_mode`** — when true, relax the "never suggest solutions" principle: remind players what their character can do, and offer 2–3 example options when they seem stuck. The world's difficulty doesn't change — only the guidance. Guidance is out-of-character (a `system`-type note or plain chat), NEVER inside narration: prose that ends in "What do you want to do next?" or a bullet menu of choices is banned in every mode, and the narrate.py style gate refuses it.
-- **`show_rolls`** — when true, labeled dice results are queued automatically as public effects and appear in the chronicle under the next narration. Nothing for you to do except keep labels player-readable ("Torva longsword vs Goblin1", not internal shorthand).
 - **`kid_friendly`** — keep violence and horror gentle: enemies are defeated/flee/collapse rather than gorily killed; fear beats dread; no cruelty lingered on.
 - **`narration_style`** — `brief`: mechanical outcome + one scene beat. `standard`: the Narrator default. `cinematic`: fuller sensory scenes; still no purple prose.
 - **`custom_rules`** — free text; treat as active house rules, same authority as `campaign/house-rules.md` "Active".
@@ -95,8 +94,8 @@ All tools print standardized JSON on stdout. They find the campaign via `CAMPAIG
 - `dice.py` — every roll. Multiple expressions batch into one call; `--label` (and `--mode`) repeat per expression, in order; a single `--mode` applies to all.
   - `python tools/dice.py 1d20+5 --mode advantage --label "stealth"`
   - `python tools/dice.py 1d20+7 1d8+3 --mode advantage --mode normal --label "longbow to-hit" --label "longbow damage"`
-- `check_resolver.py` — pulls modifiers from character JSON and rolls. Use for skill checks and saves.
-  - `python tools/check_resolver.py --char campaign/characters/<id>.json --skill stealth --dc 15`
+- `check_resolver.py` — pulls modifiers from character JSON and rolls. Use for skill checks and saves. `--char` takes a character id or name (like `char_update.py`); a sheet path also works.
+  - `python tools/check_resolver.py --char <id-or-name> --skill stealth --dc 15`
 - `char_update.py` — deterministic character-sheet mutations: HP outside combat (temp absorbs first, clamps to max/0), spell slots (`--use`/`--restore`/`--long-rest`), inventory add/remove, gold, conditions. Same invariant as dice: never do resource arithmetic in your head. Queues a player-visible effect automatically (`--quiet` to skip); refuses HP/condition changes for anyone in active combat (use `combat_tracker.py` there).
   - `python tools/char_update.py hp --char Mira --damage 6`
   - `python tools/char_update.py item --char Relthus --remove Arrows --qty 3`

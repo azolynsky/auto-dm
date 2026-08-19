@@ -412,8 +412,11 @@ async def post_setup(request: Request):
     else:
         result = {"credit": None}
 
-    appconfig.save(api_key=key or None,
-                   model=str(body.get("model") or "").strip() or None)
+    appconfig.save(api_key=key or None)
+    chosen = str(body.get("model") or "").strip()
+    if chosen:  # the setup screen picks the DM's model; the rest are per-role
+        appconfig.save(role_models={**(appconfig.load().get("role_models") or {}),
+                                    "dm": chosen})
     name = str(body.get("campaign_name", "")).strip()
     if name:
         appconfig.set_campaign_name(name)
@@ -479,8 +482,6 @@ async def post_dev(request: Request):
     for field in ("history_tokens", "recursion_limit"):
         if field in body and not (isinstance(body[field], int) and body[field] > 0):
             raise HTTPException(status_code=400, detail=f"{field} must be a positive int")
-    if "verbose" in body and not isinstance(body["verbose"], bool):
-        raise HTTPException(status_code=400, detail="verbose must be a boolean")
 
     appconfig.save(**body)
     return JSONResponse({**appconfig.dev_settings(),

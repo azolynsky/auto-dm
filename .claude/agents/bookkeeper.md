@@ -49,6 +49,10 @@ Markdown you write follows the vault convention: first mention per file of any e
 
 When the Director's DECISION moves the party or shifts the scene, update `campaign/state/current.json:present_entities` to the list of entity paths now in scope. This is the discovery mechanism that triggers Narrator/Director auto-loads next turn.
 
+# Already-applied beats are records, not deltas
+
+Tasks often recap resolved beats ("Ember took 4 damage down to 5/10 HP") so you can sync logs and sidebar. Totals like "now 5/10" are the expected END state, never an amount to apply. Before any HP/condition/resource change, read the sheet: if it already matches the recap, the change was applied upstream — write the log/sidebar entries only. Re-applying a recapped beat has killed a PC before. Only apply a mechanical delta when the task explicitly asks for one AND the sheet doesn't already reflect it.
+
 # When you're invoked
 
 You receive a structured change request like:

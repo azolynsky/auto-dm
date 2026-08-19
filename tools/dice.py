@@ -16,9 +16,6 @@ Mixed modes in a batch (repeat --mode per expression, in order; once = all):
 
 Output: one JSON object for a single expression, a JSON array for a batch.
 The positional mode argument ("python dice.py 1d20 advantage") still works.
-
-If the table setting show_rolls is on, labeled rolls are queued as public
-effects for the next narration (see campaign_lib.queue_effect).
 """
 from __future__ import annotations
 
@@ -28,10 +25,6 @@ import random
 import re
 import sys
 from dataclasses import dataclass, asdict
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))  # tools importable from anywhere
-import campaign_lib
 
 # Use secrets-backed RNG so rolls are not reproducible / not LLM-influenceable.
 _rng = random.SystemRandom()
@@ -110,16 +103,6 @@ def do_roll(expr: str, mode: str, label: str | None) -> Roll:
     )
 
 
-def public_roll_text(roll: Roll) -> str:
-    crit_tag = " — NAT 20!" if roll.crit is True else (" — nat 1" if roll.crit is False else "")
-    return f"🎲 {roll.label}: {roll.total}{crit_tag}"
-
-
-def maybe_publish(rolls: list[Roll]) -> None:
-    """Queue labeled rolls as public effects when the table wants open rolls."""
-    campaign_lib.queue_public_effects([public_roll_text(r) for r in rolls if r.label])
-
-
 def pretty_line(roll: Roll) -> str:
     tag = f"[{roll.label}] " if roll.label else ""
     crit_tag = ""
@@ -159,8 +142,6 @@ def main() -> int:
     labels = args.label or []
     rolls = [do_roll(expr, modes[i], labels[i] if i < len(labels) else None)
              for i, expr in enumerate(exprs)]
-
-    maybe_publish(rolls)
 
     if args.pretty:
         for roll in rolls:

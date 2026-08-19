@@ -12,7 +12,9 @@ Stdlib only — none of this needs langgraph installed.
 """
 from __future__ import annotations
 
+import datetime
 import json
+import threading
 import os
 import shutil
 import sys
@@ -70,12 +72,36 @@ class TestReadiness(DesktopTestCase):
         self.assertFalse(self.config.is_ready())
 
 
+class TestConsultBrief(DesktopTestCase):
+    """Every consult gets the scene state and PC sheet paths pre-injected,
+    so stateless specialists don't burn model rounds rediscovering them."""
+
+    def test_brief_carries_state_and_roster(self):
+        brief = self.agent._consult_brief()
+        self.assertIn("campaign/state/current.json", brief)
+        self.assertIn("campaign/state/settings.json", brief)
+        self.assertIn("campaign/house-rules.md", brief)
+        # exact sheet paths with names, so nobody guesses campaign/pcs/*.md
+        self.assertIn("campaign/characters/pc-warlock.json", brief)
+        self.assertIn("Ember Vex", brief)
+
+    def test_brief_survives_missing_files(self):
+        shutil.rmtree(self.campaign / "characters")
+        (self.campaign / "state" / "current.json").unlink()
+        brief = self.agent._consult_brief()  # must not raise
+        self.assertIn("campaign/state/settings.json", brief)
+        self.assertNotIn("characters", brief)
+
+
 class TestActivity(DesktopTestCase):
     """Tool calls publish player-safe progress labels to dm-activity.json —
     fixed strings only, never paths or arguments that could spoil a secret."""
 
     def _read(self):
         return json.loads((self.campaign / "state" / "dm-activity.json").read_text())
+
+    def _devlog(self):
+        return (self.campaign / "state" / "dev-log.jsonl").read_text().splitlines()
 
     def test_tool_calls_publish_steps(self):
         self.agent.run_tool("dice.py", ["1d20"])
@@ -103,39 +129,75 @@ class TestActivity(DesktopTestCase):
 
     def test_tool_calls_land_in_devlog(self):
         self.agent.run_tool("dice.py", ["1d20", "--label", "test roll"])
-        log = (self.campaign / "state" / "dev-log.jsonl").read_text().splitlines()
-        entry = json.loads(log[-1])
+        entry = json.loads(self._devlog()[-1])
         self.assertEqual(entry["tool"], "run_tool")
         self.assertIn("dice.py", entry["args"]["tool"])
         self.assertIn("test roll", entry["result"])
 
-    def test_verbose_traces_messages(self):
-        from types import SimpleNamespace
-        self.config.APP_DIR.mkdir(parents=True)
-        self.config.save(verbose=True)
-        self.agent._trace(SimpleNamespace(
-            type="ai", content="I weigh the goblin's options.",
-            tool_calls=[{"name": "run_tool",
-                         "args": {"tool": "dice.py", "argv": ["1d20"]},
-                         "id": "call1"}]))
-        self.agent._trace(SimpleNamespace(type="tool", content='{"total": 14}',
-                                          tool_calls=None))
-        steps = self._read()["steps"]
-        self.assertIn("DM: I weigh the goblin's options.", steps)
-        self.assertTrue(any(s.startswith("→ run_tool") and "dice.py" in s
-                            for s in steps))
-        self.assertIn('← {"total": 14}', steps)
-
-    def test_verbose_off_by_default(self):
-        from types import SimpleNamespace
-        self.agent._trace(SimpleNamespace(type="ai", content="hidden",
-                                          tool_calls=None))
-        # _trace itself doesn't gate on verbose — _stream_invoke does — but the
-        # ticker window must stay at 8 canned steps when verbose is off.
+    def test_ticker_window_stays_short(self):
+        """The ticker is player-facing furniture: 8 canned steps, no raw stream."""
         for _ in range(12):
             self.agent.run_tool("dice.py", ["1d20"])
             self.agent.read_file("rules/README.md")
         self.assertLessEqual(len(self._read()["steps"]), 8)
+
+    def test_devlog_names_the_thread(self):
+        """A subagent's tool calls are attributable in the sidebar."""
+        self.agent.run_tool("dice.py", ["1d20"])
+        self.assertEqual(json.loads(self._devlog()[-1])["thread"], "main")
+        token = self.agent._thread.set("narrator")
+        try:
+            self.agent.read_file("rules/README.md")
+        finally:
+            self.agent._thread.reset(token)
+        self.assertEqual(json.loads(self._devlog()[-1])["thread"], "narrator")
+
+    def test_devlog_times_every_call(self):
+        self.agent.run_tool("dice.py", ["1d20"])
+        entry = json.loads(self._devlog()[-1])
+        started = datetime.datetime.fromisoformat(entry["started"])
+        finished = datetime.datetime.fromisoformat(entry["finished"])
+        self.assertLessEqual(started, finished)
+        self.assertGreaterEqual(entry["ms"], 0)
+        # milliseconds, not seconds — parallel calls overlap well under a second
+        self.assertRegex(entry["started"], r"\.\d{3}")
+
+    def test_parallel_threads_keep_their_own_names_and_lines(self):
+        """Two role agents running at once must not blend in the log."""
+        def work(role):
+            token = self.agent._thread.set(role)
+            try:
+                for _ in range(15):
+                    self.agent.run_tool("dice.py", ["1d20", "--label", role])
+                    self.agent.read_file("rules/README.md")
+            finally:
+                self.agent._thread.reset(token)
+
+        threads = [threading.Thread(target=work, args=(r,))
+                   for r in ("narrator", "director", "rules-lawyer")]
+        [t.start() for t in threads]
+        [t.join() for t in threads]
+
+        lines = self._devlog()
+        entries = [json.loads(line) for line in lines]   # no torn/interleaved lines
+        self.assertEqual(len(entries), len(lines))
+        by_thread = {}
+        for e in entries:
+            by_thread.setdefault(e["thread"], []).append(e)
+        for role in ("narrator", "director", "rules-lawyer"):
+            self.assertEqual(len(by_thread[role]), 30, role)
+            # a thread only ever logs its own dice label
+            for e in by_thread[role]:
+                if e["args"].get("tool") == "dice.py":
+                    self.assertIn(role, e["args"]["argv"])
+
+    def test_narrator_firewall_refusal_is_logged(self):
+        read = [t for t in self.agent.role_tools("narrator")
+                if t.__name__ == "read_file_safe"][0]
+        self.assertIn("GM-eyes-only", read("campaign/npcs/x/secrets.md"))
+        entry = json.loads(self._devlog()[-1])
+        self.assertEqual(entry["tool"], "read_file")
+        self.assertIn("GM-eyes-only", entry["result"])
 
 
 class TestWriteGuard(DesktopTestCase):
@@ -292,17 +354,26 @@ class TestRoleAgents(DesktopTestCase):
         finally:
             os.environ.pop("AUTODM_MODEL")
 
-    def test_role_model_falls_back_to_global(self):
+    def test_every_role_picks_its_own_model(self):
         self.config.APP_DIR.mkdir(parents=True)
-        self.config.save(model="global/model",
-                         role_models={"narrator": "cheap/model",
-                                      "director": "user/model"})
-        # user setting beats the role default beats the global model
+        self.config.save(role_models={"narrator": "cheap/model",
+                                      "dm": "fast/model"})
+        # a user's pick beats the shipped per-role default; there is no global
         self.assertEqual(self.agent.role_model("narrator"), "cheap/model")
-        self.assertEqual(self.agent.role_model("director"), "user/model")
+        self.assertEqual(self.agent.role_model("dm"), "fast/model")
+        self.assertEqual(self.config.model(), "fast/model")
         self.assertEqual(self.agent.role_model("rules-lawyer"),
                          self.config.DEV_DEFAULTS["role_models"]["rules-lawyer"])
-        self.assertEqual(self.agent.role_model("dm"), "global/model")
+        for role in self.prompts.ROLES:
+            self.assertIn(role, self.config.DEV_DEFAULTS["role_models"], role)
+
+    def test_legacy_global_model_still_drives_the_dm(self):
+        """A config written before per-role models keeps its DM choice."""
+        self.config.APP_DIR.mkdir(parents=True)
+        self.config.save(model="legacy/model")
+        self.assertEqual(self.agent.role_model("dm"), "legacy/model")
+        self.assertEqual(self.agent.role_model("narrator"),
+                         self.config.DEV_DEFAULTS["role_models"]["narrator"])
 
 
 class TestPlayersText(DesktopTestCase):

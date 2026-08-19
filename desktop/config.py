@@ -51,7 +51,9 @@ CONFIG_FILE = APP_DIR / "config.json"
 CAMPAIGN = Path(os.environ["CAMPAIGN_ROOT"]) if os.environ.get("CAMPAIGN_ROOT") \
     else APP_DIR / "campaign"
 
-DEFAULT_MODEL = "google/gemini-3.7-flash"
+# The fallback for a role with no shipped default. There is deliberately no
+# single "global model" setting: every role's model is picked individually.
+FALLBACK_MODEL = "google/gemini-3.7-flash"
 
 # Shown on the setup screen. Ids verified against openrouter.ai/api/v1/models —
 # anything else can be typed in by hand, so this list never becomes a cage.
@@ -68,14 +70,15 @@ MODEL_CHOICES = [
 # out of the players' Table Settings on purpose: these change how the DM is
 # built, not how it plays.
 DEV_DEFAULTS = {
-    "model": DEFAULT_MODEL,
     "prompts": {},            # {role: variant} — see desktop/prompts.py
-    # {role: model id} — per-role defaults; a user's saved role_models entry
-    # overrides, a role in neither falls back to the global model. Background
-    # roles take DeepSeek's judgment over its latency; the dm orchestrator
-    # stays on the global fast model. Narrator: DeepSeek won the table's prose
-    # bake-off (2026-08-18); Luna/Gemini-lite invented facts, Haiku was cliché.
+    # {role: model id} — every role, including the dm orchestrator, has its own
+    # model; a user's saved role_models entry overrides the default here.
+    # Background roles take DeepSeek's judgment over its latency; the dm stays
+    # on a fast model because the table waits on it. Narrator: DeepSeek won the
+    # table's prose bake-off (2026-08-18); Luna/Gemini-lite invented facts,
+    # Haiku was cliché.
     "role_models": {
+        "dm": FALLBACK_MODEL,
         "narrator": "~deepseek/deepseek-v4-flash-latest",
         "director": "~deepseek/deepseek-v4-flash-latest",
         "rules-lawyer": "~deepseek/deepseek-v4-flash-latest",
@@ -86,17 +89,14 @@ DEV_DEFAULTS = {
     },
     "history_tokens": 120_000,
     "recursion_limit": 80,
-    # Stream the DM's raw output, tool calls and results into the activity
-    # ticker. Spoils secrets on the shared screen — for testing only.
-    "verbose": False,
 }
 
 
 def dev_settings() -> dict:
     cfg = load()
     settings = {k: cfg.get(k, default) for k, default in DEV_DEFAULTS.items()}
-    # Show the effective per-role models (defaults merged under user picks) so
-    # the dev panel never claims "global" for a role that has its own default.
+    # Effective per-role models: shipped defaults under the user's picks, so the
+    # dev panel shows what each role will actually run on.
     settings["role_models"] = {**DEV_DEFAULTS["role_models"],
                                **(cfg.get("role_models") or {})}
     return settings
@@ -126,10 +126,24 @@ def api_key() -> str:
     return os.environ.get("OPENROUTER_API_KEY") or load().get("api_key", "")
 
 
+def role_model(role: str) -> str:
+    """The model one role runs on: the user's pick, else the shipped default."""
+    cfg = load()
+    return ((cfg.get("role_models") or {}).get(role)
+            # A config from before per-role models had one global "model" key;
+            # honour it for the dm so an existing install keeps its choice.
+            or (cfg.get("model") if role == "dm" else None)
+            or DEV_DEFAULTS["role_models"].get(role)
+            or FALLBACK_MODEL)
+
+
 def model() -> str:
-    # AUTODM_MODEL mirrors OPENROUTER_API_KEY: an env override so tools like
-    # tools/sandbox.py can pit models against each other without touching config.
-    return os.environ.get("AUTODM_MODEL") or load().get("model") or DEFAULT_MODEL
+    """The DM orchestrator's model — role_models["dm"].
+
+    AUTODM_MODEL mirrors OPENROUTER_API_KEY: an env override so tools like
+    tools/sandbox.py can pit models against each other without touching config.
+    """
+    return os.environ.get("AUTODM_MODEL") or role_model("dm")
 
 
 def is_ready() -> bool:

@@ -40,8 +40,17 @@ Mechanics of a consult:
 - A specialist has **no chat history**. Put everything it needs in `task`:
   what the player said, the current scene, relevant entity paths, dice
   results, decisions already made. Vague tasks get vague answers.
-- Independent consults go out in parallel: multiple consult_role calls in one
-  response.
+  (`current.json`, `settings.json`, `house-rules.md`, and the PC sheet paths
+  are appended to every `task` automatically — don't tell a specialist to
+  read those.)
+- **Independent consults MUST go out in parallel** — multiple consult_role
+  calls in ONE response. Sequential consults are the single largest source of
+  table latency: a director + rules-lawyer pair issued back-to-back costs the
+  players a full extra consult of waiting. The rules question ("what check,
+  what DC?") almost never depends on the director's answer ("what does the
+  world do?") — when a beat needs both, fire both together, then reconcile.
+  Serialize only when one consult's task genuinely cannot be written without
+  the other's output.
 
 **The motivations firewall is now physical** (invariant #7): the narrator
 specialist is refused `motivations.md` / `secrets.md` at the tool level. When
@@ -68,8 +77,10 @@ nothing happened for them. Your own reply text is *not* shown to them.
 
 The manual's per-turn pipeline still applies: decide (Director), resolve
 (Rules Lawyer + `dice.py`), record (Bookkeeper — every turn, not at
-checkpoints), then narrate. Roll every random outcome through `dice.py`;
-never invent a number.
+checkpoints), then narrate. The pipeline orders the *outputs*, not the
+*calls*: Director and Rules Lawyer go out together in one response whenever
+the rules question can be phrased from the player's intent alone. Roll every
+random outcome through `dice.py`; never invent a number.
 
 **If a tool errors, stop — never improvise around it.** A failing `dice.py`
 does not license rolling "in your head" (invariant #1 has no outage clause),

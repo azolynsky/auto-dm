@@ -144,17 +144,8 @@ class TestDiceCli(TempRootMixin):
         self.assertEqual([r["label"] for r in rolls], ["to-hit", "damage"])
         self.assertEqual([r["expression"] for r in rolls], ["1d20+5", "2d6+3"])
 
-    def test_show_rolls_queues_public_effects(self):
-        (self.root / "state" / "settings.json").write_text(json.dumps({"show_rolls": True}))
-        subprocess.check_output(
-            [sys.executable, str(TOOLS / "dice.py"), "1d20+5", "--label", "open roll"],
-            env=self.env,
-        )
-        pending = self.root / "state" / "pending-effects.jsonl"
-        self.assertTrue(pending.exists())
-        self.assertIn("open roll", pending.read_text())
-
-    def test_no_settings_means_secret_rolls(self):
+    def test_rolls_never_reach_the_chronicle(self):
+        """Rolls are Dev Log material only — no path publishes them to players."""
         subprocess.check_output(
             [sys.executable, str(TOOLS / "dice.py"), "1d20+5", "--label", "secret"],
             env=self.env,
@@ -175,9 +166,9 @@ class TestEffectsQueue(TempRootMixin):
         s = campaign_lib.load_settings(self.root)
         self.assertEqual(s, campaign_lib.DEFAULT_SETTINGS)
         (self.root / "state" / "settings.json").write_text(
-            json.dumps({"show_rolls": True, "bogus_key": 1}))
+            json.dumps({"kid_friendly": True, "bogus_key": 1}))
         s = campaign_lib.load_settings(self.root)
-        self.assertTrue(s["show_rolls"])
+        self.assertTrue(s["kid_friendly"])
         self.assertNotIn("bogus_key", s)
 
 
@@ -227,6 +218,22 @@ class TestCheckResolver(unittest.TestCase):
             self.assertEqual(r["bonus"], 6)
             self.assertEqual(r["success"], r["roll"]["total"] >= 10)
             self.assertEqual(r["margin"], r["roll"]["total"] - 10)
+
+    def test_cli_char_by_id_name_and_wrong_cwd_path(self):
+        # --char must work like char_update.py: id or name, resolved via
+        # CAMPAIGN_ROOT, regardless of the caller's cwd (desktop app bug).
+        with tempfile.TemporaryDirectory() as tmp:
+            chars = Path(tmp) / "characters"
+            chars.mkdir()
+            (chars / "pc-test.json").write_text(
+                json.dumps({**self.CHAR, "id": "pc-test"}))
+            env = {**os.environ, "CAMPAIGN_ROOT": tmp}
+            for ref in ("pc-test", "Testa", "campaign/characters/pc-test.json"):
+                out = subprocess.check_output([
+                    sys.executable, str(TOOLS / "check_resolver.py"),
+                    "--char", ref, "--save", "dex", "--dc", "10",
+                ], env=env, cwd="/")
+                self.assertEqual(json.loads(out)["bonus"], 6, ref)
 
 
 class TestCombatTracker(TempRootMixin):

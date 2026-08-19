@@ -3,10 +3,11 @@
 Resolve a skill check or saving throw against a DC, using a real dice roll.
 
 Usage:
-    python check_resolver.py --char campaign/characters/<id>.json \\
-        --skill stealth --dc 15
-    python check_resolver.py --char campaign/characters/<id>.json \\
-        --save dex --dc 14 --mode advantage
+    python check_resolver.py --char <id-or-name> --skill stealth --dc 15
+    python check_resolver.py --char <id-or-name> --save dex --dc 14 --mode advantage
+
+--char matches the sheet's "id" or "name" (case-insensitive), like
+char_update.py; an explicit path to a character JSON also works.
 
 Picks the right modifier from the character sheet, calls dice.py, prints JSON.
 """
@@ -85,7 +86,8 @@ def get_save_bonus(char: dict, ability: str) -> int:
 
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("--char", required=True, help="path to character JSON")
+    p.add_argument("--char", required=True,
+                   help="character id or name (or path to character JSON)")
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument("--skill", help="e.g. stealth, perception")
     g.add_argument("--save", help="e.g. dex, wis")
@@ -94,7 +96,12 @@ def main() -> int:
     p.add_argument("--mode", default="normal", choices=["normal", "advantage", "disadvantage"])
     args = p.parse_args()
 
-    char = load_char(Path(args.char))
+    sheet = Path(args.char)
+    if not sheet.is_file():
+        # id, name, or a path guessed from the wrong cwd — Path("Ember Vex").stem
+        # is just "Ember Vex", so names survive the stem.
+        sheet = campaign_lib.find_sheet(campaign_lib.resolve_root(), Path(args.char).stem)
+    char = load_char(sheet)
     name = char.get("name", "PC")
 
     if args.skill:
@@ -119,9 +126,6 @@ def main() -> int:
         "success": roll.total >= args.dc,
         "margin": roll.total - args.dc,
     }
-    campaign_lib.queue_public_effects([
-        f"🎲 {label}: {roll.total} vs DC {args.dc} — {'success' if result['success'] else 'failure'}"
-    ])
     print(json.dumps(result, indent=2))
     return 0
 

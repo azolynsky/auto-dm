@@ -601,9 +601,7 @@ function renderDmActivity(activity) {
   const nearBottom =
     container.scrollHeight - container.scrollTop - container.clientHeight < 120;
   stepsEl.innerHTML = '';
-  // Verbose dev mode streams raw model/tool lines — show them all, not just 4.
-  const steps = activity.steps || [];
-  const recent = steps.some(s => /^(DM:|→|←)/.test(s)) ? steps : steps.slice(-4);
+  const recent = (activity.steps || []).slice(-4);
   recent.forEach((s, i) => {
     const current = i === recent.length - 1;
     const row = el('div', `dm-step ${current ? 'current' : 'done'}`);
@@ -880,7 +878,6 @@ function renderCombat(combat) {
 const SETTING_CONTROLS = {
   rules_strictness: ['set-rules-strictness', 'value'],
   beginner_mode: ['set-beginner-mode', 'checked'],
-  show_rolls: ['set-show-rolls', 'checked'],
   kid_friendly: ['set-kid-friendly', 'checked'],
   narration_style: ['set-narration-style', 'value'],
   custom_rules: ['set-custom-rules', 'value'],
@@ -942,9 +939,10 @@ function sayNote(note) {
   if (note) setTimeout(() => sayNote(''), 6000);
 }
 
-// ── Developer settings (hidden unless the URL carries #dev) ────────────────────
-// Prompt A/B testing and model choice. Deliberately not in Table Settings:
-// these change how the DM is built, not how it plays.
+// ── Developer settings ────────────────────────────────────────────────────────
+// Developer mode does exactly two things: let each DM role's model be picked
+// individually, and show the Dev Log in the sidebar. Not in Table Settings
+// because these change how the DM is built, not how it plays.
 
 const DEV_HELP = {
   dm: 'The harness prompt — how the model runs as DM',
@@ -958,53 +956,41 @@ function devEnabled() {
 
 function renderDev(data) {
   const roleModels = data.role_models || {};
-  // Model dropdown for one role: '' = inherit the global model. A hand-typed
-  // model id that isn't in MODEL_CHOICES still round-trips as an extra option.
-  const modelSelect = (role, current) => role === 'dm' ? '' : `
+  // A hand-typed model id that isn't in MODEL_CHOICES still round-trips as an
+  // extra option, so a config edited by hand survives a save from this panel.
+  const modelSelect = (role, current) => `
       <select data-model-role="${role}" title="Model for this role">
-        <option value="">↑ global model</option>
         ${data.models.map(m =>
           `<option value="${m.id}" ${m.id === current ? 'selected' : ''}>${m.id}</option>`
         ).join('')}
-        ${!current || data.models.some(m => m.id === current) ? ''
+        ${data.models.some(m => m.id === current) ? ''
           : `<option value="${current}" selected>${current}</option>`}
+      </select>`;
+
+  // Prompt-variant dropdown only where there is an actual choice to make;
+  // a role with just "default" would render a dead control.
+  const variantSelect = entry => entry.variants.length < 2 ? '' : `
+      <select data-role="${entry.role}" title="Prompt variant">
+        ${entry.variants.map(v =>
+          `<option value="${v}" ${v === entry.selected ? 'selected' : ''}>${v}</option>`
+        ).join('')}
       </select>`;
 
   const rows = data.registry.map(entry => `
     <label class="setting-row">
       <span class="setting-label">${entry.role}</span>
-      <select data-role="${entry.role}" ${entry.variants.length < 2 ? 'disabled' : ''}>
-        ${entry.variants.map(v =>
-          `<option value="${v}" ${v === entry.selected ? 'selected' : ''}>${v}</option>`
-        ).join('')}
-      </select>
+      ${variantSelect(entry)}
       ${modelSelect(entry.role, roleModels[entry.role] || '')}
       <span class="setting-desc">${DEV_HELP[entry.role] || entry.source}</span>
     </label>`).join('');
 
   document.getElementById('dev-body').innerHTML = `
-    <label class="setting-row">
-      <span class="setting-label">Model</span>
-      <select id="dev-model">
-        ${data.models.map(m =>
-          `<option value="${m.id}" ${m.id === data.model ? 'selected' : ''}>${m.id}</option>`
-        ).join('')}
-        ${data.models.some(m => m.id === data.model) ? ''
-          : `<option value="${data.model}" selected>${data.model}</option>`}
-      </select>
-    </label>
-    <p class="settings-hint">Per role: prompt variant, then the model that role's
-      subagent runs on (roles are separate agents the DM consults — "↑ global
-      model" inherits the dropdown above). Add
-      <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code> for more prompt choices —
-      see <code>prompts/README.md</code>.</p>
+    <p class="settings-hint">Every role picks its own model — the roles are
+      separate agents the DM consults, and each one's tool calls show up in the
+      Dev Log in the sidebar. Add <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code>
+      to offer that role a second prompt variant — see
+      <code>prompts/README.md</code>.</p>
     ${rows}
-    <label class="setting-row setting-check">
-      <input type="checkbox" id="dev-verbose" ${data.verbose ? 'checked' : ''}>
-      <span><span class="setting-label">Verbose</span>
-      <span class="setting-desc">Stream the DM's raw output, tool calls and
-        results into the thinking ticker. Spoils secrets — testing only.</span></span>
-    </label>
     <div class="settings-actions">
       <span id="dev-status"></span>
       <button id="dev-reset">New DM thread</button>
@@ -1029,9 +1015,7 @@ async function saveDev() {
     const res = await fetch('/api/dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompts: chosen, role_models: roleModels,
-                             model: document.getElementById('dev-model').value,
-                             verbose: document.getElementById('dev-verbose').checked }),
+      body: JSON.stringify({ prompts: chosen, role_models: roleModels }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'save failed');
@@ -1084,13 +1068,25 @@ function appendDevlog(entries) {
     const d = document.createElement('details');
     d.className = 'devlog-item';
     const args = JSON.stringify(e.args);
+    // Clock is the START time; the duration beside it is what reveals overlap
+    // when several role agents run at once, so both stay in the collapsed row.
+    // Entries land in completion order, so within a burst a row can precede one
+    // that started slightly earlier — read the timestamps, not the position.
+    const clock = (e.started || e.ts || '').slice(11, 23);
     d.appendChild(el('summary', 'devlog-summary',
-      `${(e.ts || '').slice(11, 19)} ${e.tool} ${args}`));
-    d.appendChild(el('pre', 'devlog-body', `args: ${args}\n\n${e.result}`));
+      `${clock} ${secs(e.ms)} ${e.thread || 'main'} · ${e.tool} ${args}`));
+    d.appendChild(el('pre', 'devlog-body',
+      `thread: ${e.thread || 'main'}\nstart:  ${e.started || e.ts || '?'}\n`
+      + `end:    ${e.finished || '?'}  (${secs(e.ms)})\n\nargs: ${args}\n\n${e.result}`));
     li.appendChild(d);
     list.prepend(li);
   });
   while (list.children.length > DEVLOG_CAP) list.removeChild(list.lastChild);
+}
+
+function secs(ms) {
+  if (!Number.isFinite(ms)) return '';
+  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(2)}s`;
 }
 
 function initDev() {

@@ -39,7 +39,6 @@ FEED_TYPES = ("narration", "scene_change", "system", "player", "combat")
 DEFAULT_SETTINGS = {
     "rules_strictness": "flexible",   # "strict" (RAW, no fudging outcomes) | "flexible" (Director may soften per house rules)
     "beginner_mode": False,           # DM may suggest options/reminders to help newer players decide
-    "show_rolls": False,              # public dice outcomes appear as subtext in the chronicle
     "kid_friendly": False,            # keep descriptions of violence/horror gentle
     "narration_style": "standard",    # "brief" | "standard" | "cinematic"
     "custom_rules": "",               # free-text house rules, read as if part of house-rules.md "Active"
@@ -58,6 +57,20 @@ def resolve_root() -> Path:
         f"Expected {root} (or set CAMPAIGN_ROOT).\n"
         "Start one from the template:  python tools/new_campaign.py --name 'My Campaign'"
     )
+
+
+def find_sheet(root: Path, who: str) -> Path:
+    """Character sheet path for an id or name (case-insensitive)."""
+    chars = root / "characters"
+    for path in sorted(chars.glob("*.json")) if chars.is_dir() else []:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if who.lower() in (str(data.get("id", "")).lower(),
+                           str(data.get("name", "")).lower()):
+            return path
+    raise SystemExit(f"no character sheet matches: {who}")
 
 
 def _feed_context(root: Path) -> tuple[str, str]:
@@ -104,21 +117,6 @@ def load_settings(root: Path) -> dict:
     except Exception:
         pass
     return settings
-
-
-def queue_public_effects(texts: list[str]) -> None:
-    """Queue effects only if the table's show_rolls setting is on.
-
-    Used by the dice tools for open-roll mode. Safe with no campaign
-    present (bare tool use) — it just does nothing.
-    """
-    try:
-        root = resolve_root()
-    except SystemExit:
-        return
-    if load_settings(root).get("show_rolls"):
-        for t in texts:
-            queue_effect(root, t)
 
 
 def queue_effect(root: Path, text: str) -> None:
