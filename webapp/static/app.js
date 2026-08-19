@@ -1056,6 +1056,7 @@ async function resetThread() {
 
 async function toggleDev(on) {
   document.getElementById('dev-section').classList.toggle('hidden', !on);
+  document.getElementById('devlog-section').classList.toggle('hidden', !on);
   if (on && !document.getElementById('dev-body').childElementCount) {
     try {
       renderDev(await (await fetch('/api/dev')).json());
@@ -1063,6 +1064,33 @@ async function toggleDev(on) {
       console.error('dev settings failed to load:', err);
     }
   }
+  if (on && !document.getElementById('devlog-list').childElementCount) {
+    try {
+      appendDevlog(await (await fetch('/api/devlog')).json());
+    } catch (err) {
+      console.error('dev log failed to load:', err);
+    }
+  }
+}
+
+// ── Dev Log sidebar — every tool call and result, newest first ───────────────
+
+const DEVLOG_CAP = 200;
+
+function appendDevlog(entries) {
+  const list = document.getElementById('devlog-list');
+  entries.forEach(e => {
+    const li = document.createElement('li');
+    const d = document.createElement('details');
+    d.className = 'devlog-item';
+    const args = JSON.stringify(e.args);
+    d.appendChild(el('summary', 'devlog-summary',
+      `${(e.ts || '').slice(11, 19)} ${e.tool} ${args}`));
+    d.appendChild(el('pre', 'devlog-body', `args: ${args}\n\n${e.result}`));
+    li.appendChild(d);
+    list.prepend(li);
+  });
+  while (list.children.length > DEVLOG_CAP) list.removeChild(list.lastChild);
 }
 
 function initDev() {
@@ -1217,6 +1245,10 @@ function connectSSE() {
 
   es.addEventListener('dm_activity', e => {
     renderDmActivity(JSON.parse(e.data));
+  });
+
+  es.addEventListener('dev_log', e => {
+    if (devEnabled()) appendDevlog([JSON.parse(e.data)]);
   });
 
   es.addEventListener('portrait_update', () => {

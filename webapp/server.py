@@ -55,6 +55,7 @@ IMAGES_DIR = CHARACTERS_DIR / "images"
 STATE_DIR = ROOT / "state"
 
 FEED_FILE = STATE_DIR / "player-feed.jsonl"
+DEVLOG_FILE = STATE_DIR / "dev-log.jsonl"  # written by desktop/agent.py
 CURRENT_FILE = STATE_DIR / "current.json"
 QUESTS_FILE = STATE_DIR / "quests.json"
 COMBAT_FILE = STATE_DIR / "combat.json"
@@ -221,14 +222,16 @@ def build_state_snapshot() -> dict:
     }
 
 
-def read_new_feed_lines(byte_pos: int) -> tuple[list[dict], int]:
-    """Read new lines from FEED_FILE starting at byte_pos. Returns (entries, new_pos)."""
-    if not FEED_FILE.exists():
+def read_new_feed_lines(byte_pos: int, jsonl: Path | None = None) -> tuple[list[dict], int]:
+    """Read new lines from a JSONL file (FEED_FILE by default) starting at
+    byte_pos. Returns (entries, new_pos)."""
+    jsonl = jsonl or FEED_FILE
+    if not jsonl.exists():
         return [], byte_pos
     try:
-        if FEED_FILE.stat().st_size < byte_pos:
-            byte_pos = 0  # feed was truncated/rewritten — start over (client dedupes by id)
-        with open(FEED_FILE, "rb") as f:
+        if jsonl.stat().st_size < byte_pos:
+            byte_pos = 0  # file was truncated/rewritten — start over (client dedupes)
+        with open(jsonl, "rb") as f:
             f.seek(byte_pos)
             new_bytes = f.read()
             new_pos = byte_pos + len(new_bytes)
@@ -484,6 +487,20 @@ async def post_dev(request: Request):
                          "registry": prompt_registry.registry()})
 
 
+@app.get("/api/devlog")
+async def get_devlog():
+    """Last 200 tool call/result entries for the Dev Log sidebar."""
+    if not DEVLOG_FILE.exists():
+        return JSONResponse([])
+    entries = []
+    for line in DEVLOG_FILE.read_text(encoding="utf-8").splitlines()[-200:]:
+        try:
+            entries.append(json.loads(line))
+        except json.JSONDecodeError:
+            pass
+    return JSONResponse(entries)
+
+
 @app.post("/api/dev/reset-thread")
 async def reset_thread():
     """Drop the DM's conversation, keeping all campaign state — a clean A/B arm."""
@@ -686,6 +703,7 @@ async def dm_status():
 async def events(request: Request):
     async def generator():
         byte_pos = FEED_FILE.stat().st_size if FEED_FILE.exists() else 0
+        devlog_pos = DEVLOG_FILE.stat().st_size if DEVLOG_FILE.exists() else 0
         # No-spoiler rule: combat.json changes (HP drain, conditions) must not hit
         # the players' screen before the narration that explains them. Hold the
         # update and flush it with the next feed entry.
@@ -751,6 +769,15 @@ async def events(request: Request):
                             "event": "dm_activity",
                             "data": json.dumps(load_dm_activity()),
                         }
+
+                    elif path.name == "dev-log.jsonl":
+                        new_entries, devlog_pos = read_new_feed_lines(
+                            devlog_pos, DEVLOG_FILE)
+                        for entry in new_entries:
+                            yield {
+                                "event": "dev_log",
+                                "data": json.dumps(entry),
+                            }
 
                     elif path.name == "settings.json":
                         yield {

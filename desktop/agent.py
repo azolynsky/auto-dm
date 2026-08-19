@@ -18,6 +18,9 @@ Self-check:  python desktop/agent.py --selftest
 """
 from __future__ import annotations
 
+import datetime
+import functools
+import inspect
 import io
 import json
 import re
@@ -184,6 +187,49 @@ def _tool_error(e: Exception) -> str:
     return f"error: {type(e).__name__}: {e}"
 
 
+# Every tool call and its result, appended to state/dev-log.jsonl for the web
+# companion's Dev Log sidebar. Always on: it's the flight recorder for "why
+# did the DM do that", and the trim keeps it from growing without bound.
+DEVLOG_MAX_BYTES = 400_000
+DEVLOG_KEEP = 200
+
+
+def _devlog(tool: str, args: dict, result) -> None:
+    try:
+        path = config.CAMPAIGN / "state" / "dev-log.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {"ts": datetime.datetime.now(datetime.timezone.utc)
+                 .isoformat(timespec="seconds"),
+                 "tool": tool,
+                 "args": {k: str(v)[:2000] for k, v in args.items()},
+                 "result": str(result)[:4000]}
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        if path.stat().st_size > DEVLOG_MAX_BYTES:
+            lines = path.read_text(encoding="utf-8").splitlines()[-DEVLOG_KEEP:]
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    except OSError:
+        pass  # diagnostics only — never fail a turn over the log
+
+
+def _logged(fn):
+    """Record calls and results in the dev log. functools.wraps keeps the
+    signature and docstring, which is what langchain builds the schema from."""
+    sig = inspect.signature(fn)
+
+    @functools.wraps(fn)
+    def wrapper(*a, **kw):
+        result = fn(*a, **kw)
+        try:
+            bound = sig.bind(*a, **kw)
+            _devlog(fn.__name__, dict(bound.arguments), result)
+        except TypeError:
+            _devlog(fn.__name__, {"raw": [*a, kw]}, result)
+        return result
+    return wrapper
+
+
+@_logged
 def read_file(path: str) -> str:
     """Read a text file, e.g. campaign/state/current.json, rules/srd-reference.md,
     or .claude/agents/director.md. Paths are repo-relative, never absolute."""
@@ -198,6 +244,7 @@ def read_file(path: str) -> str:
         return _tool_error(e)
 
 
+@_logged
 def write_file(path: str, content: str) -> str:
     """Write a file under campaign/, creating or replacing it whole. For a small
     state change prefer edit_file, which won't clobber the rest of the file."""
@@ -211,6 +258,7 @@ def write_file(path: str, content: str) -> str:
         return _tool_error(e)
 
 
+@_logged
 def edit_file(path: str, old_text: str, new_text: str) -> str:
     """Replace one exact, unique string in a file under campaign/. old_text must
     match the file byte for byte and appear exactly once."""
@@ -231,6 +279,7 @@ def edit_file(path: str, old_text: str, new_text: str) -> str:
         return _tool_error(e)
 
 
+@_logged
 def list_files(pattern: str) -> str:
     """List files matching a glob, e.g. campaign/npcs/recurring/*/ or
     campaign/sessions/*.md."""
@@ -251,6 +300,7 @@ def list_files(pattern: str) -> str:
 # The CLI-args parameter must not be named "args": langchain's schema
 # inference silently drops fields named args/kwargs, leaving a v__args
 # placeholder the model fills and the call then rejects.
+@_logged
 def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
     """Run a campaign tool with CLI arguments exactly as CLAUDE.md documents them.
 
@@ -374,6 +424,7 @@ def _final_text(result: dict) -> str:
     return ""
 
 
+@_logged
 def consult_role(role: str, task: str) -> str:
     """Delegate to a specialist role agent — this harness's native subagent
     mechanism from the manual. Roles: director, narrator, rules-lawyer,

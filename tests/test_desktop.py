@@ -101,6 +101,14 @@ class TestActivity(DesktopTestCase):
         self.assertFalse(data["busy"])
         self.assertEqual(data["steps"], [])
 
+    def test_tool_calls_land_in_devlog(self):
+        self.agent.run_tool("dice.py", ["1d20", "--label", "test roll"])
+        log = (self.campaign / "state" / "dev-log.jsonl").read_text().splitlines()
+        entry = json.loads(log[-1])
+        self.assertEqual(entry["tool"], "run_tool")
+        self.assertIn("dice.py", entry["args"]["tool"])
+        self.assertIn("test roll", entry["result"])
+
     def test_verbose_traces_messages(self):
         from types import SimpleNamespace
         self.config.APP_DIR.mkdir(parents=True)
