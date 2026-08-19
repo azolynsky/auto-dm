@@ -706,40 +706,40 @@ def run_turn(player_message: str) -> dict:
     if not config.api_key():
         raise DMError("No OpenRouter API key is set yet — open Settings and paste one.")
 
-    from langchain_core.messages import HumanMessage
-
-    agent = build_agent()
-    run_config = {"configurable": {"thread_id": THREAD_ID},
-                  "recursion_limit": int(config.load().get("recursion_limit")
-                                         or RECURSION_LIMIT)}
-
-    history = (agent.get_state(run_config).values or {}).get("messages") or []
-    # A turn that crashed mid-tool leaves an AIMessage's tool_calls without
-    # ToolMessages, which bricks the thread: the provider requires results
-    # immediately after the calling message, so every later turn fails too.
-    # Heal by dropping everything after the first unanswered call and closing
-    # it out with synthetic results, so "say it again" actually works.
-    answered = {m.tool_call_id for m in history if getattr(m, "tool_call_id", None)}
-    dangling = next((i for i, m in enumerate(history)
-                     if any(tc["id"] not in answered
-                            for tc in getattr(m, "tool_calls", None) or [])), None)
-    if dangling is not None:
-        from langchain_core.messages import RemoveMessage, ToolMessage
-        agent.update_state(run_config, {"messages": [
-            RemoveMessage(id=m.id) for m in history[dangling + 1:]
-        ] + [
-            ToolMessage(content="(interrupted — the tool never ran)",
-                        tool_call_id=tc["id"])
-            for tc in history[dangling].tool_calls if tc["id"] not in answered
-        ]})
-
-    fresh = not history
-    turn = ([HumanMessage(content=session_brief())] if fresh else []) \
-        + [HumanMessage(content=player_message)]
+    from langchain_core.messages import HumanMessage, ToolMessage
 
     _narrated = False
     _activity("The DM is thinking it over")
     try:
+        agent = build_agent()
+        run_config = {"configurable": {"thread_id": THREAD_ID},
+                      "recursion_limit": int(config.load().get("recursion_limit")
+                                             or RECURSION_LIMIT)}
+
+        history = (agent.get_state(run_config).values or {}).get("messages") or []
+        # A turn interrupted mid-tool (app killed, crash) leaves an AIMessage's
+        # tool_calls without ToolMessages, which bricks the thread: the provider
+        # requires results immediately after the calling message. Heal by
+        # writing synthetic results AS the tools node — that supersedes the
+        # graph's pending tasks in a new checkpoint, so the run resumes clean.
+        # (No RemoveMessage surgery: deleting around pending task writes is what
+        # used to re-brick the thread.)
+        answered = {m.tool_call_id for m in history
+                    if getattr(m, "tool_call_id", None)}
+        unanswered = [tc for m in history
+                      for tc in (getattr(m, "tool_calls", None) or [])
+                      if tc["id"] not in answered]
+        if unanswered:
+            agent.update_state(run_config, {"messages": [
+                ToolMessage(content="(interrupted — the tool never ran)",
+                            tool_call_id=tc["id"])
+                for tc in unanswered
+            ]}, as_node="tools")
+
+        fresh = not history
+        turn = ([HumanMessage(content=session_brief())] if fresh else []) \
+            + [HumanMessage(content=player_message)]
+
         try:
             # Baseline = what's already in the thread plus this turn's input,
             # so verbose tracing starts at the first new AI message. Re-read
