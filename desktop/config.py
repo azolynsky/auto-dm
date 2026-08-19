@@ -63,7 +63,28 @@ MODEL_CHOICES = [
     ("google/gemini-3.7-flash", "Gemini 3.7 Flash — recommended, fast live play"),
     ("~deepseek/deepseek-v4-flash-latest", "DeepSeek V4 Flash — sharpest rulings, cheapest, slower"),
     ("openai/gpt-5.6-luna-pro", "GPT-5.6 Luna Pro — careful, costs more"),
+    ("claude-cli", "Claude Code on this Mac — your own subscription, no API cost"),
+    ("claude-cli:opus", "Claude Code (Opus) on this Mac — slower, strongest judgment"),
 ]
+
+# A role model of "claude-cli" (optionally "claude-cli:<alias>", e.g.
+# claude-cli:opus) runs that specialist through the `claude -p` CLI on this
+# machine instead of OpenRouter — the user's own Claude subscription, no API
+# spend. Specialist roles fit it exactly: one-shot task in, answer out, and
+# Claude Code reads the campaign files itself. The dm orchestrator can't:
+# it drives our own tools (dice, narrate, consult) through structured
+# tool-calling, which `claude -p` has no way to hand back.
+CLI_MODEL = "claude-cli"
+
+
+def is_cli_model(model: str) -> bool:
+    return str(model).split(":", 1)[0].strip() == CLI_MODEL
+
+
+def cli_model_alias(model: str) -> str | None:
+    """The `--model` alias in a claude-cli id, or None for the CLI default."""
+    parts = str(model).split(":", 1)
+    return parts[1].strip() or None if len(parts) == 2 else None
 
 
 # Developer knobs — hidden behind the #dev reveal in the app's Settings. Kept
@@ -134,12 +155,16 @@ def api_key() -> str:
 def role_model(role: str) -> str:
     """The model one role runs on: the user's pick, else the shipped default."""
     cfg = load()
-    return ((cfg.get("role_models") or {}).get(role)
-            # A config from before per-role models had one global "model" key;
-            # honour it for the dm so an existing install keeps its choice.
-            or (cfg.get("model") if role == "dm" else None)
-            or DEV_DEFAULTS["role_models"].get(role)
-            or FALLBACK_MODEL)
+    picked = ((cfg.get("role_models") or {}).get(role)
+              # A config from before per-role models had one global "model" key;
+              # honour it for the dm so an existing install keeps its choice.
+              or (cfg.get("model") if role == "dm" else None)
+              or DEV_DEFAULTS["role_models"].get(role)
+              or FALLBACK_MODEL)
+    if role == "dm" and is_cli_model(picked):
+        # Saved by hand or carried over from a role swap — don't boot broken.
+        return FALLBACK_MODEL
+    return picked
 
 
 def model() -> str:

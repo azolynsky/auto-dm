@@ -87,6 +87,47 @@ this section is visible to players by default because it changes how the DM is
 *built*, not how it plays. Prompt variants live in `prompts/` — see
 [prompts/README.md](../prompts/README.md).
 
+### Running a role on Claude Code instead of OpenRouter
+
+Any specialist role can run on the `claude` CLI on this machine — your own
+Claude subscription, no API spend. Pick **Claude Code on this Mac** for that
+role in Developer settings, or set the model id by hand:
+
+```
+"role_models": { "narrator": "claude-cli", "rules-lawyer": "claude-cli:opus" }
+```
+
+`claude-cli` uses the CLI's default model; `claude-cli:<alias>` passes
+`--model <alias>` (`sonnet`, `opus`, or a full model id). The role's prompt file
+becomes the CLI's system prompt and the task — pre-read brief included — its
+user turn, so a role runs identically either way and can be switched back
+without touching prompts.
+
+Measured on the same beats (2026-08-19): narrator 7.1s local vs 11–15s on
+OpenRouter; rules-lawyer 32.4s local vs ~14s. Local is free but the CLI has
+its own startup cost per call, so it suits roles you aren't waiting on more
+than the ones you are.
+
+What it does *not* cover:
+
+- **The `dm` orchestrator.** It drives our own tools (`dice.py`, `narrate.py`,
+  `consult_role`) through structured tool-calling, which `claude -p` has no way
+  to hand back. The app refuses this setting rather than shipping a DM that
+  can't roll dice — and `role_model()` falls back to the API model if a config
+  is hand-edited to try.
+- **A shell.** Every CLI consult passes `--disallowed-tools "Bash WebFetch
+  WebSearch Task"` and an explicit `--allowed-tools` allow-list, so it never
+  blocks on a permission prompt and never gets more reach than the role needs.
+- **File access for the Narrator.** The motivations firewall (invariant #7) is
+  enforced at the tool level on the OpenRouter path; `claude -p` has no
+  per-file hook, so the Narrator runs with no file tools at all and works from
+  its brief — which is what it does anyway.
+
+Requires Claude Code installed. A GUI-launched `.app` gets a bare `PATH`, so
+the app also checks `~/.local/bin`, Homebrew, `/usr/local/bin`, and the npm
+global prefix; if it still can't find it the consult returns a plain error
+naming the fix instead of failing silently.
+
 ## Guardrails
 
 The agent has no shell. It gets five tools: `read_file`, `write_file`,

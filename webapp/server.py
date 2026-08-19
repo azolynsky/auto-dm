@@ -478,6 +478,14 @@ async def post_dev(request: Request):
             if not isinstance(model_id, str):
                 raise HTTPException(status_code=400,
                                     detail=f"model for {role} must be a string")
+            # The dm drives our tools through structured tool-calling, which
+            # the local CLI can't hand back — refuse it here rather than
+            # letting the table discover a DM that can't roll dice.
+            if role == "dm" and appconfig.is_cli_model(model_id):
+                raise HTTPException(
+                    status_code=400,
+                    detail="the DM can't run on the local claude CLI — it "
+                           "needs tool-calling. Specialist roles can.")
 
     for field in ("history_tokens", "recursion_limit"):
         if field in body and not (isinstance(body[field], int) and body[field] > 0):

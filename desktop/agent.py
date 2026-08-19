@@ -25,7 +25,9 @@ import inspect
 import io
 import json
 import re
+import shutil
 import sqlite3
+import subprocess
 import sys
 import threading
 from contextlib import redirect_stderr, redirect_stdout
@@ -468,6 +470,82 @@ def _build_sub_agent(role: str):
     return _sub_agents[key]
 
 
+# Tools a claude-cli specialist may use inside its own agent loop. The
+# narrator gets NONE: the motivations firewall (invariant #7) is a tool-level
+# guarantee here, and `claude -p` has no per-file hook to enforce it — with no
+# file access it can only work from its pre-read brief, which is what it does
+# on OpenRouter anyway. The bookkeeper is the only writer, same as role_tools.
+_CLI_ROLE_TOOLS = {
+    "narrator": [],
+    "bookkeeper": ["Read", "Glob", "Grep", "Edit", "Write"],
+}
+_CLI_DEFAULT_TOOLS = ["Read", "Glob", "Grep"]
+CLI_TIMEOUT = 300
+
+
+def claude_binary() -> str | None:
+    """Path to the claude CLI, or None if it isn't installed.
+
+    A GUI-launched .app gets a bare PATH (/usr/bin:/bin:/usr/sbin:/sbin), not
+    the login shell's — so PATH lookup alone finds nothing even when `claude`
+    works fine in a terminal. Check the usual install locations too.
+    """
+    found = shutil.which("claude")
+    if found:
+        return found
+    for candidate in (Path.home() / ".local/bin/claude",
+                      Path("/opt/homebrew/bin/claude"),
+                      Path("/usr/local/bin/claude"),
+                      Path.home() / ".claude/local/claude",
+                      Path.home() / ".npm-global/bin/claude"):
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
+def _consult_via_cli(role: str, task: str, model: str) -> str:
+    """Run one specialist through `claude -p` on this machine.
+
+    Uses the user's own Claude subscription instead of OpenRouter. The role's
+    prompt file becomes the system prompt and the task (brief included) the
+    user turn — the same contract the OpenRouter path uses, so a role can be
+    switched either way without touching its prompt.
+    """
+    binary = claude_binary()
+    if not binary:
+        return ("error: the claude CLI isn't installed on this machine (or the "
+                "app can't see it) — install Claude Code, or switch this role "
+                "back to an API model in Settings.")
+    prompt_file = prompts.resolve(role)
+    tools = _CLI_ROLE_TOOLS.get(role, _CLI_DEFAULT_TOOLS)
+    cmd = [binary, "-p", task,
+           "--system-prompt", prompt_file.read_text(encoding="utf-8"),
+           "--output-format", "text",
+           # Explicit allow-list, so a non-interactive run never blocks on a
+           # permission prompt and never gets more reach than the role needs.
+           "--allowed-tools", " ".join(tools),
+           "--disallowed-tools", "Bash WebFetch WebSearch Task"]
+    if tools:
+        cmd += ["--add-dir", str(config.CAMPAIGN), "--add-dir", str(config.BUNDLE)]
+    if alias := config.cli_model_alias(model):
+        cmd += ["--model", alias]
+    try:
+        done = subprocess.run(cmd, capture_output=True, text=True,
+                              timeout=CLI_TIMEOUT, cwd=str(config.BUNDLE))
+    except FileNotFoundError:
+        return ("error: the claude CLI isn't on this machine's PATH — install "
+                "Claude Code or switch this role back to an API model in "
+                "Settings.")
+    except subprocess.TimeoutExpired:
+        return (f"error: the local claude CLI took over {CLI_TIMEOUT}s on the "
+                f"{role} and was stopped.")
+    out = (done.stdout or "").strip()
+    if done.returncode != 0 or not out:
+        detail = (done.stderr or "").strip()[:300] or f"exit {done.returncode}"
+        return f"error running the local claude CLI for the {role}: {detail}"
+    return out
+
+
 def _final_text(result: dict) -> str:
     for message in reversed(result.get("messages", [])):
         if message.__class__.__name__ == "AIMessage":
@@ -687,6 +765,9 @@ def consult_role(role: str, task: str) -> str:
                 f"do NOT re-read these files)\n{brief}")
     token = _thread.set(role)
     try:
+        model = role_model(role)
+        if config.is_cli_model(model):
+            return _consult_via_cli(role, task, model)
         result = _build_sub_agent(role).invoke(
             {"messages": [{"role": "user", "content": task}]},
             config={"recursion_limit": SUB_RECURSION_LIMIT})

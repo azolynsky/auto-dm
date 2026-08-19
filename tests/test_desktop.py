@@ -17,6 +17,7 @@ import json
 import threading
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -235,6 +236,98 @@ class TestConsultBrief(DesktopTestCase):
         cur["present_entities"] = ["a nervous gnome at the bar (no file)"]
         cur_path.write_text(json.dumps(cur))
         self.agent._consult_brief("director")  # must not raise
+
+
+class TestLocalClaudeCli(DesktopTestCase):
+    """Any specialist role can run on `claude -p` locally instead of OpenRouter."""
+
+    def test_model_id_parsing(self):
+        c = self.config
+        self.assertTrue(c.is_cli_model("claude-cli"))
+        self.assertTrue(c.is_cli_model("claude-cli:opus"))
+        self.assertFalse(c.is_cli_model("google/gemini-3.7-flash"))
+        self.assertIsNone(c.cli_model_alias("claude-cli"))
+        self.assertEqual(c.cli_model_alias("claude-cli:opus"), "opus")
+
+    def test_dm_never_runs_on_the_cli(self):
+        # It needs structured tool-calling; a hand-edited config must not brick.
+        self.config.save(role_models={"dm": "claude-cli", "director": "claude-cli"})
+        self.assertFalse(self.config.is_cli_model(self.config.role_model("dm")))
+        self.assertTrue(self.config.is_cli_model(self.config.role_model("director")))
+
+    def test_consult_routes_to_the_cli(self):
+        self.config.save(role_models={"director": "claude-cli:opus"})
+        seen = {}
+
+        def fake_run(cmd, **kw):
+            seen["cmd"], seen["kw"] = cmd, kw
+            return subprocess.CompletedProcess(cmd, 0, stdout="DECISION\n ok\n",
+                                               stderr="")
+        real_run, real_bin = self.agent.subprocess.run, self.agent.claude_binary
+        self.agent.subprocess.run = fake_run
+        self.agent.claude_binary = lambda: "/usr/bin/claude"
+        try:
+            out = self.agent.consult_role("director", "the party opens the door")
+        finally:
+            self.agent.subprocess.run = real_run
+            self.agent.claude_binary = real_bin
+        self.assertIn("DECISION", out)
+        cmd = seen["cmd"]
+        self.assertEqual(cmd[:2], ["/usr/bin/claude", "-p"])
+        self.assertIn("the party opens the door", cmd[2])
+        self.assertIn("--model", cmd)
+        self.assertEqual(cmd[cmd.index("--model") + 1], "opus")
+        # the role's own prompt is the system prompt, and the brief rode along
+        self.assertIn("You are the Director", cmd[cmd.index("--system-prompt") + 1])
+        self.assertIn("Pre-read state", cmd[2])
+        # never blocks on a permission prompt, never gets a shell
+        self.assertIn("Bash WebFetch WebSearch Task",
+                      cmd[cmd.index("--disallowed-tools") + 1])
+        self.assertEqual(seen["kw"]["timeout"], self.agent.CLI_TIMEOUT)
+
+    def test_narrator_on_cli_gets_no_file_access(self):
+        # The motivations firewall is a tool-level guarantee; `claude -p` has no
+        # per-file hook, so the narrator runs brief-only.
+        self.assertEqual(self.agent._CLI_ROLE_TOOLS["narrator"], [])
+        self.config.save(role_models={"narrator": "claude-cli"})
+        seen = {}
+
+        def fake_run(cmd, **kw):
+            seen["cmd"] = cmd
+            return subprocess.CompletedProcess(cmd, 0, stdout="> prose", stderr="")
+        real_run, real_bin = self.agent.subprocess.run, self.agent.claude_binary
+        self.agent.subprocess.run = fake_run
+        self.agent.claude_binary = lambda: "/usr/bin/claude"
+        try:
+            self.agent.consult_role("narrator", "render the beat")
+        finally:
+            self.agent.subprocess.run = real_run
+            self.agent.claude_binary = real_bin
+        self.assertEqual(seen["cmd"][seen["cmd"].index("--allowed-tools") + 1], "")
+        self.assertNotIn("--add-dir", seen["cmd"])
+
+    def test_missing_cli_is_a_clear_error_not_a_crash(self):
+        self.config.save(role_models={"director": "claude-cli"})
+        real_bin = self.agent.claude_binary
+        self.agent.claude_binary = lambda: None
+        try:
+            out = self.agent.consult_role("director", "x")
+        finally:
+            self.agent.claude_binary = real_bin
+        self.assertIn("isn't installed", out)
+        self.assertIn("Settings", out)
+
+    def test_binary_resolution_falls_back_off_path(self):
+        # A GUI-launched .app has a bare PATH; the resolver checks real
+        # install locations too.
+        real_which = self.agent.shutil.which
+        self.agent.shutil.which = lambda _: None
+        try:
+            found = self.agent.claude_binary()
+        finally:
+            self.agent.shutil.which = real_which
+        if found is not None:  # this machine has it installed somewhere known
+            self.assertTrue(Path(found).is_file())
 
 
 class TestActivity(DesktopTestCase):
