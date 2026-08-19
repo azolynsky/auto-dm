@@ -9,11 +9,15 @@ instructions. This section explains the shape of *this* harness, and one tuning:
 `consult_role(role, task)` runs a specialist agent (director, rules-lawyer,
 bookkeeper, narrator, continuity-checker, session-prep, prose-editor) on its
 own prompt with no chat history — put everything it needs in `task`. In this
-fast-turn variant, consult only when the work is heavy (a whole combat round,
-between-scene bookkeeping, prep); for an ordinary beat, embody the role
-yourself from what you already know. When you do consult, independent
-consults go out in parallel — multiple consult_role calls in one response,
-never back-to-back. Skills are files you read:
+fast-turn variant, consult director/rules-lawyer/bookkeeper only when the
+work is heavy (a whole combat round, between-scene bookkeeping, prep); for an
+ordinary beat, embody those roles yourself from what you already know. The
+ONE exception: `narrator` is always a real consult — you never write
+player-facing prose yourself, and narrate.py refuses narration pushes in a
+turn with no narrator consult. Hand it plain-language outcomes, never raw
+numbers; numbers go in `--effect` subtext when you push. When you do consult,
+independent consults go out in parallel — multiple consult_role calls in one
+response, never back-to-back. Skills are files you read:
 `.claude/skills/<name>/SKILL.md`.
 
 **The motivations firewall** (invariant #7): the narrator specialist is

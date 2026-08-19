@@ -34,6 +34,7 @@ def load_module(name: str, path: Path):
 campaign_lib = load_module("campaign_lib", TOOLS / "campaign_lib.py")
 dice = load_module("dice", TOOLS / "dice.py")
 check_resolver = load_module("check_resolver", TOOLS / "check_resolver.py")
+narrate = load_module("narrate", TOOLS / "narrate.py")
 
 
 class TempRootMixin(unittest.TestCase):
@@ -558,6 +559,27 @@ class TestNarrate(TempRootMixin):
         # short names still match on word boundary, not substring
         out = json.loads(self.run_narrate("Yark grins. No remarkable trouble.").stdout)
         self.assertEqual(out["sidebar_check"], {"Yark": "Party goblin."})
+
+
+class TestMechanicsGate(unittest.TestCase):
+    """Numbers reach players only as --effect subtext — never inside prose."""
+
+    def test_blocks_mechanics_in_prose(self):
+        for bad in ("pinning his arms in an iron lock (24 vs 17)",
+                    "he drives it down in one arc (25 vs 9)",
+                    "it looks like a DC 15 climb",
+                    "roll a d20 to see if you make it",
+                    "she takes 4 poison damage from the draught",
+                    "taking 1 damage as the cramp twists",
+                    "leaving her battered at 5/10 HP"):
+            self.assertTrue(narrate.style_violations(bad), bad)
+
+    def test_clean_prose_passes(self):
+        for ok in ("She drives his arm down without straining.",
+                   "The chandelier hangs twenty feet above the goblins.",
+                   "Three of them fan out to cover the door.",
+                   "The ledger lists 25 gold pieces, paid in Midwinter."):
+            self.assertEqual(narrate.style_violations(ok), [], ok)
 
 
 class TestNarrateNormalize(unittest.TestCase):

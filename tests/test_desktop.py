@@ -108,6 +108,98 @@ class TestConsultBrief(DesktopTestCase):
             self.assertNotIn("/secrets.md\n", brief, role)
             self.assertNotIn("/motivations.md\n", brief, role)
 
+    def test_briefs_are_siloed_by_role(self):
+        director = self.agent._consult_brief("director")
+        narrator = self.agent._consult_brief("narrator")
+        lawyer = self.agent._consult_brief("rules-lawyer")
+        # GM-only state stays out of the narrator's view: quests carry
+        # secret_truth, world-flags notes and dramatis' hidden entries
+        # pre-stage reveals.
+        for gm_file in ("state/quests.json", "state/world-flags.json",
+                        "state/dramatis-personae.json"):
+            self.assertIn(f"--- campaign/{gm_file}", director)
+            self.assertNotIn(f"--- campaign/{gm_file}", narrator)
+            self.assertNotIn(f"--- campaign/{gm_file}", lawyer)
+        # story context the lawyer doesn't need
+        self.assertIn("--- campaign/sessions/recap.md", narrator)
+        self.assertNotIn("--- campaign/sessions/recap.md", lawyer)
+        # prose-editor gets no world state at all
+        self.assertEqual(self.agent._consult_brief("prose-editor"), "")
+
+    def test_narration_requires_narrator_consult(self):
+        self.agent._narrator_ok = False
+        out = self.agent.run_tool("narrate.py", ["The gate opens."])
+        self.assertIn("error", out)
+        self.assertIn("narrator", out)
+        # system announcements are exempt
+        out = self.agent.run_tool(
+            "narrate.py", ["Back in five.", "--type", "system"])
+        self.assertNotIn("must come from the narrator", out)
+        # once the narrator was consulted this turn, pushes go through
+        self.agent._narrator_ok = True
+        out = self.agent.run_tool("narrate.py", ["The gate opens."])
+        self.assertNotIn("must come from the narrator", out)
+
+    def test_fallback_only_narrates_clean_blockquotes(self):
+        # A reply with no blockquote is orchestrator chatter, not narration.
+        self.assertEqual(self.agent.players_text(
+            "1. **Maera is deceased**\n2. the apron is Ember's",
+            quoted_only=True), "")
+        self.assertEqual(self.agent.players_text(
+            "[DIRECTOR] x\n> The gate groans open.", quoted_only=True),
+            "The gate groans open.")
+        # and the fallback applies the same gate the tool does
+        self.assertTrue(self.agent.narrate_gate("she pins him (24 vs 17)"))
+        self.assertEqual(self.agent.narrate_gate("She pins him flat."), [])
+
+    def test_checkpoint_roles_wait_for_the_beat(self):
+        self.agent._narrated = False
+        for role in ("continuity-checker", "prose-editor", "session-prep"):
+            out = self.agent.consult_role(role, "check the last scene")
+            self.assertIn("after the beat is on screen", out, role)
+        # director/rules-lawyer/bookkeeper are live-loop roles, never blocked
+        self.assertNotIn("after the beat is on screen",
+                         self.agent.consult_role("director", "x") or "")
+
+    def test_entities_named_in_the_task_are_preloaded(self):
+        # present_entities drifts stale; the task text is the live signal.
+        cur_path = self.campaign / "state" / "current.json"
+        cur = json.loads(cur_path.read_text())
+        cur["present_entities"] = []
+        cur_path.write_text(json.dumps(cur))
+        brief = self.agent._consult_brief(
+            "narrator", "Yara asks Maera Thistle about the strongbox")
+        self.assertIn("--- campaign/npcs/recurring/maera-thistle/summary.md",
+                      brief)
+        self.assertIn("--- campaign/npcs/recurring/maera-thistle/voice.md",
+                      brief)
+        # by folder id too, and the firewall still holds for non-directors
+        brief = self.agent._consult_brief("narrator", "scene at maera-thistle")
+        self.assertIn("maera-thistle/summary.md", brief)
+        self.assertNotIn("/motivations.md\n", brief)
+        self.assertIn("--- campaign/npcs/recurring/maera-thistle/motivations.md",
+                      self.agent._consult_brief("director", "Maera Thistle"))
+        # an unmentioned entity is not pulled in
+        self.assertNotIn("maera-thistle/summary.md",
+                         self.agent._consult_brief("narrator", "an empty road"))
+
+    def test_narrator_cannot_run_tools(self):
+        names = [t.__name__ for t in self.agent.role_tools("narrator")]
+        self.assertNotIn("run_tool", names)  # it double-posted via narrate.py
+
+    def test_party_sheets_inline_for_live_loop_roles(self):
+        cur_path = self.campaign / "state" / "current.json"
+        cur = json.loads(cur_path.read_text())
+        cur["party"] = ["pc-warlock"]
+        cur_path.write_text(json.dumps(cur))
+        for role in ("director", "rules-lawyer", "narrator"):
+            brief = self.agent._consult_brief(role)
+            self.assertIn("--- campaign/characters/pc-warlock.json", brief, role)
+        # background roles keep the one-line roster
+        brief = self.agent._consult_brief("bookkeeper")
+        self.assertNotIn("--- campaign/characters/pc-warlock.json", brief)
+        self.assertIn("pc-warlock.json — Ember Vex", brief)
+
     def test_free_text_entities_are_skipped(self):
         cur_path = self.campaign / "state" / "current.json"
         cur = json.loads(cur_path.read_text())
@@ -293,12 +385,14 @@ class TestToolWhitelist(DesktopTestCase):
 
     def test_narration_flag_only_set_by_narrate(self):
         self.agent._narrated = False
+        self.agent._narrator_ok = True  # plumbing test, not routing policy
         self.agent.run_tool("dice.py", ["1d20"])
         self.assertFalse(self.agent._narrated)
         self.agent.run_tool("narrate.py", ["The door opens."])
         self.assertTrue(self.agent._narrated)
 
     def test_narrate_reaches_the_feed(self):
+        self.agent._narrator_ok = True  # plumbing test, not routing policy
         self.agent.run_tool("narrate.py", ["-"], stdin="The gate groans open.")
         feed = (self.campaign / "state" / "player-feed.jsonl").read_text().splitlines()
         self.assertEqual(json.loads(feed[-1])["text"], "The gate groans open.")

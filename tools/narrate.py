@@ -102,6 +102,21 @@ STYLE_PATTERNS = [
     (r"(?:^\s*(?:[-•*]|\d+[.)])\s.+\n?){2,}\s*\Z",
      "closing option menu — narration never ends in a bullet list of choices; "
      "if beginner guidance is needed, give it out-of-character in one sentence"),
+    # Mechanics leaks — the no-spoiler rule: numbers reach players only as
+    # --effect subtext under the prose, never inside it (leak observed s14:
+    # "pinning his arms in an iron lock (24 vs 17)").
+    (r"\(\s*\d+\s+vs\.?\s+\d+\s*\)",
+     "roll result in prose — outcomes go in --effect subtext, never the narration"),
+    (r"\bDC\s*\d+\b",
+     "DC in prose — difficulty is DM-layer; describe how hard it looks instead"),
+    (r"\bd(?:4|6|8|10|12|20|100)\b",
+     "die name in prose — dice are DM-layer, not part of the story"),
+    (r"\brolls? (?:a|an)?\s*\d+\b|\btotal of \d+\b",
+     "roll numbers in prose — say what happens, put the roll in --effect"),
+    (r"\btak(?:es?|ing) \d+ (?:points? of )?(?:\w+ )?damage\b",
+     "damage numbers in prose — char_update/combat_tracker queue that subtext"),
+    (r"\b\d+\s*/\s*\d+ (?:HP|hit points?)\b|\bhit points?\b|\bHP\b",
+     "HP in prose — describe the wound, the sheet keeps the number"),
 ]
 
 

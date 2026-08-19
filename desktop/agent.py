@@ -143,6 +143,9 @@ def _read_activity(path: str) -> str | None:
 # Docstrings are what the model sees, so they carry the usage rules.
 
 _narrated = False   # set when a narrate.py push lands; read once per turn
+_narrator_ok = False  # set when the narrator role is consulted this turn —
+                      # narration/scene_change pushes are refused without it,
+                      # so player-facing prose always comes from the narrator
 
 
 def _tool_error(e: Exception) -> str:
@@ -292,6 +295,15 @@ def list_files(pattern: str) -> str:
         return _tool_error(e)
 
 
+def _narrate_type(argv: list[str] | None) -> str:
+    """The --type a narrate.py call will publish as (default: narration)."""
+    argv = [str(a) for a in (argv or [])]
+    try:
+        return argv[argv.index("--type") + 1]
+    except (ValueError, IndexError):
+        return "narration"
+
+
 # The CLI-args parameter must not be named "args": langchain's schema
 # inference silently drops fields named args/kwargs, leaving a v__args
 # placeholder the model fills and the call then rejects.
@@ -312,6 +324,12 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
     global _narrated
     if tool not in TOOL_SCRIPTS:
         return f"error: unknown tool {tool!r}; available: {', '.join(TOOL_SCRIPTS)}"
+    if tool == "narrate.py" and not _narrator_ok and _narrate_type(argv) in (
+            "narration", "scene_change"):
+        return ("error: player-facing prose must come from the narrator — "
+                "consult_role('narrator', ...) with the Director's decision and "
+                "the roll outcomes, then push what it returns. (--type system "
+                "table announcements don't need the narrator.)")
     _activity(TOOL_ACTIVITY.get(tool))
     script = config.BUNDLE / "tools" / tool
     # ponytail: the tool scripts run in-process because a frozen app has no
@@ -363,6 +381,9 @@ TOOLS = [read_file, write_file, edit_file, list_files, run_tool]
 SUB_ROLES = tuple(r for r in prompts.ROLES if r != "dm")
 SUB_RECURSION_LIMIT = 32
 
+# Roles that must not sit between a player's message and their narration.
+_AFTER_NARRATION_ROLES = ("continuity-checker", "prose-editor", "session-prep")
+
 
 role_model = config.role_model
 
@@ -387,7 +408,10 @@ def role_tools(role: str) -> list:
                 return refusal
             return base_read(path)
 
-        return [read_file_safe, list_files, run_tool]
+        # No run_tool: the narrator returns prose for the DM to publish —
+        # with narrate.py it double-posted (observed s14) and it has no
+        # other tool business (no dice, no state writes).
+        return [read_file_safe, list_files]
     return [read_file, list_files, run_tool]
 
 
@@ -424,28 +448,86 @@ def _final_text(result: dict) -> str:
     return ""
 
 
-def _consult_brief(role: str = "") -> str:
+# What each role's brief carries — the information silo. GM-side roles get
+# the full state; the narrator's view excludes everything with GM-only fields
+# (quests.json carries secret_truth and unrevealed quests, world-flags notes
+# and dramatis-personae's known_to_party=false entries pre-stage reveals);
+# the rules-lawyer gets mechanics context only.
+_GM_ROLES = ("director", "bookkeeper", "continuity-checker", "session-prep")
+_GM_STATE = ("state/current.json", "state/settings.json", "house-rules.md",
+             "state/quests.json", "state/world-flags.json",
+             "state/dramatis-personae.json", "sessions/recap.md")
+_BRIEF_FILES = {
+    **{role: _GM_STATE for role in _GM_ROLES},
+    "rules-lawyer": ("state/current.json", "state/settings.json",
+                     "house-rules.md"),
+    "narrator": ("state/current.json", "state/settings.json",
+                 "house-rules.md", "sessions/recap.md"),
+    "prose-editor": (),
+}
+
+
+def _entity_folders() -> list:
+    """Every entity folder on disk, as (path-from-campaign, Path)."""
+    found = []
+    for group in ("npcs/recurring", "npcs/one-shot", "world/locations",
+                  "factions"):
+        for folder in sorted((config.CAMPAIGN / group).glob("*")):
+            if folder.is_dir() and not folder.name.startswith("_"):
+                found.append((f"{group}/{folder.name}", folder))
+    return found
+
+
+def _named_in(task: str, folders: list) -> list:
+    """Entity folders this task actually mentions — by id or by display name.
+
+    present_entities drifts (invariant #2 gets missed under time pressure);
+    the task text is the live signal for who is in the beat, so the brief
+    pre-loads them and the specialist doesn't glob to find their voice.md.
+    """
+    low = task.lower()
+    hits = []
+    for rel, folder in folders:
+        ident = folder.name
+        if ident.lower() in low or ident.replace("-", " ").lower() in low:
+            hits.append((rel, folder))
+            continue
+        summary = folder / "summary.md"
+        try:  # display name from the H1, e.g. "# Maera Thistle"
+            for line in summary.read_text(encoding="utf-8").splitlines():
+                if line.startswith("# ") and line[2:].strip().lower() in low:
+                    hits.append((rel, folder))
+                    break
+        except OSError:
+            continue
+    return hits
+
+
+def _consult_brief(role: str = "", task: str = "") -> str:
     """State every consult otherwise re-reads cold (specialists are stateless).
 
     Injected into each consult's task so a Director/Rules-Lawyer round doesn't
     spend 30s+ rediscovering the scene file by file — the measured worst case
     was a consult burning ~70s guessing PC sheet paths (campaign/pcs/*.md …).
-    Role-aware: present_entities' files ride along too — motivations.md and
-    secrets.md ONLY for the director (invariant #7, the motivations firewall).
+    Siloed by role via _BRIEF_FILES; present_entities' files ride along too —
+    motivations.md and secrets.md ONLY for the director (invariant #7, the
+    motivations firewall).
     """
+    if role == "prose-editor":
+        return ""  # style work needs the draft in the task, not the world
     parts = []
-    for rel in ("state/current.json", "state/settings.json", "house-rules.md",
-                "state/quests.json", "state/world-flags.json",
-                "state/dramatis-personae.json", "sessions/recap.md"):
+    default = ("state/current.json", "state/settings.json", "house-rules.md")
+    for rel in _BRIEF_FILES.get(role, default):
         try:
             text = (config.CAMPAIGN / rel).read_text(encoding="utf-8").strip()
             parts.append(f"--- campaign/{rel}\n{text}")
         except OSError:
             continue
-    logs = sorted((config.CAMPAIGN / "sessions").glob("session-*.md"))
-    if logs:
-        tail = logs[-1].read_text(encoding="utf-8")[-4000:]
-        parts.append(f"--- campaign/sessions/{logs[-1].name} (tail)\n…{tail}")
+    if role in _GM_ROLES:
+        logs = sorted((config.CAMPAIGN / "sessions").glob("session-*.md"))
+        if logs:
+            tail = logs[-1].read_text(encoding="utf-8")[-4000:]
+            parts.append(f"--- campaign/sessions/{logs[-1].name} (tail)\n…{tail}")
     try:
         current = json.loads(
             (config.CAMPAIGN / "state" / "current.json").read_text(encoding="utf-8"))
@@ -457,16 +539,24 @@ def _consult_brief(role: str = "") -> str:
         names += ["motivations.md", "secrets.md"]
     elif role == "narrator":
         names.append("voice.md")
-    for ent in entities:
-        folder = config.CAMPAIGN / str(ent)
-        if not isinstance(ent, str) or not folder.is_dir():
-            continue  # free-text entry ("nervous gnome at the bar…")
+    all_folders = _entity_folders()
+    in_scope = [(str(e), config.CAMPAIGN / str(e)) for e in entities
+                if isinstance(e, str) and (config.CAMPAIGN / str(e)).is_dir()]
+    for rel, folder in in_scope + _named_in(task, all_folders):
         for name in names:
             try:
                 text = (folder / name).read_text(encoding="utf-8").strip()
-                parts.append(f"--- campaign/{ent}/{name}\n{text}")
+                header = f"--- campaign/{rel}/{name}"
+                if header not in "\n".join(parts):
+                    parts.append(f"{header}\n{text}")
             except OSError:
                 continue
+    try:
+        current = json.loads(
+            (config.CAMPAIGN / "state" / "current.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        current = {}
+    party = set(current.get("party") or [])
     chars = config.CAMPAIGN / "characters"
     roster = []
     for p in sorted(chars.glob("*.json")) if chars.is_dir() else []:
@@ -474,12 +564,32 @@ def _consult_brief(role: str = "") -> str:
             d = json.loads(p.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        roster.append(f"campaign/characters/{p.name} — {d.get('name', '?')}"
-                      f" ({d.get('race', '?')} {d.get('class', '?')}"
-                      f" {d.get('level', '?')})")
+        # Live-loop roles get seated party members' full sheets inline —
+        # they otherwise re-read them every single beat.
+        if d.get("id") in party and role in ("director", "rules-lawyer",
+                                             "narrator"):
+            parts.append(f"--- campaign/characters/{p.name}\n"
+                         + p.read_text(encoding="utf-8").strip())
+        else:
+            roster.append(f"campaign/characters/{p.name} — {d.get('name', '?')}"
+                          f" ({d.get('race', '?')} {d.get('class', '?')}"
+                          f" {d.get('level', '?')})")
     if roster:
         parts.append("--- PC sheets (exact paths — read for full stats)\n"
                      + "\n".join(roster))
+    # Entity manifest: every folder that exists, so a role that needs one the
+    # scene didn't pre-load reads exactly one file instead of globbing for it
+    # (measured: 3 wasted glob rounds hunting an NPC's voice.md).
+    manifest = []
+    for rel, folder in all_folders:
+        files = sorted(f.name for f in folder.glob("*.md")
+                       if role == "director"
+                       or f.name not in ("motivations.md", "secrets.md"))
+        if files:
+            manifest.append(f"campaign/{rel}/: " + ", ".join(files))
+    if manifest:
+        parts.append("--- Entities on file (read only if this beat needs one "
+                     "not pre-loaded above)\n" + "\n".join(manifest))
     return "\n\n".join(parts)
 
 
@@ -504,12 +614,23 @@ def consult_role(role: str, task: str) -> str:
     question (DC, save type, condition effect) almost never depends on the
     Director's answer — fire director + rules-lawyer together.
     """
+    global _narrator_ok
     if role not in SUB_ROLES:
         return f"error: unknown role {role!r}; available: {', '.join(SUB_ROLES)}"
     if not task.strip():
         return "error: task is empty — tell the specialist what you need"
+    # Checkpoint roles are free AFTER the beat lands (players are reading) and
+    # ruinous before it (players are staring at nothing): a continuity check
+    # measured 69s ahead of a narration once. Same rule the manual states for
+    # bookkeeping — never block a player's turn.
+    if role in _AFTER_NARRATION_ROLES and not _narrated:
+        return (f"error: the {role} runs after the beat is on screen, not "
+                "before it — push this beat's narration first, then consult "
+                "it in the same turn (the players read while it works).")
+    if role == "narrator":
+        _narrator_ok = True  # unlocks narration pushes for the rest of the turn
     _activity(ROLE_ACTIVITY.get(role, "The DM is consulting a specialist"))
-    brief = _consult_brief(role)
+    brief = _consult_brief(role, task)
     if brief:
         task = (f"{task}\n\n# Pre-read state (current as of this consult — "
                 f"do NOT re-read these files)\n{brief}")
@@ -705,17 +826,34 @@ def _friendly(e: Exception) -> DMError:
 LABEL_LINE = re.compile(r"^\s*(\[[A-Z][A-Z ]+\]|roll:|result:)", re.M)
 
 
-def players_text(text: str) -> str:
+def players_text(text: str, *, quoted_only: bool = False) -> str:
     """Best-effort player-facing prose from a reply that never called narrate.py.
 
-    Prefers the blockquote layer the manual mandates; failing that, strips the
-    DM-layer label lines so the table gets prose rather than [DIRECTOR] notes.
+    Prefers the blockquote layer the manual mandates; failing that (unless
+    quoted_only), strips the DM-layer label lines so the table gets prose
+    rather than [DIRECTOR] notes.
     """
     quoted = [ln.lstrip()[2:] for ln in text.splitlines() if ln.lstrip().startswith("> ")]
     if quoted:
         return "\n".join(quoted).strip()
+    if quoted_only:
+        return ""
     return "\n".join(ln for ln in text.splitlines()
                      if ln.strip() and not LABEL_LINE.match(ln)).strip()
+
+
+def narrate_gate(prose: str) -> list:
+    """narrate.py's style/mechanics violations for `prose` ([] if clean).
+
+    The fallback path publishes without going through the tool, so it has to
+    apply the same gate rather than trusting it happened upstream.
+    """
+    try:
+        sys.path.insert(0, str(config.BUNDLE / "tools"))
+        import narrate  # the tool module, not this function's caller
+        return narrate.style_violations(prose)
+    except Exception:
+        return []  # never let the gate itself blank the players' screen
 
 
 def generate_character(description: str) -> dict:
@@ -773,13 +911,14 @@ def generate_character(description: str) -> dict:
 
 def run_turn(player_message: str) -> dict:
     """One player turn. Publishes to the chronicle; returns a small summary."""
-    global _narrated
+    global _narrated, _narrator_ok
     if not config.api_key():
         raise DMError("No OpenRouter API key is set yet — open Settings and paste one.")
 
     from langchain_core.messages import HumanMessage, ToolMessage
 
     _narrated = False
+    _narrator_ok = False
     _activity("The DM is thinking it over")
     try:
         agent = build_agent()
@@ -830,11 +969,50 @@ def run_turn(player_message: str) -> dict:
 
         final = _final_text(result)
 
-        # A turn that never reached the chronicle is a blank screen for the players.
+        # The turn ended without the beat reaching the players. Observed live:
+        # the DM took the Director's decision, then stopped — no narrator
+        # consult, no push, nothing on screen. One nudge on the same thread
+        # (it still has the decision and the rolls) costs nothing on the happy
+        # path and saves the turn on the unhappy one.
+        if not _narrated and not players_text(final, quoted_only=True):
+            _activity("The Narrator is finding the words")
+            try:
+                result = agent.invoke({"messages": [HumanMessage(
+                    content="(From the app: that turn never reached the "
+                            "players' screen — nothing was published. Consult "
+                            "the narrator with the decision and roll outcomes "
+                            "you already have, then push its prose with "
+                            "narrate.py. Do not redo state changes you have "
+                            "already applied.)")]}, config=run_config)
+                final = _final_text(result) or final
+            except Exception:
+                pass  # the fallback below still tells the table something
+
+        # A turn that never reached the chronicle is a blank screen for the
+        # players — but the DM's own reply is orchestrator text, not the
+        # Narrator's prose: it skips the style gate and has published
+        # out-of-character chatter ("1. Maera is deceased…") as in-world
+        # narration. Only a real blockquote (the manual's player layer) lands
+        # as narration, and only if it passes the same gate narrate.py applies;
+        # anything else is a visibly out-of-character table note.
         if not _narrated:
-            prose = players_text(final)
-            if prose:
-                campaign_lib.append_feed(config.CAMPAIGN, prose, type="narration")
+            quoted = players_text(final, quoted_only=True)
+            gate = narrate_gate(quoted) if quoted else []
+            if quoted and not gate:
+                campaign_lib.append_feed(config.CAMPAIGN, quoted,
+                                         type="narration")
+            else:
+                # Silence is the one unacceptable outcome: a player who gets
+                # no reply can't tell a lost turn from a slow one. Say so.
+                campaign_lib.append_feed(
+                    config.CAMPAIGN,
+                    players_text(final) or
+                    "(The DM lost the thread on that one — say it again and "
+                    "it'll pick up from here.)",
+                    type="system")
+                _devlog("turn_unnarrated",
+                        {"gate": [g["why"] for g in gate]},
+                        (final or "(empty reply)")[:800], _utcnow())
 
         return {"narrated": _narrated, "fresh_session": fresh, "reply": final[:2000]}
     finally:

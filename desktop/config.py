@@ -74,13 +74,17 @@ DEV_DEFAULTS = {
     # {role: model id} — every role, including the dm orchestrator, has its own
     # model; a user's saved role_models entry overrides the default here.
     # Background roles take DeepSeek's judgment over its latency; LIVE-LOOP
-    # roles (dm, director, rules-lawyer) stay fast because the table waits on
-    # them — measured 2026-08-19: DeepSeek director consults ran 60-180s/beat
-    # vs ~half that on Gemini flash. Narrator: DeepSeek won the table's prose
-    # bake-off (2026-08-18); Luna/Gemini-lite invented facts, Haiku was cliché.
+    # roles stay fast because the table waits on them — measured 2026-08-19:
+    # DeepSeek director consults ran 60-180s/beat vs ~half that on Gemini
+    # flash. The narrator moved into the live loop the same day (it now writes
+    # every beat, no more inline DM prose), and re-measured on the same scene
+    # it was 11.7s on flash vs 27-276s on DeepSeek with no drop in prose
+    # quality — the 2026-08-18 bake-off that picked DeepSeek predates both the
+    # pre-read brief and the mechanics style gate. Prose roles that still run
+    # off the clock (prose-editor, session-prep) keep DeepSeek.
     "role_models": {
         "dm": FALLBACK_MODEL,
-        "narrator": "~deepseek/deepseek-v4-flash-latest",
+        "narrator": FALLBACK_MODEL,
         "director": FALLBACK_MODEL,
         "rules-lawyer": FALLBACK_MODEL,
         "bookkeeper": "~deepseek/deepseek-v4-flash-latest",
