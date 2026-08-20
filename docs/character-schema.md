@@ -7,7 +7,7 @@ ordered by `campaign/state/current.json` `party[]`.
 
 ```json
 {
-  "id": "pc-kestrel",
+  "id": "pc-rogue",
   "name": "Character name",
   "player": "Player name",
   "race": "Half-Elf",
