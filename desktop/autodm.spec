@@ -72,6 +72,7 @@ exe = EXE(
     pyz, a.scripts, [],
     exclude_binaries=True,
     name="Auto-DM",
+    icon="autodm.ico",      # Windows; regenerate both via make_icons.py
     console=False,          # no terminal window
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -83,6 +84,7 @@ coll = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name="Auto-DM")
 app = BUNDLE(                # a no-op off macOS
     coll,
     name="Auto-DM.app",
+    icon="autodm.icns",
     bundle_identifier="dev.autodm.app",
     info_plist={
         "CFBundleShortVersionString": "0.1.0",
