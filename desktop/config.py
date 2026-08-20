@@ -88,6 +88,19 @@ def is_cli_model(model: str) -> bool:
     return str(model).split(":", 1)[0].strip() == CLI_MODEL
 
 
+def model_choices(role: str | None = None) -> list:
+    """The models a role can actually be set to.
+
+    Offering the dm a local-CLI model would be offering a setting that cannot
+    work: the setup screen would save it and role_model() would silently
+    ignore it, and the dev panel would reject it with an error. Don't render
+    the choice.
+    """
+    if role == "dm":
+        return [(i, label) for i, label in MODEL_CHOICES if not is_cli_model(i)]
+    return list(MODEL_CHOICES)
+
+
 def cli_model_alias(model: str) -> str | None:
     """The `--model` alias in a claude-cli id, or None for the CLI default."""
     parts = str(model).split(":", 1)

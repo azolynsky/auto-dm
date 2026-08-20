@@ -958,14 +958,19 @@ function renderDev(data) {
   const roleModels = data.role_models || {};
   // A hand-typed model id that isn't in MODEL_CHOICES still round-trips as an
   // extra option, so a config edited by hand survives a save from this panel.
-  const modelSelect = (role, current) => `
+  const modelSelect = (role, current) => {
+    // The dm can't run on the local claude CLI (no tool-calling), so its row
+    // is served a shorter list — never render a choice that can't be saved.
+    const choices = (role === 'dm' && data.dm_models) || data.models;
+    return `
       <select data-model-role="${role}" title="Model for this role">
-        ${data.models.map(m =>
+        ${choices.map(m =>
           `<option value="${m.id}" ${m.id === current ? 'selected' : ''}>${m.id}</option>`
         ).join('')}
-        ${data.models.some(m => m.id === current) ? ''
+        ${choices.some(m => m.id === current) ? ''
           : `<option value="${current}" selected>${current}</option>`}
       </select>`;
+  };
 
   // Prompt-variant dropdown only where there is an actual choice to make;
   // a role with just "default" would render a dead control.

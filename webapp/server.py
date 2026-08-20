@@ -390,7 +390,10 @@ async def get_setup():
         "has_key": bool(appconfig.api_key()),
         "campaign": (read_json(CURRENT_FILE) or {}).get("campaign", ""),
         "model": appconfig.model(),
-        "models": [{"id": i, "label": label} for i, label in appconfig.MODEL_CHOICES],
+        # This screen sets the DM's model, so it gets the DM's choices —
+        # the local CLI can't drive the orchestrator's tool calls.
+        "models": [{"id": i, "label": label}
+                   for i, label in appconfig.model_choices("dm")],
         "pregens": list_pregens(),
         "party": (read_json(CURRENT_FILE) or {}).get("party", []),
     })
@@ -414,6 +417,14 @@ async def post_setup(request: Request):
 
     appconfig.save(api_key=key or None)
     chosen = str(body.get("model") or "").strip()
+    if chosen and appconfig.is_cli_model(chosen):
+        # Silently ignoring it (role_model falls back) would leave the setup
+        # screen claiming a model the DM isn't running on.
+        raise HTTPException(
+            status_code=400,
+            detail="The DM can't run on the local claude CLI — it needs "
+                   "tool-calling. Pick an API model here; specialist roles "
+                   "can use the CLI from Developer settings.")
     if chosen:  # the setup screen picks the DM's model; the rest are per-role
         appconfig.save(role_models={**(appconfig.load().get("role_models") or {}),
                                     "dm": chosen})
@@ -443,7 +454,10 @@ async def get_dev():
     return JSONResponse({**appconfig.dev_settings(),
                          "registry": prompt_registry.registry(),
                          "models": [{"id": i, "label": label}
-                                    for i, label in appconfig.MODEL_CHOICES]})
+                                    for i, label in appconfig.model_choices()],
+                         # The dm's row renders from this shorter list.
+                         "dm_models": [{"id": i, "label": label}
+                                       for i, label in appconfig.model_choices("dm")]})
 
 
 @app.post("/api/dev")

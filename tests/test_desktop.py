@@ -257,6 +257,18 @@ class TestLocalClaudeCli(DesktopTestCase):
         self.assertEqual(cli, ["claude-cli:haiku", "claude-cli:sonnet",
                                "claude-cli:opus", "claude-cli:fable"])
 
+    def test_dm_is_never_offered_a_cli_model(self):
+        # Rejecting the save is not enough: an unpickable option in the dm's
+        # dropdown is a defect. The setup screen (which sets the dm) and the
+        # dm's dev-panel row both render from model_choices("dm").
+        dm = [i for i, _ in self.config.model_choices("dm")]
+        self.assertTrue(dm, "the dm must still have models to pick")
+        self.assertFalse([i for i in dm if self.config.is_cli_model(i)])
+        for role in (None, "narrator", "bookkeeper"):
+            offered = [i for i, _ in self.config.model_choices(role)]
+            self.assertTrue([i for i in offered if self.config.is_cli_model(i)],
+                            f"{role} should be offered the local CLI")
+
     def test_dm_never_runs_on_the_cli(self):
         # It needs structured tool-calling; a hand-edited config must not brick.
         self.config.save(role_models={"dm": "claude-cli", "director": "claude-cli"})
