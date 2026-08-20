@@ -135,6 +135,30 @@ class TestMultiCampaign(DesktopTestCase):
         self.assertTrue(legacy.exists())  # pinned root: nothing moves
 
 
+class TestMenuOrder(unittest.TestCase):
+    """The Campaign menu sits right after the application menu — pywebview
+    appends custom menus last, so app.py reorders the live NSMenu bar."""
+
+    @unittest.skipUnless(sys.platform == "darwin", "AppKit menu bar is macOS-only")
+    def test_campaign_menu_moves_after_app_menu(self):
+        import AppKit
+        sys.modules.pop("app", None)
+        import app
+
+        bar = AppKit.NSMenu.alloc().init()
+        for title in ("Auto-DM", "View", "Edit", app.CAMPAIGN_MENU_TITLE):
+            item = AppKit.NSMenuItem.alloc().init()
+            item.setTitle_(title)
+            bar.addItem_(item)
+
+        self.assertTrue(app.move_after_app_menu(bar, app.CAMPAIGN_MENU_TITLE))
+        self.assertEqual([i.title() for i in bar.itemArray()],
+                         ["Auto-DM", app.CAMPAIGN_MENU_TITLE, "View", "Edit"])
+        # missing item / missing bar are no-ops, not crashes
+        self.assertFalse(app.move_after_app_menu(bar, "No Such Menu"))
+        self.assertFalse(app.move_after_app_menu(None, app.CAMPAIGN_MENU_TITLE))
+
+
 class TestConsultBrief(DesktopTestCase):
     """Every consult gets the scene state and PC sheet paths pre-injected,
     so stateless specialists don't burn model rounds rediscovering them."""

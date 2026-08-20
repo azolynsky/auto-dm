@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import config  # noqa: E402
 
 WINDOW_TITLE = "Auto-DM"
+CAMPAIGN_MENU_TITLE = "Campaign"
 
 
 def relaunch() -> None:
@@ -42,6 +43,39 @@ def relaunch() -> None:
     os.execv(argv[0], argv)
 
 
+def move_after_app_menu(bar, title: str) -> bool:
+    """Move the named top-level item of an NSMenu bar to index 1 — right
+    after the application menu. No-op when the bar or item is missing."""
+    if bar is None:
+        return False
+    item = bar.itemWithTitle_(title)
+    if item is None:
+        return False
+    bar.removeItem_(item)
+    bar.insertItem_atIndex_(item, 1)
+    return True
+
+
+def promote_campaign_menu() -> None:
+    """Put Campaign ahead of pywebview's built-in Edit/View menus.
+
+    pywebview appends custom menus after its built-ins and offers no
+    ordering hook; disabling the built-ins instead would take the Edit menu
+    — and ⌘C/⌘V in the chat input — with it. So reorder the live menu bar
+    once, via the main runloop: AppKit isn't thread-safe and webview.start
+    funcs run off-main."""
+    if sys.platform != "darwin":
+        return
+
+    import AppKit
+    from PyObjCTools import AppHelper
+
+    AppHelper.callAfter(
+        lambda: move_after_app_menu(
+            AppKit.NSApplication.sharedApplication().mainMenu(),
+            CAMPAIGN_MENU_TITLE))
+
+
 def campaign_menu(on_new, on_switch) -> list:
     """The native Campaign menu: new, then one entry per campaign, the
     active one checked. Built once per process — every campaign change
@@ -56,7 +90,7 @@ def campaign_menu(on_new, on_switch) -> list:
             label = f"{label} ({slug})"
         mark = "✓  " if slug == config.CAMPAIGN.name else "     "
         items.append(wm.MenuAction(mark + label, lambda s=slug: on_switch(s)))
-    return [wm.Menu("Campaign", items)]
+    return [wm.Menu(CAMPAIGN_MENU_TITLE, items)]
 
 
 def free_port() -> int:
@@ -128,7 +162,7 @@ def main() -> int:
         on_switch=change_to)
 
     # blocks until the window closes; the server thread is a daemon
-    webview.start(menu=menu)
+    webview.start(func=promote_campaign_menu, menu=menu)
     if switching.is_set():
         relaunch()
     return 0
