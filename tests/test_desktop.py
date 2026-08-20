@@ -38,7 +38,7 @@ class DesktopTestCase(unittest.TestCase):
         os.environ["CAMPAIGN_ROOT"] = str(self.campaign)
 
         # Reimport under the temp root: config caches CAMPAIGN at import time.
-        for name in ("config", "prompts", "agent", "campaign_lib"):
+        for name in ("config", "prompts", "campaign_tools", "agent", "campaign_lib"):
             sys.modules.pop(name, None)
         import agent
         import config
@@ -51,7 +51,7 @@ class DesktopTestCase(unittest.TestCase):
     def tearDown(self):
         os.environ.pop("CAMPAIGN_ROOT", None)
         shutil.rmtree(self.tmp, ignore_errors=True)
-        for name in ("config", "prompts", "agent", "campaign_lib"):
+        for name in ("config", "prompts", "campaign_tools", "agent", "campaign_lib"):
             sys.modules.pop(name, None)
 
 
@@ -456,7 +456,7 @@ class TestConsultBrief(DesktopTestCase):
         self.assertEqual(self.agent._consult_brief("prose-editor"), "")
 
     def test_narration_requires_narrator_consult(self):
-        self.agent._narrator_ok = False
+        self.agent.begin_turn()
         out = self.agent.run_tool("narrate.py", ["The gate opens."])
         self.assertIn("error", out)
         self.assertIn("narrator", out)
@@ -465,7 +465,7 @@ class TestConsultBrief(DesktopTestCase):
             "narrate.py", ["Back in five.", "--type", "system"])
         self.assertNotIn("must come from the narrator", out)
         # once the narrator was consulted this turn, pushes go through
-        self.agent._narrator_ok = True
+        self.agent.allow_narration()
         out = self.agent.run_tool("narrate.py", ["The gate opens."])
         self.assertNotIn("must come from the narrator", out)
 
@@ -482,7 +482,7 @@ class TestConsultBrief(DesktopTestCase):
         self.assertEqual(self.agent.narrate_gate("She pins him flat."), [])
 
     def test_checkpoint_roles_wait_for_the_beat(self):
-        self.agent._narrated = False
+        self.agent.begin_turn()
         for role in ("continuity-checker", "prose-editor", "session-prep"):
             out = self.agent.consult_role(role, "check the last scene")
             self.assertIn("after the beat is on screen", out, role)
@@ -854,15 +854,15 @@ class TestToolWhitelist(DesktopTestCase):
         self.assertIn("1d20", self.agent.run_tool("dice.py", ["1d20"]))
 
     def test_narration_flag_only_set_by_narrate(self):
-        self.agent._narrated = False
-        self.agent._narrator_ok = True  # plumbing test, not routing policy
+        self.agent.begin_turn()
+        self.agent.allow_narration()  # plumbing test, not routing policy
         self.agent.run_tool("dice.py", ["1d20"])
-        self.assertFalse(self.agent._narrated)
+        self.assertFalse(self.agent.narrated())
         self.agent.run_tool("narrate.py", ["The door opens."])
-        self.assertTrue(self.agent._narrated)
+        self.assertTrue(self.agent.narrated())
 
     def test_narrate_reaches_the_feed(self):
-        self.agent._narrator_ok = True  # plumbing test, not routing policy
+        self.agent.allow_narration()  # plumbing test, not routing policy
         self.agent.run_tool("narrate.py", ["-"], stdin="The gate groans open.")
         feed = (self.campaign / "state" / "player-feed.jsonl").read_text().splitlines()
         self.assertEqual(json.loads(feed[-1])["text"], "The gate groans open.")
