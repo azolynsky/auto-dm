@@ -63,17 +63,24 @@ MODEL_CHOICES = [
     ("google/gemini-3.7-flash", "Gemini 3.7 Flash — recommended, fast live play"),
     ("~deepseek/deepseek-v4-flash-latest", "DeepSeek V4 Flash — sharpest rulings, cheapest, slower"),
     ("openai/gpt-5.6-luna-pro", "GPT-5.6 Luna Pro — careful, costs more"),
-    ("claude-cli", "Claude Code on this Mac — your own subscription, no API cost"),
-    ("claude-cli:opus", "Claude Code (Opus) on this Mac — slower, strongest judgment"),
+    ("claude-cli:haiku", "Claude Code on this Mac: Haiku — fastest, no API cost"),
+    ("claude-cli:sonnet", "Claude Code on this Mac: Sonnet — balanced, no API cost"),
+    ("claude-cli:opus", "Claude Code on this Mac: Opus — strong judgment, slower"),
+    ("claude-cli:fable", "Claude Code on this Mac: Fable — most capable, slowest"),
 ]
 
-# A role model of "claude-cli" (optionally "claude-cli:<alias>", e.g.
-# claude-cli:opus) runs that specialist through the `claude -p` CLI on this
-# machine instead of OpenRouter — the user's own Claude subscription, no API
-# spend. Specialist roles fit it exactly: one-shot task in, answer out, and
-# Claude Code reads the campaign files itself. The dm orchestrator can't:
-# it drives our own tools (dice, narrate, consult) through structured
-# tool-calling, which `claude -p` has no way to hand back.
+# A role model of "claude-cli:<alias>" runs that specialist through the
+# `claude -p` CLI on this machine instead of OpenRouter — the user's own Claude
+# subscription, no API spend. Specialist roles fit it exactly: one-shot task
+# in, answer out, and Claude Code reads the campaign files itself. The dm
+# orchestrator can't: it drives our own tools (dice, narrate, consult) through
+# structured tool-calling, which `claude -p` has no way to hand back.
+#
+# Always name the model. A bare "claude-cli" still works for a hand-written
+# config, but it passes no --model flag, so the role silently inherits whatever
+# the machine's own Claude Code is set to (a `model` key in ~/.claude/
+# settings.json, else the CLI default) — which changes under the app without
+# warning. The picker offers only the explicit ids for that reason.
 CLI_MODEL = "claude-cli"
 
 

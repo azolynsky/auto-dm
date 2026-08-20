@@ -249,6 +249,14 @@ class TestLocalClaudeCli(DesktopTestCase):
         self.assertIsNone(c.cli_model_alias("claude-cli"))
         self.assertEqual(c.cli_model_alias("claude-cli:opus"), "opus")
 
+    def test_picker_names_every_cli_model_explicitly(self):
+        # A bare "claude-cli" inherits the machine's own Claude Code model
+        # setting, so the picker must not offer it — every choice names one.
+        cli = [i for i, _ in self.config.MODEL_CHOICES
+               if self.config.is_cli_model(i)]
+        self.assertEqual(cli, ["claude-cli:haiku", "claude-cli:sonnet",
+                               "claude-cli:opus", "claude-cli:fable"])
+
     def test_dm_never_runs_on_the_cli(self):
         # It needs structured tool-calling; a hand-edited config must not brick.
         self.config.save(role_models={"dm": "claude-cli", "director": "claude-cli"})

@@ -90,18 +90,26 @@ this section is visible to players by default because it changes how the DM is
 ### Running a role on Claude Code instead of OpenRouter
 
 Any specialist role can run on the `claude` CLI on this machine — your own
-Claude subscription, no API spend. Pick **Claude Code on this Mac** for that
-role in Developer settings, or set the model id by hand:
+Claude subscription, no API spend. Pick one of the **Claude Code on this Mac**
+entries for that role in Developer settings, or set the model id by hand:
 
 ```
-"role_models": { "narrator": "claude-cli", "rules-lawyer": "claude-cli:opus" }
+"role_models": { "narrator": "claude-cli:haiku", "rules-lawyer": "claude-cli:opus" }
 ```
 
-`claude-cli` uses the CLI's default model; `claude-cli:<alias>` passes
-`--model <alias>` (`sonnet`, `opus`, or a full model id). The role's prompt file
-becomes the CLI's system prompt and the task — pre-read brief included — its
-user turn, so a role runs identically either way and can be switched back
-without touching prompts.
+Four ids, fastest first: `claude-cli:haiku`, `claude-cli:sonnet`,
+`claude-cli:opus`, `claude-cli:fable`. Each passes `--model <alias>` straight
+through, so any alias the installed CLI accepts (or a full model id) works.
+
+**Name the model.** A bare `claude-cli` still resolves, but it sends no
+`--model` flag, so that role inherits whatever the machine's Claude Code is set
+to — a `model` key in `~/.claude/settings.json`, else the CLI's default. That
+setting changes outside the app, which silently changes who is narrating your
+game. The picker offers only the explicit ids.
+
+The role's prompt file becomes the CLI's system prompt and the task — pre-read
+brief included — its user turn, so a role runs identically either way and can be
+switched back without touching prompts.
 
 Measured on the same beats (2026-08-19): narrator 7.1s local vs 11–15s on
 OpenRouter; rules-lawyer 32.4s local vs ~14s. Local is free but the CLI has
