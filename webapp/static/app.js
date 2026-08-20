@@ -897,6 +897,27 @@ function collectSettings() {
   return out;
 }
 
+// The DM's model is app config, not campaign state: it loads from /api/setup
+// when the modal opens and saves back through it (which merges into the
+// per-role models without clobbering the others). Setup no longer asks — new
+// tables start on the shipped default and change it here.
+let dmModelSaved = '';
+
+async function loadDmModel() {
+  const sel = document.getElementById('set-dm-model');
+  try {
+    const data = await fetch('/api/setup').then(r => r.json());
+    sel.innerHTML = data.models
+      .map(m => `<option value="${m.id}">${m.label}</option>`).join('')
+      // a hand-typed model id from the dev panel still round-trips
+      + (data.models.some(m => m.id === data.model) ? ''
+         : `<option value="${data.model}">${data.model}</option>`);
+    sel.value = dmModelSaved = data.model;
+  } catch (err) {
+    console.error('DM model load failed:', err);
+  }
+}
+
 async function saveSettings() {
   const status = document.getElementById('settings-status');
   try {
@@ -907,6 +928,16 @@ async function saveSettings() {
     });
     if (!res.ok) throw new Error(await res.text());
     renderSettings(await res.json());
+    const model = document.getElementById('set-dm-model').value;
+    if (model && model !== dmModelSaved) {
+      const modelRes = await fetch('/api/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model }),
+      });
+      if (!modelRes.ok) throw new Error((await modelRes.json()).detail || 'model save failed');
+      dmModelSaved = model;
+    }
     status.textContent = 'Saved — the DM will honor this from their next narration.';
   } catch (err) {
     status.textContent = 'Could not save settings.';
@@ -1123,6 +1154,7 @@ function initModals() {
   });
   document.getElementById('settings-btn').addEventListener('click', () => {
     document.getElementById('settings-modal').classList.remove('hidden');
+    loadDmModel(); // fresh each open — the dev panel can change it too
   });
   document.getElementById('settings-save').addEventListener('click', saveSettings);
 
