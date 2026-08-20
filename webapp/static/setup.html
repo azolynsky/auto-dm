@@ -42,20 +42,71 @@
     .status.err { color: #e88; }
     .status.ok { color: var(--accent); }
 
-    /* World chooser */
-    #phaseworld { max-width: 720px; }
+    /* Campaign / world chooser — a wide card grid, not a scroll of rows */
+    #phaseworld { max-width: 1060px; }
+    .backlink {
+      display: inline-block; font-size: 13px; color: var(--ink-dim);
+      text-decoration: none; margin-bottom: 14px;
+    }
+    .backlink:hover { color: var(--accent); }
     .worldgroup {
       font-family: var(--font-header); font-size: 15px; color: var(--parchment);
       letter-spacing: 0.03em; margin: 22px 0 10px;
     }
-    .worldgroup:first-child { margin-top: 0; }
-    .worlds-grid { display: grid; gap: 12px; }
+    #campaigns .worldgroup, #worlds .worldgroup:first-child { margin-top: 0; }
+    #worlds { margin-bottom: 22px; }
+    .worlds-grid, .camps-grid {
+      display: grid; gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    }
+    .camp {
+      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+      background: var(--surface); padding: 14px 16px;
+      display: flex; flex-direction: column;
+      transition: border-color 0.12s, box-shadow 0.12s;
+    }
+    .camp[data-mode="normal"]:hover {
+      border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim);
+    }
+    .camp:not([data-mode="normal"]) { cursor: default; }
+    .camp.gone { border-style: dashed; opacity: 0.75; }
+    .camp.working { animation: dm-thinking 1.4s ease-in-out infinite; }
+    .camp h3 {
+      margin: 0 0 4px; font-size: 16px; color: var(--parchment);
+      font-family: var(--font-header);
+      display: flex; align-items: baseline; gap: 4px;
+    }
+    .camp .camp-name { flex: 1; }
+    .iconbtn {
+      background: none; border: none; cursor: pointer; padding: 2px 4px;
+      font: inherit; font-size: 14px; color: var(--ink-dim); line-height: 1;
+    }
+    .iconbtn:hover { color: var(--accent); }
+    .iconbtn.trash:hover { color: #e88; }
+    .camp p { margin: 0 0 12px; font-size: 13px; color: var(--ink-dim); line-height: 1.45; flex: 1; }
+    .camp input {
+      font: inherit; width: 100%; box-sizing: border-box; font-size: 14px;
+      color: var(--parchment); background: var(--surface-2); margin: 4px 0 12px;
+      border: 1px solid var(--border); border-radius: 4px; padding: 7px 9px;
+    }
+    .camp-actions { display: flex; gap: 8px; margin-top: auto; }
+    .minibtn {
+      font: inherit; font-size: 13px; cursor: pointer;
+      color: var(--parchment); background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 4px; padding: 5px 11px;
+    }
+    .minibtn.primary { color: var(--accent); border-color: var(--accent-dim); }
+    .minibtn.danger:hover { color: #e88; border-color: #a55; }
+    .namerow { display: flex; gap: 10px; }
+    .namerow input { flex: 1; }
+    .namerow .bigbtn { width: auto; padding: 9px 32px; font-size: 15px; }
     .world {
       border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
       background: var(--surface); padding: 14px 16px;
       transition: border-color 0.12s, box-shadow 0.12s;
     }
     .world.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+    .world.wide { grid-column: 1 / -1; }
     .world h3 {
       margin: 0 0 4px; font-size: 16px; color: var(--parchment);
       font-family: var(--font-header);
@@ -138,7 +189,7 @@
     </p>
 
     <div class="step">
-      <h2>1 · Connect the DM's brain</h2>
+      <h2>Connect the DM's brain</h2>
       <p>
         Auto-DM thinks using OpenRouter — you pay them directly for what you use,
         usually a few cents a session. Make a free account, add a little credit,
@@ -149,14 +200,9 @@
       <label for="key">Your OpenRouter key</label>
       <input id="key" type="password" placeholder="sk-or-v1-…" autocomplete="off"
              spellcheck="false">
-      <p class="hint">Stored only on this computer, in this app's settings file.</p>
-    </div>
-
-    <div class="step">
-      <h2>2 · Pick the DM</h2>
-      <p>Smarter models run better games and cost a bit more. You can change this later.</p>
-      <label for="model">Model</label>
-      <select id="model"></select>
+      <p class="hint">Stored only on this computer, in this app's settings file.
+        The DM starts on the standard model; change it any time from Settings ⚙
+        once you're playing.</p>
     </div>
 
     <button id="continue" class="bigbtn">Continue</button>
@@ -164,25 +210,33 @@
   </div>
 
   <div class="setup-wrap" id="phaseworld" hidden>
-    <h1>Choose your world</h1>
+    <a class="backlink" href="#" id="world-back">← Back — API key &amp; model</a>
+    <h1>Choose your adventure</h1>
     <p class="setup-lede">
-      Start from a ready-made world, re-run one of your own campaigns with a
-      new party, or have the DM invent something that's never been played.
+      Continue one of your campaigns, or start a new one — in a ready-made
+      world, or a world the DM invents for your table.
     </p>
+    <div id="campaigns"></div>
     <div id="worlds"></div>
 
     <div class="step">
       <h2>Name your campaign</h2>
-      <label for="name">Campaign name</label>
-      <input id="name" type="text" placeholder="Emberwick Nights" maxlength="80">
-      <p class="hint">Your DM can change anything once you're playing — just ask.</p>
+      <p>
+        Name it for your table, not the story — inventing the adventure's own
+        title is the DM's job. A good campaign name reminds you why you made
+        it: <em>Tuesdays with Mitch and Olive</em>, <em>Guest Campaign</em>.
+      </p>
+      <div class="namerow">
+        <input id="name" type="text" placeholder="Tuesdays with Mitch and Olive"
+               maxlength="80" aria-label="Campaign name">
+        <button id="world-continue" class="bigbtn">Continue</button>
+      </div>
     </div>
-
-    <button id="world-continue" class="bigbtn">Continue</button>
     <div id="statusw" class="status"></div>
   </div>
 
   <div class="setup-wrap" id="phase2" hidden>
+    <a class="backlink" href="#" id="heroes-back">← Back — choose a different world</a>
     <h1>Choose your heroes</h1>
     <p class="setup-lede">
       Pick one hero per player and add each player's name. You can also make your
@@ -278,55 +332,172 @@ function chosenParty() {
   }));
 }
 
-// ── World chooser ────────────────────────────────────────────────────────────
-let chosenWorld = null; // {source:'template',id} | {source:'rerun',slug} | {source:'generate'}
-let autoName = '';      // the last name we suggested, so we never clobber typing
+// ── Campaign & world chooser ─────────────────────────────────────────────────
+let chosenWorld = null; // {source:'template',id} | {source:'generate'}
 
 const esc = s => String(s).replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function worldCard(sel, name, blurb, extra) {
-  return `<div class="world" data-sel="${esc(JSON.stringify(sel))}">
+async function api(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return { ok: res.ok, data: await res.json() };
+}
+
+function show(phase) {
+  for (const id of ['phase1', 'phaseworld', 'phase2']) $(id).hidden = id !== phase;
+  window.scrollTo(0, 0);
+}
+
+function worldCard(sel, name, blurb, extra, cls) {
+  return `<div class="world${cls ? ' ' + cls : ''}" data-sel="${esc(JSON.stringify(sel))}">
       <h3>${esc(name)}</h3><p>${esc(blurb)}</p>${extra || ''}</div>`;
 }
 
-function suggestName(name) {
-  const field = $('name');
-  if (!field.value.trim() || field.value === autoName) {
-    field.value = name || '';
-    autoName = field.value;
+// Existing campaigns: clicking the card continues it — that's the whole
+// point of the card, so it needs no button. Rename hides behind the pencil,
+// delete behind the trash can; delete is soft (the app's trash folder) with
+// an immediate undo. The card's own click handler (bound once, in
+// renderCampaigns) only acts in 'normal' mode, so clicks inside the rename
+// and confirm states never fall through to a switch.
+function campNormal(el, c) {
+  el.classList.remove('gone');
+  el.dataset.mode = 'normal';
+  el.innerHTML = `
+    <h3><span class="camp-name">${esc(c.name)}</span>
+      <button class="iconbtn" title="Rename" aria-label="Rename">✎</button>
+      <button class="iconbtn trash" title="Delete" aria-label="Delete">🗑&#xFE0E;</button>
+    </h3>
+    <p>Pick up where your table left off.</p>`;
+  const [ren, del] = el.querySelectorAll('button');
+  ren.addEventListener('click', e => { e.stopPropagation(); campRename(el, c); });
+  del.addEventListener('click', e => { e.stopPropagation(); campConfirmDelete(el, c); });
+}
+
+async function switchCampaign(el, c) {
+  el.classList.add('working');
+  setStatus($('statusw'), `Opening “${c.name}”…`);
+  try {
+    const { ok, data } = await api('/api/campaigns/switch', { slug: c.slug });
+    if (!ok) {
+      setStatus($('statusw'), data.detail || 'Something went wrong.', 'err');
+      el.classList.remove('working');
+      return;
+    }
+    setStatus($('statusw'), data.relaunching
+      ? `Opening “${c.name}” — the app is reopening…`
+      : `Saved. Restart Auto-DM to open “${c.name}”.`, 'ok');
+  } catch (err) {
+    setStatus($('statusw'), 'Could not reach the app. Try again.', 'err');
+    el.classList.remove('working');
   }
 }
 
+function campRename(el, c) {
+  el.dataset.mode = 'rename';
+  el.innerHTML = `
+    <h3>Rename</h3>
+    <input type="text" maxlength="80" value="${esc(c.name)}" aria-label="New name">
+    <div class="camp-actions">
+      <button class="minibtn primary">Save</button>
+      <button class="minibtn">Cancel</button>
+    </div>`;
+  const input = el.querySelector('input');
+  const [save, cancel] = el.querySelectorAll('button');
+  input.focus();
+  input.select();
+  cancel.addEventListener('click', e => { e.stopPropagation(); campNormal(el, c); });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') save.click();
+    if (e.key === 'Escape') campNormal(el, c);
+  });
+  save.addEventListener('click', async e => {
+    e.stopPropagation();
+    const name = input.value.trim();
+    if (!name) { campNormal(el, c); return; }
+    const { ok, data } = await api('/api/campaigns/rename', { slug: c.slug, name });
+    if (!ok) { setStatus($('statusw'), data.detail || 'Rename failed.', 'err'); return; }
+    c.name = data.name;
+    campNormal(el, c);
+  });
+}
+
+function campConfirmDelete(el, c) {
+  el.dataset.mode = 'confirm';
+  el.innerHTML = `
+    <h3>${esc(c.name)}</h3>
+    <p>Delete this campaign? It moves to the app's trash, and you can undo it right after.</p>
+    <div class="camp-actions">
+      <button class="minibtn danger">Yes, delete</button>
+      <button class="minibtn">Keep it</button>
+    </div>`;
+  const [confirm, keep] = el.querySelectorAll('button');
+  keep.addEventListener('click', e => { e.stopPropagation(); campNormal(el, c); });
+  confirm.addEventListener('click', async e => {
+    e.stopPropagation();
+    const { ok, data } = await api('/api/campaigns/delete', { slug: c.slug });
+    if (!ok) {
+      setStatus($('statusw'), data.detail || 'Delete failed.', 'err');
+      campNormal(el, c);
+      return;
+    }
+    campDeleted(el, c, data.trash_id);
+  });
+}
+
+function campDeleted(el, c, trashId) {
+  el.dataset.mode = 'deleted';
+  el.classList.add('gone');
+  el.innerHTML = `
+    <h3>Deleted “${esc(c.name)}”</h3>
+    <p>It's in the app's trash if you change your mind later.</p>
+    <div class="camp-actions"><button class="minibtn primary">Undo</button></div>`;
+  el.querySelector('button').addEventListener('click', async e => {
+    e.stopPropagation();
+    const { ok, data } = await api('/api/campaigns/restore', { trash_id: trashId });
+    if (!ok) { setStatus($('statusw'), data.detail || 'Restore failed.', 'err'); return; }
+    c.slug = data.slug;
+    c.name = data.name;
+    campNormal(el, c);
+  });
+}
+
+function renderCampaigns(list) {
+  const box = $('campaigns');
+  box.innerHTML = !list.length ? '' :
+    '<div class="worldgroup">Continue a campaign</div><div class="camps-grid">'
+    + list.map(c => `<div class="camp" data-slug="${esc(c.slug)}"></div>`).join('')
+    + '</div>';
+  box.querySelectorAll('.camp').forEach((el, i) => {
+    const c = list[i];
+    el.addEventListener('click', () => {
+      if (el.dataset.mode === 'normal') switchCampaign(el, c);
+    });
+    campNormal(el, c);
+  });
+}
+
 function renderWorlds(data) {
-  const groups = [
-    '<div class="worldgroup">Ready-made worlds</div><div class="worlds-grid">'
+  renderCampaigns(data.campaigns || []);
+  $('worlds').innerHTML =
+    '<div class="worldgroup">Start a new campaign in a ready-made world</div>'
+    + '<div class="worlds-grid">'
     + data.templates.map(t =>
-        worldCard({ source: 'template', id: t.id, name: t.name }, t.name, t.blurb)).join('')
-    + '</div>',
-  ];
-  if ((data.reruns || []).length) {
-    groups.push(
-      '<div class="worldgroup">Re-run one of your campaigns</div><div class="worlds-grid">'
-      + data.reruns.map(r =>
-          worldCard({ source: 'rerun', slug: r.slug, name: r.name }, r.name,
-            'Same world, new party. Its quests, places, and heroes stay; session history is cleared.')).join('')
-      + '</div>');
-  }
-  groups.push(
-    '<div class="worldgroup">Something new</div><div class="worlds-grid">'
+        worldCard({ source: 'template', id: t.id }, t.name, t.blurb)).join('')
     + worldCard({ source: 'generate' }, 'Have the DM invent a world',
         "Describe what you're in the mood for — or leave it blank and be surprised. Takes a minute or two.",
         `<textarea id="pitch" onclick="event.stopPropagation()"
-          placeholder="e.g. sea-faring pirates, lighthearted, lots of sea monsters…"></textarea>`)
-    + '</div>');
-  $('worlds').innerHTML = groups.join('');
+          placeholder="e.g. sea-faring pirates, lighthearted, lots of sea monsters…"></textarea>`,
+        'wide')
+    + '</div>';
   document.querySelectorAll('.world').forEach(el => {
     el.addEventListener('click', () => {
       document.querySelectorAll('.world.picked').forEach(p => p.classList.remove('picked'));
       el.classList.add('picked');
       chosenWorld = JSON.parse(el.dataset.sel);
-      suggestName(chosenWorld.name);
     });
   });
   document.querySelector('.world').click(); // default: the first template
@@ -335,11 +506,9 @@ function renderWorlds(data) {
 async function load() {
   const res = await fetch('/api/setup');
   const data = await res.json();
-  $('name').value = data.campaign || '';
-  autoName = $('name').value; // a template's default name may be replaced freely
-  $('model').innerHTML = data.models
-    .map(m => `<option value="${m.id}">${m.label}</option>`).join('');
-  $('model').value = data.model;
+  // "New Campaign" is the template placeholder, not a chosen name — leave the
+  // field blank so the name-your-table guidance shows.
+  $('name').value = data.campaign === 'New Campaign' ? '' : (data.campaign || '');
   if (data.has_key) $('key').placeholder = 'Already saved — leave blank to keep it';
 }
 
@@ -350,10 +519,7 @@ $('continue').addEventListener('click', async () => {
     const res = await fetch('/api/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        api_key: $('key').value.trim(),
-        model: $('model').value,
-      }),
+      body: JSON.stringify({ api_key: $('key').value.trim() }),
     });
     const data = await res.json();
     if (!res.ok) { setStatus($('status1'), data.detail || 'Something went wrong.', 'err'); $('continue').disabled = false; return; }
@@ -362,17 +528,35 @@ $('continue').addEventListener('click', async () => {
       ? '' : ` You have $${data.credit} of credit.`;
     setStatus($('status1'), `Connected.${credit}`, 'ok');
     renderWorlds(worlds);
-    $('phase1').hidden = true;
-    $('phaseworld').hidden = false;
-    window.scrollTo(0, 0);
+    $('continue').disabled = false;
+    show('phaseworld');
   } catch (err) {
     setStatus($('status1'), 'Could not reach the app. Try again.', 'err');
     $('continue').disabled = false;
   }
 });
 
+$('world-back').addEventListener('click', e => {
+  e.preventDefault();
+  setStatus($('status1'), '');
+  show('phase1');
+});
+
+$('heroes-back').addEventListener('click', e => {
+  e.preventDefault();
+  setStatus($('statusw'), '');
+  show('phaseworld');
+});
+
 $('world-continue').addEventListener('click', async () => {
   if (!chosenWorld) { setStatus($('statusw'), 'Pick a world first.', 'err'); return; }
+  const campaignName = $('name').value.trim();
+  if (!campaignName) {
+    setStatus($('statusw'),
+      "Name your campaign first — after your table, like “Tuesdays with Mitch and Olive”. The DM titles the adventure itself.", 'err');
+    $('name').focus();
+    return;
+  }
   const generating = chosenWorld.source === 'generate';
   const card = document.querySelector('.world.picked');
   $('world-continue').disabled = true;
@@ -383,7 +567,7 @@ $('world-continue').addEventListener('click', async () => {
   try {
     const body = generating
       ? { source: 'generate', description: ($('pitch')?.value || '').trim() }
-      : { source: chosenWorld.source, id: chosenWorld.id, slug: chosenWorld.slug };
+      : { source: chosenWorld.source, id: chosenWorld.id };
     const res = await fetch('/api/worlds', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -394,17 +578,13 @@ $('world-continue').addEventListener('click', async () => {
     await fetch('/api/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        campaign_name: $('name').value.trim() || data.name || 'New Campaign',
-      }),
+      body: JSON.stringify({ campaign_name: campaignName }),
     });
-    // heroes render only now — a re-run brings its own cast
+    // heroes render only now — the chosen world decides the cast
     const setup = await (await fetch('/api/setup')).json();
     renderHeroes(setup.pregens || [], setup.party || []);
     setStatus($('statusw'), '');
-    $('phaseworld').hidden = true;
-    $('phase2').hidden = false;
-    window.scrollTo(0, 0);
+    show('phase2');
   } catch (err) {
     setStatus($('statusw'), 'Could not reach the app. Try again.', 'err');
   } finally {

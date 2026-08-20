@@ -14,6 +14,7 @@ import json
 import os
 import shutil
 import sys
+import time
 from pathlib import Path
 
 # Reference content (rules/, .claude/, tools/, campaigns/starter/, CLAUDE.md) is
@@ -258,8 +259,8 @@ def _starter_template() -> Path:
 
 def list_world_templates() -> list[dict]:
     """Bundled prewritten worlds: every campaign directory under campaigns/.
-    An optional template.json beside it ({name, blurb}) feeds its setup card;
-    the directory name is the fallback."""
+    An optional template.json beside it ({name, blurb, order}) feeds its setup
+    card and its place in the lineup; the directory name is the fallback."""
     root = BUNDLE / "campaigns"
     out = []
     for p in sorted(root.iterdir()) if root.is_dir() else []:
@@ -269,9 +270,15 @@ def list_world_templates() -> list[dict]:
             meta = json.loads((p / "template.json").read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             meta = {}
+        try:
+            order = int(meta.get("order", 99))
+        except (TypeError, ValueError):
+            order = 99
         out.append({"id": p.name,
                     "name": str(meta.get("name") or p.name.replace("-", " ").title()),
-                    "blurb": str(meta.get("blurb") or "")})
+                    "blurb": str(meta.get("blurb") or ""),
+                    "order": order})
+    out.sort(key=lambda t: (t["order"], t["name"]))
     return out
 
 
@@ -305,6 +312,11 @@ def seed_campaign(source: Path) -> None:
             shutil.copytree(child, CAMPAIGN / child.name)
         else:
             shutil.copy2(child, CAMPAIGN / child.name)
+    # World templates share the starter's pregen heroes (and their portraits,
+    # which are most of the bundle's weight) rather than each shipping a copy.
+    if not (CAMPAIGN / "characters").is_dir():
+        shutil.copytree(_starter_template() / "characters",
+                        CAMPAIGN / "characters")
 
 
 def reset_for_new_table(root: Path | None = None) -> None:
@@ -371,12 +383,98 @@ def create_campaign() -> str:
     return target.name
 
 
+def _campaign_path(slug: str) -> Path:
+    """The directory of an existing campaign. Refuses path-shaped slugs, so
+    a slug arriving from the web setup screen can't reach outside
+    campaigns/."""
+    if not slug or slug != Path(slug).name or slug in (".", ".."):
+        raise ValueError(f"not a campaign slug: {slug!r}")
+    path = campaigns_dir() / slug
+    if not (path / "state" / "current.json").exists():
+        raise ValueError(f"no campaign at {path}")
+    return path
+
+
+def _is_pristine(path: Path) -> bool:
+    """A campaign that was created but never touched: no party, no chronicle,
+    never named. Its contents are an exact template copy — nothing to lose."""
+    try:
+        current = json.loads(
+            (path / "state" / "current.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return (not current.get("party")
+            and str(current.get("campaign") or "New Campaign") == "New Campaign"
+            and not (path / "state" / "player-feed.jsonl").exists())
+
+
 def set_active_campaign(slug: str) -> None:
     """Point config.json at another campaign. Takes effect on next launch —
-    CAMPAIGN is a per-process constant (see its comment)."""
-    if not (campaigns_dir() / slug / "state" / "current.json").exists():
-        raise ValueError(f"no campaign at {campaigns_dir() / slug}")
+    CAMPAIGN is a per-process constant (see its comment).
+
+    Choosing "New Campaign" mints a fresh table before the setup screen can
+    offer "continue" instead — so continuing another campaign from there
+    would leave the untouched table behind, haunting every campaign list as
+    one more "New Campaign". Switching away from a pristine table discards
+    it; named, seeded, or played tables are always kept."""
+    target = _campaign_path(slug)
+    previous = CAMPAIGN
     save(campaign=slug)
+    if (previous.resolve() != target.resolve()
+            and previous.parent == campaigns_dir()
+            and _is_pristine(previous)):
+        shutil.rmtree(previous, ignore_errors=True)
+
+
+def rename_campaign(slug: str, name: str) -> None:
+    """Set any campaign's display name. The active one goes through
+    set_campaign_name so the live window title and menu refresh too."""
+    path = _campaign_path(slug)
+    if path.resolve() == CAMPAIGN.resolve():
+        set_campaign_name(name)
+        return
+    current_file = path / "state" / "current.json"
+    current = json.loads(current_file.read_text(encoding="utf-8"))
+    current["campaign"] = name
+    current_file.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n",
+                            encoding="utf-8")
+
+
+def trash_dir() -> Path:
+    return APP_DIR / "trash"
+
+
+def delete_campaign(slug: str) -> str:
+    """Move a campaign to APP_DIR/trash — never a hard delete, so a slip of
+    the mouse costs nothing. Returns the trash id restore_campaign takes.
+    A same-volume rename: atomic, and the campaign is intact in the trash."""
+    path = _campaign_path(slug)
+    if path.resolve() == CAMPAIGN.resolve():
+        raise ValueError("this campaign is the one you're setting up — "
+                         "switch away from it first")
+    trash_dir().mkdir(parents=True, exist_ok=True)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    target, n = trash_dir() / f"{slug}.{stamp}", 2
+    while target.exists():
+        target, n = trash_dir() / f"{slug}.{stamp}.{n}", n + 1
+    path.rename(target)
+    return target.name
+
+
+def restore_campaign(trash_id: str) -> str:
+    """Bring a trashed campaign back; returns its (possibly re-minted) slug."""
+    if not trash_id or trash_id != Path(trash_id).name:
+        raise ValueError(f"not a trash id: {trash_id!r}")
+    source = trash_dir() / trash_id
+    if not (source / "state" / "current.json").exists():
+        raise ValueError(f"nothing in the trash at {source}")
+    slug = trash_id.split(".", 1)[0]
+    target, n = campaigns_dir() / slug, 2
+    while target.exists():
+        target, n = campaigns_dir() / f"{slug}-{n}", n + 1
+    target.parent.mkdir(parents=True, exist_ok=True)
+    source.rename(target)
+    return target.name
 
 
 def _migrate_legacy_campaign() -> None:
@@ -411,6 +509,13 @@ def ensure_campaign() -> Path:
 # launch, and a brand-new campaign has no name yet at that point — the setup
 # screen names it mid-process, in the server thread.
 on_campaign_renamed = None
+
+# Registered by the desktop shell so the setup screen can continue another
+# campaign: called (with the new slug) after set_active_campaign, it schedules
+# the relaunch that makes the switch take effect. Unset when there is no shell
+# to relaunch (plain `python webapp/server.py`, or an externally pinned
+# CAMPAIGN_ROOT) — the switch is then saved but needs a manual restart.
+on_campaign_switched = None
 
 
 def set_campaign_name(name: str) -> None:

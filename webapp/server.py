@@ -483,13 +483,92 @@ def apply_world_package(pkg: dict) -> str:
 
 @app.get("/api/worlds")
 async def get_worlds():
-    """Sources for the setup screen's world chooser."""
+    """Sources for the setup screen: bundled world templates, plus the other
+    campaigns on this machine (shown as continue/rename/delete cards)."""
     return JSONResponse({
         "templates": appconfig.list_world_templates(),
-        "reruns": [{"slug": slug, "name": name}
-                   for slug, name in appconfig.list_campaigns()
-                   if slug != appconfig.CAMPAIGN.name],
+        "campaigns": [{"slug": slug, "name": name}
+                      for slug, name in appconfig.list_campaigns()
+                      if slug != appconfig.CAMPAIGN.name],
     })
+
+
+# ── Campaign management (setup: continue / rename / delete) ───────────────────
+
+def _campaign_body_slug(body: dict) -> str:
+    slug = str(body.get("slug", ""))
+    if not slug:
+        raise HTTPException(status_code=400, detail="slug required")
+    return slug
+
+
+@app.post("/api/campaigns/switch")
+async def switch_campaign(request: Request):
+    """Make another campaign the active one. In the desktop app the shell's
+    hook relaunches the process (a campaign change never re-roots a live one);
+    without a shell the choice is saved for the next start."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    slug = _campaign_body_slug(body)
+    try:
+        appconfig.set_active_campaign(slug)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    relaunching = appconfig.on_campaign_switched is not None
+    if relaunching:
+        appconfig.on_campaign_switched(slug)
+    return JSONResponse({"ok": True, "relaunching": relaunching})
+
+
+@app.post("/api/campaigns/rename")
+async def rename_campaign(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    slug = _campaign_body_slug(body)
+    name = str(body.get("name", "")).strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="name required")
+    try:
+        appconfig.rename_campaign(slug, name[:80])
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return JSONResponse({"ok": True, "name": name[:80]})
+
+
+@app.post("/api/campaigns/delete")
+async def delete_campaign(request: Request):
+    """Move a campaign to the app's trash folder — undoable via restore, and
+    recoverable by hand from APP_DIR/trash even after the app closes."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    slug = _campaign_body_slug(body)
+    try:
+        trash_id = appconfig.delete_campaign(slug)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return JSONResponse({"ok": True, "trash_id": trash_id})
+
+
+@app.post("/api/campaigns/restore")
+async def restore_campaign(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    trash_id = str(body.get("trash_id", ""))
+    try:
+        slug = appconfig.restore_campaign(trash_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return JSONResponse({"ok": True, "slug": slug,
+                         "name": appconfig.campaign_label(
+                             appconfig.campaigns_dir() / slug)})
 
 
 @app.post("/api/worlds")

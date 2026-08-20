@@ -195,6 +195,15 @@ def main() -> int:
 
     config.on_campaign_renamed = on_renamed
 
+    def on_switched(slug: str) -> None:
+        """The setup screen switched campaigns via the server thread. Give
+        uvicorn a beat to flush the HTTP response, then relaunch."""
+        switching.set()
+        threading.Timer(0.4, window.destroy).start()
+
+    if not external_root:
+        config.on_campaign_switched = on_switched
+
     # blocks until the window closes; the server thread is a daemon
     webview.start(func=promote_campaign_menu, menu=menu)
     if switching.is_set():

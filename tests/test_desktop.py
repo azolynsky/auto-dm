@@ -107,6 +107,95 @@ class TestMultiCampaign(DesktopTestCase):
         with self.assertRaises(ValueError):
             self.config.set_active_campaign("no-such-table")
 
+    def test_switching_away_discards_a_pristine_table(self):
+        """Choosing "New Campaign" mints a table before the setup screen can
+        offer "continue" — continuing another campaign from there must not
+        leave the untouched table behind as a phantom "New Campaign"."""
+        self.config.ensure_campaign()  # table-1: unnamed, unseated, unplayed
+        other = self.config.create_campaign()
+        self.config.set_active_campaign(other)
+        self.assertEqual(self.config.load()["campaign"], other)
+        self.assertFalse((self.config.campaigns_dir() / "table-1").exists())
+
+    def test_switching_away_keeps_touched_tables(self):
+        self.config.ensure_campaign()
+        other = self.config.create_campaign()
+        # any single touch — a name, a seated party, or a chronicle — keeps it
+        for touch in ("name", "party", "feed"):
+            root = self.config.CAMPAIGN
+            if touch == "name":
+                self.config.set_campaign_name("Guest Campaign")
+            elif touch == "party":
+                current_file = root / "state" / "current.json"
+                current = json.loads(current_file.read_text())
+                current.update(campaign="New Campaign", party=["pc-fighter"])
+                current_file.write_text(json.dumps(current))
+            else:
+                current_file = root / "state" / "current.json"
+                current = json.loads(current_file.read_text())
+                current.update(campaign="New Campaign", party=[])
+                current_file.write_text(json.dumps(current))
+                (root / "state" / "player-feed.jsonl").write_text("{}\n")
+            self.config.set_active_campaign(other)
+            self.assertTrue(root.exists(), touch)
+            self.config.save(campaign=root.name)  # switch back for the next arm
+
+    def test_rename_campaign(self):
+        slug = self.config.create_campaign()
+        self.config.rename_campaign(slug, "Tuesdays with Mitch and Olive")
+        self.assertIn((slug, "Tuesdays with Mitch and Olive"),
+                      self.config.list_campaigns())
+        with self.assertRaises(ValueError):
+            self.config.rename_campaign("no-such-table", "x")
+        with self.assertRaises(ValueError):
+            self.config.rename_campaign("../starter", "x")
+
+    def test_rename_active_campaign_goes_through_the_hook(self):
+        self.config.ensure_campaign()
+        seen = []
+        self.config.on_campaign_renamed = seen.append
+        self.config.rename_campaign(self.config.CAMPAIGN.name, "Guest Campaign")
+        self.assertEqual(seen, ["Guest Campaign"])
+        self.assertEqual(self.config.campaign_label(self.config.CAMPAIGN),
+                         "Guest Campaign")
+
+    def test_delete_campaign_is_a_move_to_trash(self):
+        self.config.ensure_campaign()  # so create_campaign mints a non-active slug
+        slug = self.config.create_campaign()
+        self.config.rename_campaign(slug, "Oops")
+        trash_id = self.config.delete_campaign(slug)
+        self.assertFalse((self.config.campaigns_dir() / slug).exists())
+        trashed = self.config.trash_dir() / trash_id
+        self.assertTrue((trashed / "state" / "current.json").exists())
+        # restore brings it back, content intact
+        restored = self.config.restore_campaign(trash_id)
+        self.assertEqual(restored, slug)
+        self.assertIn((slug, "Oops"), self.config.list_campaigns())
+        self.assertFalse(trashed.exists())
+
+    def test_delete_refuses_the_active_campaign_and_bad_slugs(self):
+        self.config.ensure_campaign()
+        with self.assertRaises(ValueError):
+            self.config.delete_campaign(self.config.CAMPAIGN.name)
+        for slug in ("no-such-table", "../starter", "", "."):
+            with self.assertRaises(ValueError, msg=slug):
+                self.config.delete_campaign(slug)
+
+    def test_restore_reslugs_when_the_slot_is_retaken(self):
+        self.config.ensure_campaign()  # so create_campaign mints a non-active slug
+        slug = self.config.create_campaign()
+        trash_id = self.config.delete_campaign(slug)
+        # a new campaign mints the freed slug before the restore
+        self.assertEqual(self.config.create_campaign(), slug)
+        restored = self.config.restore_campaign(trash_id)
+        self.assertNotEqual(restored, slug)
+        self.assertTrue((self.config.campaigns_dir() / restored /
+                         "state" / "current.json").exists())
+        with self.assertRaises(ValueError):
+            self.config.restore_campaign("nothing-here")
+        with self.assertRaises(ValueError):
+            self.config.restore_campaign("../campaigns/" + slug)
+
     def test_legacy_campaign_migrates_once(self):
         legacy = self.config.APP_DIR / "campaign"
         shutil.copytree(REPO / "campaigns" / "starter", legacy)
@@ -175,6 +264,43 @@ class TestWorldSources(DesktopTestCase):
         starter = next(t for t in templates if t["id"] == "starter")
         self.assertEqual(starter["name"], "The Vale of Emberwick")
         self.assertTrue(starter["blurb"])
+
+    def test_templates_ship_in_lineup_order_starter_first(self):
+        ids = [t["id"] for t in self.config.list_world_templates()]
+        self.assertEqual(ids[:4], ["starter", "harrowmoor", "kraghold",
+                                   "glasswash"])
+
+    def test_bundled_worlds_are_complete_and_starter_free(self):
+        """Every bundled world stands alone: card metadata, a visible opening
+        quest, an opening scene whose entities exist — and none of the
+        starter's Emberwick content leaked in."""
+        for slug in ("harrowmoor", "kraghold", "glasswash"):
+            root = self.config.BUNDLE / "campaigns" / slug
+            meta = json.loads((root / "template.json").read_text())
+            self.assertTrue(meta["name"] and meta["blurb"], slug)
+            current = json.loads(
+                (root / "state" / "current.json").read_text())
+            self.assertEqual(current["party"], [], slug)
+            for entity in current["present_entities"]:
+                self.assertTrue((root / entity / "summary.md").exists(),
+                                f"{slug}: {entity}")
+            quests = json.loads((root / "state" / "quests.json").read_text())
+            self.assertTrue(quests["active"][0]["known_to_party"], slug)
+            self.assertTrue(all(h["pitch"] for h in quests["hooks"]), slug)
+            self.assertFalse((root / "characters").exists(), slug)
+            self.assertFalse(
+                (root / "npcs" / "recurring" / "maera-thistle").exists(), slug)
+            self.assertFalse(
+                (root / "world" / "locations" / "emberwick").exists(), slug)
+
+    def test_seeding_a_characterless_template_borrows_the_pregens(self):
+        self.config.seed_campaign(self.config.BUNDLE / "campaigns" / "kraghold")
+        self.assertEqual(self.config.campaign_label(self.config.CAMPAIGN),
+                         "New Campaign")
+        self.assertTrue((self.config.CAMPAIGN / "characters" /
+                         "pc-fighter.json").exists())
+        self.assertTrue((self.config.CAMPAIGN / "npcs" / "recurring" /
+                         "brunna-stonehewn" / "summary.md").exists())
 
     def test_template_metadata_never_enters_a_campaign(self):
         self.assertFalse((self.config.CAMPAIGN / "template.json").exists())

@@ -468,8 +468,12 @@ class TestWorldChoice(unittest.TestCase):
         shutil.copytree(REPO / "campaigns" / "starter", self.campaign)
 
         ac = server.appconfig
-        self._ac_saved = {"CAMPAIGN": ac.CAMPAIGN, "APP_DIR": ac.APP_DIR}
+        self._ac_saved = {"CAMPAIGN": ac.CAMPAIGN, "APP_DIR": ac.APP_DIR,
+                          "CONFIG_FILE": ac.CONFIG_FILE,
+                          "on_campaign_switched": ac.on_campaign_switched}
         ac.CAMPAIGN, ac.APP_DIR = self.campaign, tmp
+        ac.CONFIG_FILE = tmp / "config.json"
+        ac.on_campaign_switched = None
         self._srv_saved = {k: getattr(server, k) for k in self.SERVER_FILES}
         server.ROOT = self.campaign
         server.CURRENT_FILE = self.campaign / "state" / "current.json"
@@ -533,8 +537,70 @@ class TestWorldChoice(unittest.TestCase):
         with self.client() as client:
             data = client.get("/api/worlds").json()
         self.assertIn("starter", [t["id"] for t in data["templates"]])
-        self.assertEqual(data["reruns"],
+        self.assertEqual(data["campaigns"],
                          [{"slug": "table-2", "name": "Curse of the Salt Peddler"}])
+
+    def test_switch_campaign_saves_and_fires_the_relaunch_hook(self):
+        self.add_campaign("table-2", "Curse of the Salt Peddler")
+        with self.client() as client:
+            # no desktop shell registered: saved, not relaunching
+            res = client.post("/api/campaigns/switch", json={"slug": "table-2"})
+            self.assertEqual(res.status_code, 200)
+            self.assertFalse(res.json()["relaunching"])
+            self.assertEqual(server.appconfig.load()["campaign"], "table-2")
+            # the abandoned table was pristine (unnamed, unseated, unplayed):
+            # continuing another campaign must not leave it behind
+            self.assertFalse(self.campaign.exists())
+
+            seen = []
+            server.appconfig.on_campaign_switched = seen.append
+            res = client.post("/api/campaigns/switch", json={"slug": "table-2"})
+            self.assertTrue(res.json()["relaunching"])
+            self.assertEqual(seen, ["table-2"])
+
+            for slug in ("nope", "../starter", ""):
+                res = client.post("/api/campaigns/switch", json={"slug": slug})
+                self.assertEqual(res.status_code, 400, slug)
+
+    def test_rename_campaign_endpoint(self):
+        path = self.add_campaign("table-2", "Old Name")
+        with self.client() as client:
+            res = client.post("/api/campaigns/rename",
+                              json={"slug": "table-2", "name": "  Guest Campaign  "})
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.json()["name"], "Guest Campaign")
+            current = json.loads((path / "state" / "current.json").read_text())
+            self.assertEqual(current["campaign"], "Guest Campaign")
+            for body in ({"slug": "table-2", "name": "  "},
+                         {"slug": "nope", "name": "x"},
+                         {"slug": "../starter", "name": "x"}):
+                self.assertEqual(
+                    client.post("/api/campaigns/rename", json=body).status_code,
+                    400, body)
+
+    def test_delete_and_restore_roundtrip(self):
+        path = self.add_campaign("table-2", "Oops")
+        with self.client() as client:
+            res = client.post("/api/campaigns/delete", json={"slug": "table-2"})
+            self.assertEqual(res.status_code, 200)
+            trash_id = res.json()["trash_id"]
+            self.assertFalse(path.exists())  # gone from campaigns/
+            self.assertTrue(  # ...but intact in the trash
+                (server.appconfig.trash_dir() / trash_id /
+                 "state" / "current.json").exists())
+
+            res = client.post("/api/campaigns/restore", json={"trash_id": trash_id})
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.json()["slug"], "table-2")
+            self.assertEqual(res.json()["name"], "Oops")
+            self.assertTrue((path / "state" / "current.json").exists())
+
+    def test_delete_refuses_the_active_campaign(self):
+        with self.client() as client:
+            res = client.post("/api/campaigns/delete",
+                              json={"slug": self.campaign.name})
+        self.assertEqual(res.status_code, 400)
+        self.assertTrue(self.campaign.exists())
 
     def test_template_choice_seeds_and_names(self):
         with self.client() as client:
