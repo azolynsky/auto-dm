@@ -59,18 +59,39 @@ def resolve_root() -> Path:
     )
 
 
-def find_sheet(root: Path, who: str) -> Path:
-    """Character sheet path for an id or name (case-insensitive)."""
+def match_sheet(root: Path, who: str) -> Path | None:
+    """Character sheet path for an id, filename, full name, or unique name
+    word — all case-insensitive. "Balasar" finds "Balasar Dawnshield".
+
+    Exact matches (id/name/filename) win over name-word matches; a word that
+    fits several sheets is a loud error, never a guess. Returns None when
+    nothing matches, so callers decide whether a miss is fatal."""
+    w = who.strip().lower()
+    exact, word = [], []
     chars = root / "characters"
     for path in sorted(chars.glob("*.json")) if chars.is_dir() else []:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             continue
-        if who.lower() in (str(data.get("id", "")).lower(),
-                           str(data.get("name", "")).lower()):
-            return path
-    raise SystemExit(f"no character sheet matches: {who}")
+        name = str(data.get("name", ""))
+        if w in (str(data.get("id", "")).lower(), name.lower(), path.stem.lower()):
+            exact.append((path, name))
+        elif w in name.lower().split():
+            word.append((path, name))
+    hits = exact or word
+    if len(hits) > 1:
+        raise SystemExit(f"'{who}' is ambiguous — matches: "
+                         + ", ".join(n or p.stem for p, n in hits))
+    return hits[0][0] if hits else None
+
+
+def find_sheet(root: Path, who: str) -> Path:
+    """match_sheet, but a miss is an error."""
+    path = match_sheet(root, who)
+    if path is None:
+        raise SystemExit(f"no character sheet matches: {who}")
+    return path
 
 
 def _feed_context(root: Path) -> tuple[str, str]:

@@ -22,10 +22,16 @@ immediately. Damage/heal/conditions do NOT — they queue as effects that
 attach to the next narrate.py call, so the players read the story before
 the numbers (no spoilers).
 
-Participants whose name matches a character sheet in <campaign>/characters/
-get their HP loaded from the sheet at start, and every damage/heal/sethp is
-written back to the sheet immediately — the sidebar and combat panel always
-show live HP without a separate sync step.
+Participants who resolve to a character sheet in <campaign>/characters/
+(by id, filename, full name, or unique name word — "Balasar" finds
+"Balasar Dawnshield") are BOUND to it at start: the sheet's id is stamped
+into the order entry as char_id, HP and conditions load from the sheet
+(an explicit spec HP overrides current HP; max always comes from the
+sheet), and every damage/heal/sethp/condition mirrors back to the sheet
+through that binding — the sidebar and combat panel always show live HP
+without a separate sync step, and a bound sheet can never drift silently.
+Bound participants are player-controlled automatically; --pcs covers
+combatants without sheets.
 """
 from __future__ import annotations
 
@@ -62,31 +68,38 @@ def out(obj: dict) -> None:
     print(json.dumps(obj, ensure_ascii=False))
 
 
-def char_sheet(name: str) -> Path | None:
-    """Character JSON in <campaign>/characters/ whose "name" matches, or None."""
-    chars = campaign_lib.resolve_root() / "characters"
-    for path in sorted(chars.glob("*.json")) if chars.is_dir() else []:
-        try:
-            with open(path) as f:
-                if json.load(f).get("name", "").lower() == name.lower():
-                    return path
-        except (json.JSONDecodeError, OSError):
-            continue
-    return None
+def sheet_for(entry: dict) -> Path | None:
+    """The character sheet a combatant is bound to, or None (a monster).
+
+    Binding is by char_id, stamped at start. A stamped id that no longer
+    resolves is a loud error, never a silent no-op. Entries from a combat
+    started before char_id existed fall back to name matching."""
+    root = campaign_lib.resolve_root()
+    cid = entry.get("char_id")
+    if cid:
+        path = campaign_lib.match_sheet(root, cid)
+        if path is None:
+            raise SystemExit(
+                f"{entry['name']} is bound to sheet '{cid}' which no longer exists")
+        return path
+    return campaign_lib.match_sheet(root, entry["name"])
 
 
-def sync_sheet(name: str, hp: int) -> bool:
-    """Write live HP back to the matching character sheet, if any."""
-    path = char_sheet(name)
-    if path is None:
-        return False
+def sync_sheet(entry: dict) -> None:
+    """Mirror a combatant's live HP and conditions to their character sheet.
+
+    combat.json is authoritative during combat; the sheet (which the sidebar
+    and char_update.py read) must never drift from it."""
+    path = sheet_for(entry)
+    if path is None or entry["hp"] is None:
+        return
     with open(path) as f:
         data = json.load(f)
-    data["hp"]["current"] = max(0, hp)
+    data["hp"]["current"] = max(0, entry["hp"])
+    data["conditions"] = list(entry["conditions"])
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
         f.write("\n")
-    return True
 
 
 def parse_participant(spec: str) -> dict:
@@ -96,26 +109,39 @@ def parse_participant(spec: str) -> dict:
     mod = int(mod_s) if mod_s else 0
     hp = int(hp_s) if hp_s else None
     max_hp = hp
-    if hp is None:
-        path = char_sheet(name)
-        if path is not None:
-            with open(path) as f:
-                sheet_hp = json.load(f)["hp"]
-            hp, max_hp = sheet_hp["current"], sheet_hp["max"]
+    conditions: list = []
+    char_id = None
+    path = campaign_lib.match_sheet(campaign_lib.resolve_root(), name)
+    if path is not None:
+        with open(path) as f:
+            data = json.load(f)
+        char_id = str(data.get("id") or path.stem)
+        conditions = list(data.get("conditions", []))
+        if hp is None:
+            hp = data["hp"]["current"]
+        # spec HP overrides current HP; max always comes from the sheet
+        max_hp = data["hp"]["max"]
     init = dice.do_roll(f"1d20{mod:+d}", "normal", f"{name} initiative").total
-    return {"name": name, "init": init, "mod": mod,
-            "hp": hp, "max_hp": max_hp, "conditions": [], "pc": False}
+    entry = {"name": name, "init": init, "mod": mod,
+             "hp": hp, "max_hp": max_hp, "conditions": conditions, "pc": False}
+    if char_id:
+        entry["char_id"] = char_id
+    return entry
 
 
 def cmd_start(args) -> None:
     order = [parse_participant(spec) for spec in args.participants]
     pcs = {n.strip().lower() for n in (args.pcs or "").split(",") if n.strip()}
     for o in order:
-        o["pc"] = o["name"].lower() in pcs
+        # A bound combatant is someone's character — never act for them.
+        o["pc"] = bool(o.get("char_id")) or o["name"].lower() in pcs
     order.sort(key=lambda x: (-x["init"], -x["mod"]))
     state = {"active": True, "round": 1, "turn_index": 0, "order": order, "log": []}
     state["log"].append("Combat started. Initiative: " + ", ".join(f"{o['name']}({o['init']})" for o in order))
     save(state)
+    for o in order:
+        if o.get("char_id"):
+            sync_sheet(o)  # converge sheets with any spec-HP overrides now
     campaign_lib.append_feed(
         campaign_lib.resolve_root(),
         "⚔ Combat! Initiative: " + " → ".join(f"{o['name']} ({o['init']})" for o in order),
@@ -148,7 +174,7 @@ def cmd_damage(args) -> None:
         line += " — DOWN"
     s["log"].append(line)
     save(s)
-    sync_sheet(p["name"], p["hp"])
+    sync_sheet(p)
     campaign_lib.queue_effect(campaign_lib.resolve_root(), line)
     out({"action": "damage", "who": p["name"], "amount": args.amount,
          "hp": p["hp"], "max_hp": p["max_hp"], "down": down})
@@ -163,7 +189,7 @@ def cmd_heal(args) -> None:
     line = f"{p['name']} healed {args.amount} (now {p['hp']} HP)"
     s["log"].append(line)
     save(s)
-    sync_sheet(p["name"], p["hp"])
+    sync_sheet(p)
     campaign_lib.queue_effect(campaign_lib.resolve_root(), line)
     out({"action": "heal", "who": p["name"], "amount": args.amount,
          "hp": p["hp"], "max_hp": p["max_hp"]})
@@ -175,8 +201,9 @@ def cmd_sethp(args) -> None:
     p["hp"] = args.current
     if args.max is not None:
         p["max_hp"] = args.max
+    s["log"].append(f"{p['name']} HP set to {p['hp']}/{p['max_hp']}")
     save(s)
-    sync_sheet(p["name"], p["hp"])
+    sync_sheet(p)
     out({"action": "sethp", "who": p["name"], "hp": p["hp"], "max_hp": p["max_hp"]})
 
 
@@ -194,6 +221,7 @@ def cmd_condition(args) -> None:
         s["log"].append(f"{p['name']} no longer {args.remove}")
         campaign_lib.queue_effect(root, f"{p['name']} is no longer {args.remove}")
     save(s)
+    sync_sheet(p)
     out({"action": "condition", "who": p["name"], "conditions": p["conditions"]})
 
 

@@ -338,6 +338,63 @@ class TestCombatTracker(TempRootMixin):
         self.run_cmd("damage", "--who", "Ren", "--amount", "99")
         self.assertEqual(json.loads(sheet.read_text())["hp"]["current"], 0)
 
+    def test_short_name_binds_to_sheet(self):
+        """Regression: 'Balasar' must bind to 'Balasar Dawnshield'. An
+        exact-name miss used to skip the HP load at start AND silently skip
+        every write-back, so the combat bar and the sheet showed different
+        HP with no error anywhere."""
+        chars = self.root / "characters"
+        chars.mkdir(parents=True, exist_ok=True)
+        sheet = chars / "pc-paladin.json"
+        sheet.write_text(json.dumps({
+            "id": "pc-paladin", "name": "Balasar Dawnshield",
+            "hp": {"max": 11, "current": 0, "temp": 0},
+            "conditions": ["Unconscious (Stable)"],
+        }))
+        self.run_cmd("start", "--participants", "Balasar:+0", "Goblin1:+2:7")
+        bal = next(o for o in self.state()["order"] if o["name"] == "Balasar")
+        self.assertEqual(bal["char_id"], "pc-paladin")
+        self.assertEqual((bal["hp"], bal["max_hp"]), (0, 11))
+        self.assertEqual(bal["conditions"], ["Unconscious (Stable)"])
+        # bound combatants are player-controlled even without --pcs
+        self.assertTrue(bal["pc"])
+        goblin = next(o for o in self.state()["order"] if o["name"] == "Goblin1")
+        self.assertFalse(goblin["pc"])
+        # sethp through the short name reaches the sheet — and is logged
+        self.run_cmd("sethp", "--who", "Balasar", "--current", "1")
+        self.assertEqual(json.loads(sheet.read_text())["hp"]["current"], 1)
+        self.assertIn("Balasar HP set to 1/11", self.state()["log"])
+        # condition changes mirror to the sheet too
+        self.run_cmd("condition", "--who", "Balasar",
+                      "--remove", "Unconscious (Stable)")
+        self.assertEqual(json.loads(sheet.read_text())["conditions"], [])
+
+    def test_spec_hp_overrides_current_and_syncs_at_start(self):
+        chars = self.root / "characters"
+        chars.mkdir(parents=True, exist_ok=True)
+        sheet = chars / "pc-paladin.json"
+        sheet.write_text(json.dumps({
+            "id": "pc-paladin", "name": "Balasar Dawnshield",
+            "hp": {"max": 11, "current": 0, "temp": 0}, "conditions": [],
+        }))
+        self.run_cmd("start", "--participants", "Balasar:+0:5")
+        bal = next(o for o in self.state()["order"] if o["name"] == "Balasar")
+        # spec HP overrides current; max still comes from the sheet
+        self.assertEqual((bal["hp"], bal["max_hp"]), (5, 11))
+        # and the sheet converged at start, not on the first damage
+        self.assertEqual(json.loads(sheet.read_text())["hp"]["current"], 5)
+
+    def test_ambiguous_short_name_fails_loudly(self):
+        chars = self.root / "characters"
+        chars.mkdir(parents=True, exist_ok=True)
+        for i, name in enumerate(["Pip Stonehill", "Pip Underhill"]):
+            (chars / f"pc-{i}.json").write_text(json.dumps(
+                {"id": f"pc-{i}", "name": name,
+                 "hp": {"max": 10, "current": 10, "temp": 0}}))
+        proc = self.run_cmd("start", "--participants", "Pip:+1", check=False)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("ambiguous", proc.stderr)
+
     def test_sethp_still_works(self):
         self.run_cmd("start", "--participants", "Wolf:+1")
         out = json.loads(self.run_cmd("sethp", "--who", "Wolf", "--current", "11", "--max", "11").stdout)
@@ -433,6 +490,26 @@ class TestCharUpdate(TempRootMixin):
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("combat_tracker", proc.stderr)
         self.assertEqual(self.read_sheet()["hp"]["current"], 14)
+
+    def test_hp_refused_when_combatant_uses_short_name(self):
+        """Regression: the in-combat guard used to fail open when the
+        combatant was registered under a short name — 'Balasar' in the
+        order didn't block writes to 'Balasar Dawnshield'."""
+        self.sheet.write_text(json.dumps({
+            "id": "pc-test", "name": "Mira Brandybuck",
+            "hp": {"max": 20, "current": 14, "temp": 0}, "conditions": [],
+        }))
+        (self.root / "state" / "combat.json").write_text(json.dumps(
+            {"active": True, "order": [{"name": "Mira"}]}))
+        proc = self.run_cmd("hp", "--char", "pc-test", "--damage", "1", check=False)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("combat_tracker", proc.stderr)
+        # the char_id binding blocks too, whatever the display name says
+        (self.root / "state" / "combat.json").write_text(json.dumps(
+            {"active": True, "order": [{"name": "Sir M", "char_id": "pc-test"}]}))
+        proc = self.run_cmd("condition", "--char", "Mira Brandybuck",
+                            "--add", "prone", check=False)
+        self.assertNotEqual(proc.returncode, 0)
 
     def test_quiet_skips_effect(self):
         self.run_cmd("hp", "--char", "Mira", "--damage", "2", "--quiet")

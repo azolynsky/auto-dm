@@ -16,7 +16,8 @@ Usage:
     python tools/char_update.py condition --char Mira --add poisoned
     python tools/char_update.py condition --char Mira --remove poisoned
 
---char matches the sheet's "id" or "name" (case-insensitive). Every command
+--char matches the sheet's "id", filename, full "name", or a unique name
+word ("Balasar" finds "Balasar Dawnshield"), case-insensitive. Every command
 prints the resulting state as JSON and queues a player-visible effect for
 the next narrate.py call (no-spoiler rule) — pass --quiet to skip the effect
 for changes the players shouldn't see surfaced.
@@ -46,14 +47,24 @@ import campaign_lib
 find_sheet = campaign_lib.find_sheet
 
 
-def in_active_combat(root: Path, name: str) -> bool:
+def in_active_combat(root: Path, path: Path, data: dict) -> bool:
+    """Is this character seated in the active combat?
+
+    Matches the tracker's binding (char_id) first, then any combatant name
+    that refers to this sheet — a combatant registered as "Balasar" blocks
+    writes to "Balasar Dawnshield". Fails closed: a plausible reference is
+    enough to refuse."""
     try:
         state = json.loads((root / "state" / "combat.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
-    return state.get("active") and any(
-        o.get("name", "").lower() == name.lower() for o in state.get("order", [])
-    )
+    if not state.get("active"):
+        return False
+    name = str(data.get("name", "")).lower()
+    ident = {str(data.get("id", "")).lower(), name, path.stem.lower()} - {""}
+    refs = ident | set(name.split())
+    return any(str(o.get(key, "")).lower() in refs
+               for o in state.get("order", []) for key in ("char_id", "name"))
 
 
 def save_sheet(path: Path, data: dict) -> None:
@@ -69,7 +80,7 @@ def finish(root: Path, result: dict, effect: str | None, quiet: bool) -> None:
 
 
 def cmd_hp(args, root: Path, path: Path, data: dict) -> None:
-    if in_active_combat(root, data["name"]):
+    if in_active_combat(root, path, data):
         raise SystemExit(
             f"{data['name']} is in active combat — HP is authoritative in "
             "combat.json; use combat_tracker.py damage/heal/sethp instead."
@@ -175,7 +186,7 @@ def cmd_gold(args, root: Path, path: Path, data: dict) -> None:
 
 
 def cmd_condition(args, root: Path, path: Path, data: dict) -> None:
-    if in_active_combat(root, data["name"]):
+    if in_active_combat(root, path, data):
         raise SystemExit(
             f"{data['name']} is in active combat — use combat_tracker.py condition instead."
         )
