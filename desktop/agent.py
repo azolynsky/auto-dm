@@ -1051,6 +1051,87 @@ def generate_character(description: str) -> dict:
                   "Try describing the hero again.")
 
 
+def generate_campaign(description: str) -> dict:
+    """One-shot LLM call: the table's free-text pitch → a world package that
+    server.apply_world_package writes into a freshly seeded campaign. Like
+    generate_character, this runs on the setup screen, before the table
+    exists. Examples come from the bundled starter so the shapes are stable
+    regardless of what the active campaign currently holds."""
+    if not config.api_key():
+        raise DMError("No OpenRouter API key is set yet — open Settings and paste one.")
+    from langchain_core.messages import HumanMessage
+    from langchain_openai import ChatOpenAI
+
+    starter = config.BUNDLE / "campaigns" / "starter"
+    overview_example = (starter / "world" / "overview.md").read_text(encoding="utf-8")
+    quest_example = json.dumps(
+        (json.loads((starter / "state" / "quests.json")
+                    .read_text(encoding="utf-8")).get("active") or [{}])[0],
+        indent=2, ensure_ascii=False)
+
+    model = ChatOpenAI(
+        model=config.model(), api_key=config.api_key(), base_url=OPENROUTER_URL,
+        timeout=600,
+        default_headers={"HTTP-Referer": "https://github.com/auto-dm",
+                         "X-Title": "Auto-DM"},
+    )
+    system = (
+        "You design the opening state of a Dungeons & Dragons 5e campaign for "
+        "level 1 characters. Reply with ONLY a JSON object — no prose, no "
+        "markdown fences — with exactly these fields:\n"
+        "- campaign_name: a short evocative title\n"
+        "- overview_md: markdown for world/overview.md — same scope and length "
+        "as this example (keep the '## Tone targets' section):\n---\n"
+        + overview_example + "\n---\n"
+        "- lore_md: markdown, 2-4 short paragraphs of world history and myth "
+        "the DM can draw on\n"
+        "- regions_md: markdown, a bullet list of 3-5 nearby regions/places "
+        "with one line each (only the starting settlement is detailed; the "
+        "rest are references)\n"
+        "- current: {in_game_date, time_of_day, weather, location: {region, "
+        "settlement, specific}} — `specific` is the exact opening spot, e.g. "
+        "a tavern common room\n"
+        "- location: {name, summary_md, secrets_md} — the starting settlement. "
+        "summary_md is player-safe color (layout, notable folk, mood); "
+        "secrets_md is GM-only truth about what's really going on there\n"
+        "- npc: {name, summary_md, voice_md, motivations_md, dramatis_note} — "
+        "the quest-giver the party meets first. voice_md: how they talk, with "
+        "2-3 sample lines. motivations_md is GM-only: what they want, what "
+        "they'd never do, what they're hiding. dramatis_note: ONE player-safe "
+        "sentence for the Who's Who panel\n"
+        "- quest: the opening quest, exactly this shape (secret_truth and "
+        "obstacles are GM-only; known_to_party true):\n" + quest_example + "\n"
+        "- hooks: a list of 1-2 {id, title, pitch, summary} adventure seeds on "
+        "the horizon — pitch is one player-facing sentence, summary is GM "
+        "shorthand\n"
+        "Rules: playable at level 1 (small, personal stakes); the opening "
+        "quest must be resolvable in one or two sessions; no stat blocks; "
+        "plain markdown without wikilinks; every *_md field is a complete "
+        "file body starting with a '# ' heading. Honor the table's pitch — "
+        "genre, tone, names they give — and invent tastefully where they "
+        "don't. If the pitch is empty, surprise them with something fresh "
+        "that is NOT a sleepy farming village."
+    )
+    pitch = description.strip() or "(none — DM's choice)"
+    last_err = None
+    for _ in range(2):
+        try:
+            raw = model.invoke([_cached_system(system),
+                                HumanMessage(content="The table's pitch: " + pitch)])
+        except Exception as e:
+            raise _friendly(e) from e
+        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", str(raw.content).strip())
+        try:
+            pkg = json.loads(text)
+            if isinstance(pkg, dict):
+                return pkg
+            last_err = "not a JSON object"
+        except json.JSONDecodeError as e:
+            last_err = str(e)
+    raise DMError(f"The DM couldn't write a valid world ({last_err}). "
+                  "Try the pitch again.")
+
+
 def _is_ooc(msg: str) -> bool:
     """True when the WHOLE message is out-of-character — parenthetical asides
     with nothing in-character between or after them. A mixed message like

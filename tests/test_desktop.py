@@ -159,6 +159,122 @@ class TestMenuOrder(unittest.TestCase):
         self.assertFalse(app.move_after_app_menu(None, app.CAMPAIGN_MENU_TITLE))
 
 
+class TestWorldSources(DesktopTestCase):
+    """The setup screen's "choose your world": bundled templates, and re-runs
+    of a table's own campaigns with the previous group's traces stripped."""
+
+    def setUp(self):
+        super().setUp()
+        self.config.APP_DIR.mkdir(parents=True)
+        os.environ.pop("CAMPAIGN_ROOT", None)
+        self.config.CAMPAIGN = self.config.campaigns_dir() / "table-1"
+        self.config.ensure_campaign()
+
+    def test_templates_listed_with_card_metadata(self):
+        templates = self.config.list_world_templates()
+        starter = next(t for t in templates if t["id"] == "starter")
+        self.assertEqual(starter["name"], "The Vale of Emberwick")
+        self.assertTrue(starter["blurb"])
+
+    def test_template_metadata_never_enters_a_campaign(self):
+        self.assertFalse((self.config.CAMPAIGN / "template.json").exists())
+        slug = self.config.create_campaign()
+        self.assertFalse(
+            (self.config.campaigns_dir() / slug / "template.json").exists())
+
+    def test_seed_replaces_contents_and_respects_seated_guard(self):
+        source = self.config.campaigns_dir() / self.config.create_campaign()
+        (source / "sessions" / "session-01.md").write_text("old table's story")
+        current_file = source / "state" / "current.json"
+        current = json.loads(current_file.read_text())
+        current["campaign"] = "Curse of the Salt Peddler"
+        current_file.write_text(json.dumps(current))
+
+        self.config.seed_campaign(source)
+        self.assertEqual(self.config.campaign_label(self.config.CAMPAIGN),
+                         "Curse of the Salt Peddler")
+        self.assertTrue(
+            (self.config.CAMPAIGN / "sessions" / "session-01.md").exists())
+
+        # a seated (= played) campaign refuses to be reseeded
+        target_current = self.config.CAMPAIGN / "state" / "current.json"
+        seated = json.loads(target_current.read_text())
+        seated["party"] = ["pc-fighter"]
+        target_current.write_text(json.dumps(seated))
+        with self.assertRaises(ValueError):
+            self.config.seed_campaign(source)
+        with self.assertRaises(ValueError):  # and never from itself
+            self.config.seed_campaign(self.config.CAMPAIGN)
+
+    def test_reset_for_new_table_strips_group_keeps_world(self):
+        root = self.config.CAMPAIGN
+        state = root / "state"
+        (state / "player-feed.jsonl").write_text('{"type":"narration"}\n')
+        (state / "dm-thread.sqlite").write_text("old conversation")
+        (root / "sessions" / "session-07.md").write_text("old log")
+        current = json.loads((state / "current.json").read_text())
+        current["party"] = ["pc-fighter"]
+        (state / "current.json").write_text(json.dumps(current))
+        sheet_path = root / "characters" / "pc-fighter.json"
+        sheet = json.loads(sheet_path.read_text())
+        sheet["player"] = "Old Alice"
+        sheet_path.write_text(json.dumps(sheet))
+
+        self.config.reset_for_new_table()
+
+        self.assertFalse((state / "player-feed.jsonl").exists())
+        self.assertFalse((state / "dm-thread.sqlite").exists())
+        self.assertFalse((root / "sessions" / "session-07.md").exists())
+        self.assertIn("new table", (root / "sessions" / "recap.md").read_text())
+        self.assertEqual(
+            json.loads((state / "current.json").read_text())["party"], [])
+        self.assertEqual(json.loads(sheet_path.read_text())["player"], "")
+        self.assertFalse(
+            json.loads((state / "combat.json").read_text())["active"])
+        # world state survives: quests and entity files are the world
+        self.assertTrue((state / "quests.json").exists())
+        self.assertTrue(
+            (root / "npcs" / "recurring" / "maera-thistle" / "summary.md").exists())
+
+
+class TestCampaignRename(DesktopTestCase):
+    """Naming a campaign mid-process (the setup screen does) must reach the
+    live window/menu — they're built once per launch, before the name exists."""
+
+    def test_set_campaign_name_fires_rename_hook(self):
+        seen = []
+        self.config.on_campaign_renamed = seen.append
+        self.config.set_campaign_name("The Salt Road")
+        self.assertEqual(seen, ["The Salt Road"])
+        current = json.loads(
+            (self.campaign / "state" / "current.json").read_text())
+        self.assertEqual(current["campaign"], "The Salt Road")
+
+    def test_no_hook_is_fine(self):
+        self.config.set_campaign_name("Quiet Table")  # must not raise
+
+    @unittest.skipUnless(sys.platform == "darwin", "AppKit menu is macOS-only")
+    def test_retitle_active_campaign_menu_item(self):
+        import AppKit
+        sys.modules.pop("app", None)
+        import app
+
+        submenu = AppKit.NSMenu.alloc().init()
+        for title in ("New Campaign", app.ACTIVE_MARK + "New Campaign",
+                      app.IDLE_MARK + "Elsewhere"):
+            item = AppKit.NSMenuItem.alloc().init()
+            item.setTitle_(title)
+            submenu.addItem_(item)
+
+        self.assertTrue(app.retitle_active_campaign(submenu, "The Salt Road"))
+        titles = [str(i.title()) for i in submenu.itemArray()]
+        self.assertIn(app.ACTIVE_MARK + "The Salt Road", titles)
+        self.assertNotIn(app.ACTIVE_MARK + "New Campaign", titles)
+        self.assertIn(app.IDLE_MARK + "Elsewhere", titles)  # others untouched
+        # missing menu is a no-op, not a crash
+        self.assertFalse(app.retitle_active_campaign(None, "x"))
+
+
 class TestConsultBrief(DesktopTestCase):
     """Every consult gets the scene state and PC sheet paths pre-injected,
     so stateless specialists don't burn model rounds rediscovering them."""

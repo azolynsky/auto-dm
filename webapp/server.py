@@ -17,6 +17,7 @@ Opens on: http://localhost:8765
 import asyncio
 import json
 import re
+import shutil
 import ssl
 import sys
 import traceback
@@ -354,6 +355,186 @@ async def create_hero(request: Request):
     except agent.DMError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return JSONResponse(save_new_hero(sheet))
+
+
+# ── World choice (setup: prewritten / re-run / generated worlds) ──────────────
+
+def _slug(text: str, fallback: str) -> str:
+    s = re.sub(r"[^a-z0-9]+", "-", str(text).lower()).strip("-")
+    return s or fallback
+
+
+def _md_body(value: Any, title: str) -> str:
+    """A complete markdown file body: the given text, or a stub the DM can
+    grow later. Generated fields may be thin; empty files may not."""
+    text = str(value or "").strip()
+    if not text:
+        text = f"# {title}\n\n*(To be written as the campaign grows.)*"
+    return text + "\n"
+
+
+def apply_world_package(pkg: dict) -> str:
+    """Validate a generated world package (agent.generate_campaign) and write
+    it over the active campaign, which the caller has just seeded from the
+    starter template. Returns the campaign name; 400 on a malformed package."""
+    if not isinstance(pkg, dict):
+        raise HTTPException(status_code=400, detail="generated world is not an object")
+    for key in ("campaign_name", "overview_md", "current", "location", "npc", "quest"):
+        if not pkg.get(key):
+            raise HTTPException(status_code=400,
+                                detail=f"generated world is missing '{key}'")
+    loc, npc, quest, scene = pkg["location"], pkg["npc"], pkg["quest"], pkg["current"]
+    for obj, field in ((loc, "name"), (loc, "summary_md"), (npc, "name"),
+                       (npc, "summary_md"), (quest, "title"), (quest, "summary")):
+        if not isinstance(obj, dict) or not obj.get(field):
+            raise HTTPException(status_code=400,
+                                detail=f"generated world is missing a '{field}'")
+    if not isinstance(scene, dict) or not isinstance(scene.get("location"), dict):
+        raise HTTPException(status_code=400,
+                            detail="generated world is missing the opening scene")
+
+    # The seeded template's opening entities make way for the new world's.
+    current = read_json(CURRENT_FILE) or {}
+    for entry in current.get("present_entities", []):
+        rel = appconfig.norm_path(str(entry))
+        if rel and ".." not in rel:
+            shutil.rmtree(ROOT / rel, ignore_errors=True)
+
+    loc_id = _slug(loc["name"], "starting-town")
+    npc_id = _slug(npc["name"], "quest-giver")
+    world = ROOT / "world"
+    loc_dir = world / "locations" / loc_id
+    npc_dir = ROOT / "npcs" / "recurring" / npc_id
+    loc_dir.mkdir(parents=True, exist_ok=True)
+    npc_dir.mkdir(parents=True, exist_ok=True)
+
+    (world / "overview.md").write_text(
+        _md_body(pkg["overview_md"], "Setting overview"), encoding="utf-8")
+    (world / "lore.md").write_text(_md_body(pkg.get("lore_md"), "Lore"),
+                                   encoding="utf-8")
+    (world / "locations" / "regions.md").write_text(
+        _md_body(pkg.get("regions_md"), "Regions"), encoding="utf-8")
+    (loc_dir / "summary.md").write_text(
+        _md_body(loc["summary_md"], loc["name"]), encoding="utf-8")
+    (loc_dir / "secrets.md").write_text(
+        _md_body(loc.get("secrets_md"), f"{loc['name']} — GM secrets"),
+        encoding="utf-8")
+    (npc_dir / "summary.md").write_text(
+        _md_body(npc["summary_md"], npc["name"]), encoding="utf-8")
+    (npc_dir / "voice.md").write_text(
+        _md_body(npc.get("voice_md"), f"{npc['name']} — voice"), encoding="utf-8")
+    (npc_dir / "motivations.md").write_text(
+        _md_body(npc.get("motivations_md"), f"{npc['name']} — motivations"),
+        encoding="utf-8")
+    (ROOT / "npcs" / "INDEX.md").write_text(
+        "# NPC index\n\n## Recurring\n\n"
+        f"- [[npcs/recurring/{npc_id}/summary|{npc['name']}]]\n", encoding="utf-8")
+    (world / "locations" / "INDEX.md").write_text(
+        "# Location index\n\n"
+        f"- [[world/locations/{loc_id}/summary|{loc['name']}]]\n", encoding="utf-8")
+
+    # A hidden opening quest would blank the players' panel — force it visible.
+    quests = read_json(QUESTS_FILE) or {}
+    hooks = [{"id": _slug(h.get("id") or h["title"], "hook"),
+              "title": str(h["title"]),
+              "pitch": str(h.get("pitch") or ""),
+              "summary": str(h.get("summary") or "")}
+             for h in (pkg.get("hooks") or [])
+             if isinstance(h, dict) and h.get("title")]
+    QUESTS_FILE.write_text(json.dumps({
+        "_description": quests.get("_description", ""),
+        "active": [{**quest, "known_to_party": True}],
+        "completed": [], "hooks": hooks,
+    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    dramatis = read_json(DRAMATIS_FILE) or {}
+    DRAMATIS_FILE.write_text(json.dumps({
+        "_description": dramatis.get("_description", ""),
+        "characters": [{"name": str(npc["name"]), "disposition": "friend",
+                        "note": str(npc.get("dramatis_note") or ""),
+                        "known_to_party": True}],
+    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    name = str(pkg["campaign_name"])
+    scene_loc = scene["location"]
+    current.update({
+        "campaign": name,
+        "campaign_day": 1,
+        "in_game_date": str(scene.get("in_game_date")
+                            or current.get("in_game_date") or "1st day, year 1"),
+        "time_of_day": str(scene.get("time_of_day") or "morning"),
+        "weather": str(scene.get("weather") or "clear"),
+        "location": {k: str(scene_loc.get(k) or "")
+                     for k in ("region", "settlement", "specific")},
+        "party": [],
+        "present_entities": [f"npcs/recurring/{npc_id}",
+                             f"world/locations/{loc_id}"],
+    })
+    CURRENT_FILE.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n",
+                            encoding="utf-8")
+
+    (ROOT / "sessions" / "recap.md").write_text(
+        "# Campaign so far\n\nNothing yet — the campaign hasn't started.\n\n"
+        f"Open session 1 at {scene_loc.get('specific') or loc['name']} in "
+        f"{loc['name']}. The opening quest is \"{quest['title']}\" "
+        f"(see state/quests.json); {npc['name']} gives it.\n", encoding="utf-8")
+    return name
+
+
+@app.get("/api/worlds")
+async def get_worlds():
+    """Sources for the setup screen's world chooser."""
+    return JSONResponse({
+        "templates": appconfig.list_world_templates(),
+        "reruns": [{"slug": slug, "name": name}
+                   for slug, name in appconfig.list_campaigns()
+                   if slug != appconfig.CAMPAIGN.name],
+    })
+
+
+@app.post("/api/worlds")
+async def choose_world(request: Request):
+    """Seed the active (still unseated) campaign from a chosen source: a
+    bundled template, a re-run of another campaign on this machine, or a
+    world the DM generates from the table's pitch."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+    source = str(body.get("source", ""))
+    try:
+        if source == "template":
+            tid = str(body.get("id", ""))
+            card = next((t for t in appconfig.list_world_templates()
+                         if t["id"] == tid), None)
+            if card is None:
+                raise HTTPException(status_code=400, detail=f"unknown template: {tid}")
+            appconfig.seed_campaign(appconfig.BUNDLE / "campaigns" / tid)
+            # the world's name beats the template's "New Campaign" placeholder
+            return JSONResponse({"ok": True, "name": card["name"]})
+        elif source == "rerun":
+            slug = str(body.get("slug", ""))
+            path = appconfig.campaigns_dir() / slug
+            if slug != Path(slug).name \
+                    or not (path / "state" / "current.json").exists():
+                raise HTTPException(status_code=400, detail=f"unknown campaign: {slug}")
+            appconfig.seed_campaign(path)
+            appconfig.reset_for_new_table()
+        elif source == "generate":
+            import agent
+            description = str(body.get("description", "")).strip()
+            try:
+                pkg = await asyncio.to_thread(agent.generate_campaign, description)
+            except agent.DMError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            appconfig.seed_campaign(appconfig.BUNDLE / "campaigns" / "starter")
+            return JSONResponse({"ok": True, "name": apply_world_package(pkg)})
+        else:
+            raise HTTPException(status_code=400, detail=f"unknown source: {source}")
+    except ValueError as e:  # seed_campaign's guards (seated table, bad source)
+        raise HTTPException(status_code=400, detail=str(e))
+    return JSONResponse({"ok": True,
+                         "name": appconfig.campaign_label(appconfig.CAMPAIGN)})
 
 
 def check_api_key(key: str) -> dict:

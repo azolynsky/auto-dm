@@ -254,6 +254,106 @@ def _starter_template() -> Path:
     return template
 
 
+# ── World sources — the setup screen's "choose your world" ────────────────────
+
+def list_world_templates() -> list[dict]:
+    """Bundled prewritten worlds: every campaign directory under campaigns/.
+    An optional template.json beside it ({name, blurb}) feeds its setup card;
+    the directory name is the fallback."""
+    root = BUNDLE / "campaigns"
+    out = []
+    for p in sorted(root.iterdir()) if root.is_dir() else []:
+        if not (p / "state" / "current.json").exists():
+            continue
+        try:
+            meta = json.loads((p / "template.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            meta = {}
+        out.append({"id": p.name,
+                    "name": str(meta.get("name") or p.name.replace("-", " ").title()),
+                    "blurb": str(meta.get("blurb") or "")})
+    return out
+
+
+def seed_campaign(source: Path) -> None:
+    """Replace the active campaign's contents with a copy of `source` — a
+    bundled template or another campaign on this machine.
+
+    Refuses once the table is seated: an unseated party is the mark of a
+    campaign that hasn't been played (see is_ready), and reseeding a played
+    one would erase it. Replaces contents rather than the directory itself,
+    so an externally pinned CAMPAIGN_ROOT (symlink, tests) stays valid."""
+    if not (source / "state" / "current.json").exists():
+        raise ValueError(f"not a campaign: {source}")
+    if source.resolve() == CAMPAIGN.resolve():
+        raise ValueError("a campaign can't be seeded from itself")
+    try:
+        current = json.loads(
+            (CAMPAIGN / "state" / "current.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        current = {}
+    if current.get("party"):
+        raise ValueError("this campaign has already started — "
+                         "its world can't be swapped out")
+    CAMPAIGN.mkdir(parents=True, exist_ok=True)
+    for child in CAMPAIGN.iterdir():
+        shutil.rmtree(child) if child.is_dir() else child.unlink()
+    for child in source.iterdir():
+        if child.name == "template.json":  # card metadata, not campaign state
+            continue
+        if child.is_dir():
+            shutil.copytree(child, CAMPAIGN / child.name)
+        else:
+            shutil.copy2(child, CAMPAIGN / child.name)
+
+
+def reset_for_new_table(root: Path | None = None) -> None:
+    """Strip the previous table's traces from a copied campaign so a new
+    group starts fresh: party unseated, player names blanked, session logs,
+    chronicle, and the DM's conversation thread cleared. World state — quests,
+    flags, entities, hero sheets — stays; it IS the world being re-run."""
+    root = root or CAMPAIGN
+    state = root / "state"
+    for name in ("player-feed.jsonl", "dm-thread.sqlite",
+                 "dev-log.jsonl", "dm-activity.json"):
+        (state / name).unlink(missing_ok=True)
+    (state / "combat.json").write_text(
+        json.dumps({"active": False}) + "\n", encoding="utf-8")
+
+    sessions = root / "sessions"
+    if sessions.is_dir():
+        for p in sessions.iterdir():
+            shutil.rmtree(p) if p.is_dir() else p.unlink()
+    sessions.mkdir(exist_ok=True)
+    (sessions / "recap.md").write_text(
+        "# Campaign so far\n\n"
+        "Nothing yet — a new table is starting in a world that has been "
+        "played before. Its quests, world flags, and entity files are "
+        "established history; open a fresh story for this party on top of "
+        "them.\n", encoding="utf-8")
+
+    for sheet_path in sorted((root / "characters").glob("*.json")):
+        try:
+            sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if sheet.get("player"):
+            sheet["player"] = ""
+            sheet_path.write_text(
+                json.dumps(sheet, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8")
+
+    current_file = state / "current.json"
+    try:
+        current = json.loads(current_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        current = {}
+    current["party"] = []
+    current_file.write_text(
+        json.dumps(current, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8")
+
+
 def create_campaign() -> str:
     """New campaign from the starter template; returns its slug.
 
@@ -266,7 +366,8 @@ def create_campaign() -> str:
         n += 1
     target = root / f"table-{n}"
     root.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(_starter_template(), target)
+    shutil.copytree(_starter_template(), target,
+                    ignore=shutil.ignore_patterns("template.json"))
     return target.name
 
 
@@ -300,8 +401,16 @@ def ensure_campaign() -> Path:
     if (CAMPAIGN / "state" / "current.json").exists():
         return CAMPAIGN
     CAMPAIGN.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(_starter_template(), CAMPAIGN)
+    shutil.copytree(_starter_template(), CAMPAIGN,
+                    ignore=shutil.ignore_patterns("template.json"))
     return CAMPAIGN
+
+
+# The desktop shell registers a callback here so a rename can refresh the
+# window title and Campaign menu of the live process. Those are built once at
+# launch, and a brand-new campaign has no name yet at that point — the setup
+# screen names it mid-process, in the server thread.
+on_campaign_renamed = None
 
 
 def set_campaign_name(name: str) -> None:
@@ -310,3 +419,5 @@ def set_campaign_name(name: str) -> None:
     current["campaign"] = name
     path.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n",
                     encoding="utf-8")
+    if on_campaign_renamed:
+        on_campaign_renamed(name)

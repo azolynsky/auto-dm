@@ -24,6 +24,8 @@ import config  # noqa: E402
 
 WINDOW_TITLE = "Auto-DM"
 CAMPAIGN_MENU_TITLE = "Campaign"
+ACTIVE_MARK = "✓  "   # prefixes the active campaign's menu entry
+IDLE_MARK = "     "   # same width, so labels align
 
 
 def relaunch() -> None:
@@ -54,6 +56,20 @@ def move_after_app_menu(bar, title: str) -> bool:
     bar.removeItem_(item)
     bar.insertItem_atIndex_(item, 1)
     return True
+
+
+def retitle_active_campaign(submenu, name: str) -> bool:
+    """Retitle the checked entry of the Campaign NSMenu to the new name.
+
+    The checked entry is the active campaign — the only one
+    set_campaign_name can touch. No-op when the menu or entry is missing."""
+    if submenu is None:
+        return False
+    for item in submenu.itemArray():
+        if str(item.title()).startswith(ACTIVE_MARK.strip()):
+            item.setTitle_(ACTIVE_MARK + name)
+            return True
+    return False
 
 
 def promote_campaign_menu() -> None:
@@ -88,7 +104,7 @@ def campaign_menu(on_new, on_switch) -> list:
     for slug, label in campaigns:
         if labels.count(label) > 1:  # two unnamed tables: show the slug too
             label = f"{label} ({slug})"
-        mark = "✓  " if slug == config.CAMPAIGN.name else "     "
+        mark = ACTIVE_MARK if slug == config.CAMPAIGN.name else IDLE_MARK
         items.append(wm.MenuAction(mark + label, lambda s=slug: on_switch(s)))
     return [wm.Menu(CAMPAIGN_MENU_TITLE, items)]
 
@@ -160,6 +176,24 @@ def main() -> int:
     menu = [] if external_root else campaign_menu(
         on_new=lambda: change_to(config.create_campaign()),
         on_switch=change_to)
+
+    def on_renamed(name: str) -> None:
+        """The setup screen names a brand-new campaign after this process
+        built its window title and menu; refresh both in place."""
+        window.set_title(f"{WINDOW_TITLE} — {name}")
+        if sys.platform != "darwin" or not menu:
+            return
+        import AppKit
+        from PyObjCTools import AppHelper
+
+        def retitle() -> None:
+            bar = AppKit.NSApplication.sharedApplication().mainMenu()
+            item = bar.itemWithTitle_(CAMPAIGN_MENU_TITLE) if bar else None
+            retitle_active_campaign(item.submenu() if item else None, name)
+
+        AppHelper.callAfter(retitle)
+
+    config.on_campaign_renamed = on_renamed
 
     # blocks until the window closes; the server thread is a daemon
     webview.start(func=promote_campaign_menu, menu=menu)

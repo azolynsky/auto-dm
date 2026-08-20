@@ -450,5 +450,202 @@ class TestSayGuard(unittest.TestCase):
         self.assertIn("still working", res.json()["detail"])
 
 
+@unittest.skipUnless(HAVE_DEPS, "webapp dependencies not installed")
+class TestWorldChoice(unittest.TestCase):
+    """The setup screen's world chooser: bundled templates, re-runs, and the
+    generated-world writer. Above all the guard: a seated (= played) campaign
+    must never be reseeded."""
+
+    SERVER_FILES = ("ROOT", "CURRENT_FILE", "QUESTS_FILE", "DRAMATIS_FILE")
+
+    def setUp(self):
+        import shutil
+        self.shutil = shutil
+        self._tmp = tempfile.TemporaryDirectory()
+        tmp = Path(self._tmp.name)
+        (tmp / "campaigns").mkdir()
+        self.campaign = tmp / "campaigns" / "table-9"
+        shutil.copytree(REPO / "campaigns" / "starter", self.campaign)
+
+        ac = server.appconfig
+        self._ac_saved = {"CAMPAIGN": ac.CAMPAIGN, "APP_DIR": ac.APP_DIR}
+        ac.CAMPAIGN, ac.APP_DIR = self.campaign, tmp
+        self._srv_saved = {k: getattr(server, k) for k in self.SERVER_FILES}
+        server.ROOT = self.campaign
+        server.CURRENT_FILE = self.campaign / "state" / "current.json"
+        server.QUESTS_FILE = self.campaign / "state" / "quests.json"
+        server.DRAMATIS_FILE = self.campaign / "state" / "dramatis-personae.json"
+
+    def tearDown(self):
+        for k, v in self._ac_saved.items():
+            setattr(server.appconfig, k, v)
+        for k, v in self._srv_saved.items():
+            setattr(server, k, v)
+        self._tmp.cleanup()
+
+    def client(self):
+        from fastapi.testclient import TestClient
+        return TestClient(server.app)
+
+    def add_campaign(self, slug: str, name: str) -> Path:
+        path = server.appconfig.campaigns_dir() / slug
+        self.shutil.copytree(REPO / "campaigns" / "starter", path)
+        current_file = path / "state" / "current.json"
+        current = json.loads(current_file.read_text())
+        current["campaign"] = name
+        current_file.write_text(json.dumps(current))
+        return path
+
+    def seat_party(self):
+        current_file = self.campaign / "state" / "current.json"
+        current = json.loads(current_file.read_text())
+        current["party"] = ["pc-fighter"]
+        current_file.write_text(json.dumps(current))
+
+    WORLD_PKG = {
+        "campaign_name": "Ashes of the Ninth Fleet",
+        "overview_md": "# Setting overview\n\nA drowned archipelago.",
+        "lore_md": "# Lore\n\nThe fleet burned.",
+        "regions_md": "# Regions\n\n- The Shallows",
+        "current": {"in_game_date": "3rd of Brine, 412", "time_of_day": "dusk",
+                    "weather": "salt wind",
+                    "location": {"region": "The Shallows", "settlement": "Port Grieve",
+                                 "specific": "The Anchor's Rest, taproom"}},
+        "location": {"name": "Port Grieve",
+                     "summary_md": "# Port Grieve\n\nA town on stilts.",
+                     "secrets_md": "# GM secrets\n\nThe harbormaster smuggles."},
+        "npc": {"name": "Salla Wrack", "summary_md": "# Salla Wrack\n\nDockmistress.",
+                "voice_md": "# Voice\n\nClipped.",
+                "motivations_md": "# Motivations\n\nWants her ship back.",
+                "dramatis_note": "Dockmistress of Port Grieve; hiring."},
+        "quest": {"id": "quest-lost-tide", "title": "The Lost Tide",
+                  "given_by": "Salla Wrack",
+                  "summary": "A fishing boat came back empty.",
+                  "objectives": ["Find the crew"],
+                  "obstacles": "GM ONLY", "secret_truth": "GM ONLY",
+                  "rewards": "20 gp", "known_to_party": False},
+        "hooks": [{"title": "The Ninth Light", "pitch": "A lighthouse burns green.",
+                   "summary": "GM shorthand"}],
+    }
+
+    def test_worlds_listing_excludes_active_campaign(self):
+        self.add_campaign("table-2", "Curse of the Salt Peddler")
+        with self.client() as client:
+            data = client.get("/api/worlds").json()
+        self.assertIn("starter", [t["id"] for t in data["templates"]])
+        self.assertEqual(data["reruns"],
+                         [{"slug": "table-2", "name": "Curse of the Salt Peddler"}])
+
+    def test_template_choice_seeds_and_names(self):
+        with self.client() as client:
+            res = client.post("/api/worlds", json={"source": "template",
+                                                   "id": "starter"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["name"], "The Vale of Emberwick")
+        self.assertFalse((self.campaign / "template.json").exists())
+
+    def test_seated_campaign_refuses_reseed(self):
+        self.seat_party()
+        with self.client() as client:
+            res = client.post("/api/worlds", json={"source": "template",
+                                                   "id": "starter"})
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("already started", res.json()["detail"])
+
+    def test_unknown_sources_rejected(self):
+        with self.client() as client:
+            for body in ({"source": "template", "id": "nope"},
+                         {"source": "rerun", "slug": "nope"},
+                         {"source": "rerun", "slug": "../starter"},
+                         {"source": "sideload"}):
+                self.assertEqual(client.post("/api/worlds", json=body).status_code,
+                                 400, body)
+
+    def test_rerun_copies_world_and_strips_group(self):
+        source = self.add_campaign("table-2", "Curse of the Salt Peddler")
+        (source / "sessions" / "session-05.md").write_text("old story")
+        current_file = source / "state" / "current.json"
+        current = json.loads(current_file.read_text())
+        current["party"] = ["pc-fighter"]
+        current_file.write_text(json.dumps(current))
+
+        with self.client() as client:
+            res = client.post("/api/worlds", json={"source": "rerun",
+                                                   "slug": "table-2"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["name"], "Curse of the Salt Peddler")
+        new_current = json.loads(
+            (self.campaign / "state" / "current.json").read_text())
+        self.assertEqual(new_current["party"], [])
+        self.assertFalse((self.campaign / "sessions" / "session-05.md").exists())
+        # the source campaign is untouched — a re-run is a copy, not a move
+        self.assertTrue((source / "sessions" / "session-05.md").exists())
+        self.assertEqual(
+            json.loads(current_file.read_text())["party"], ["pc-fighter"])
+
+    def test_apply_world_package_writes_a_coherent_world(self):
+        name = server.apply_world_package(dict(self.WORLD_PKG))
+        self.assertEqual(name, "Ashes of the Ninth Fleet")
+
+        current = json.loads((self.campaign / "state" / "current.json").read_text())
+        self.assertEqual(current["campaign"], "Ashes of the Ninth Fleet")
+        self.assertEqual(current["campaign_day"], 1)
+        self.assertEqual(current["location"]["settlement"], "Port Grieve")
+        self.assertEqual(current["present_entities"],
+                         ["npcs/recurring/salla-wrack",
+                          "world/locations/port-grieve"])
+        # the starter's opening entities made way for the new world's
+        self.assertFalse(
+            (self.campaign / "npcs" / "recurring" / "maera-thistle").exists())
+        self.assertFalse(
+            (self.campaign / "world" / "locations" / "emberwick").exists())
+        for rel in ("npcs/recurring/salla-wrack/summary.md",
+                    "npcs/recurring/salla-wrack/voice.md",
+                    "npcs/recurring/salla-wrack/motivations.md",
+                    "world/locations/port-grieve/summary.md",
+                    "world/locations/port-grieve/secrets.md",
+                    "world/overview.md", "world/lore.md"):
+            self.assertTrue((self.campaign / rel).exists(), rel)
+        self.assertIn("salla-wrack",
+                      (self.campaign / "npcs" / "INDEX.md").read_text())
+
+        quests = json.loads((self.campaign / "state" / "quests.json").read_text())
+        self.assertTrue(quests["active"][0]["known_to_party"])  # forced visible
+        self.assertEqual(quests["hooks"][0]["title"], "The Ninth Light")
+        # and the player API still strips the GM-only fields
+        server.QUESTS_FILE = self.campaign / "state" / "quests.json"
+        visible = server.load_quests()[0]
+        self.assertNotIn("secret_truth", visible)
+
+    def test_apply_world_package_rejects_missing_fields(self):
+        from fastapi import HTTPException
+        broken = dict(self.WORLD_PKG)
+        broken.pop("npc")
+        with self.assertRaises(HTTPException):
+            server.apply_world_package(broken)
+
+    def test_generate_uses_the_agent_and_writes_the_world(self):
+        import types
+        stub = types.ModuleType("agent")
+        stub.DMError = RuntimeError
+        stub.generate_campaign = lambda description: dict(self.WORLD_PKG)
+        real = sys.modules.get("agent")
+        sys.modules["agent"] = stub
+        try:
+            with self.client() as client:
+                res = client.post("/api/worlds",
+                                  json={"source": "generate",
+                                        "description": "drowned pirate fleet"})
+        finally:
+            if real is not None:
+                sys.modules["agent"] = real
+            else:
+                sys.modules.pop("agent", None)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["name"], "Ashes of the Ninth Fleet")
+        self.assertTrue((self.campaign / "npcs" / "recurring" / "salla-wrack"
+                         / "summary.md").exists())
+
+
 if __name__ == "__main__":
     unittest.main()

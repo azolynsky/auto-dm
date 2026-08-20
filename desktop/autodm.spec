@@ -32,7 +32,7 @@ datas = [
     (repo("prompts"), "prompts"),
     (repo(".claude", "agents"), ".claude/agents"),
     (repo(".claude", "skills"), ".claude/skills"),
-    (repo("campaigns", "starter"), "campaigns/starter"),
+    (repo("campaigns"), "campaigns"),   # every prewritten world template
     (repo("CLAUDE.md"), "."),
 ]
 binaries = []
