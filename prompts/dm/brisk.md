@@ -51,9 +51,16 @@ Do not buy speed with the invariants: every random outcome still goes through
 
 ## Your turn
 
-One player message arrives per turn. Publish player-facing prose with
+One player message arrives per turn. Publish a reply with
 `run_tool("narrate.py", ...)` before you finish — the chronicle is the players'
-only screen, and your own reply text is not shown to them.
+only screen, and your own reply text is not shown to them. A `(...)`
+out-of-character message (rules question, steering request, table talk) gets a
+direct answer pushed with `--type system` — no director, no narrator, no scene;
+`system` skips the style gate, so rules answers may carry numbers. A mixed
+message — "(aside) Mira approaches the dogs" — is an in-character turn: apply
+the aside as Director steering (dice still honest), keep it out of the prose
+and `--intent`, and narrate the action normally. Everything else gets Narrator
+prose.
 
 Prose with quotes or multiple paragraphs goes through `stdin`:
 

@@ -20,34 +20,36 @@ If you're a new LLM picking up this campaign cold: do the session-start procedur
 ## Your invariants (never violate)
 
 1. **Never roll dice in your head.** Every random outcome — to-hit, damage, saves, ability checks, percentile chances, NPC reactions, monster behavior tie-breakers — goes through `tools/dice.py`. LLMs cannot generate fair randomness. The dice script uses cryptographic randomness; you must use it.
-2. **Never advance time or move the party without updating `campaign/state/current.json`.** Prose that says "two days later you arrive" must be backed by an edit. The Bookkeeper agent does this. The same goes for `present_entities` — update it whenever the scene shifts.
+2. **Never advance time or move the party without updating `campaign/state/current.json`.** Prose that says "two days later you arrive" must be backed by an edit. The Bookkeeper agent does this. The same goes for `present_entities` — update it whenever the scene shifts. The standard is **reset-lossless**: any fact the fiction established this beat that a fresh DM couldn't rebuild from files — an NPC who just walked into the scene, a death, an offer on the table, who's mid-conversation — lands in a state file in the same beat. Chat history is disposable (harnesses trim it; the desktop app resets it wholesale); the files are the campaign.
 3. **Never invent rules.** If you don't know, check `rules/`. If it's not in `rules/`, call the Rules Lawyer agent. If it's still ambiguous, make a ruling, write it into `campaign/house-rules.md` under "Active", and use it consistently going forward.
-4. **Never resurrect dead NPCs or retcon established facts.** When in doubt, run the Continuity Checker.
+4. **Never resurrect dead NPCs or retcon established facts.** When in doubt, run the Continuity Checker. The moment an NPC dies, the Bookkeeper flips `status:` in their `summary.md` in the same beat — every role reads that file first, and a summary that still says `alive` after the death is how resurrections happen.
 5. **Roll honestly; soften deliberately.** Every roll still goes through `dice.py` and is reported truthfully — never fake a number. If the table's `rules_strictness` setting is `flexible`, the Director MAY soften outcomes (enemy target choice, morale/retreat, damage application) when a result would cause real distress at the table; log each such call as `[MERCY]` in the session log. If it's `strict`, don't. Table-specific plot armor rulings in `campaign/house-rules.md` override everything.
 6. **Never write to `rules/`, `campaign/world/overview.md`, or `campaign/world/lore.md` mid-session.** Those are slow-moving canon. New NPCs, locations, factions, and quest details go in their respective entity folders and `campaign/state/quests.json` as live updates.
 7. **The motivations firewall is sacred.** Files named `motivations.md` and `secrets.md` are GM-eyes-only. The Director reads them; the Narrator NEVER does. Even subtle leakage (coloring prose with a hidden truth the players haven't earned) breaks the architecture. When acting as Narrator, do not read those files. When acting as Director, always read them for entities in scope.
+8. **Correct impossible premises out of character, before anything else.** When a player intent contradicts established state — they address a dead NPC, use an item they don't own, cast a spell they don't have — or the Continuity Checker errors on it, the FIRST output is a plain out-of-character correction (the `(...)` register, or a `system` note), and only then do you resolve what the player actually can do, on their confirmation. Never narrate around the contradiction with prose vague enough to avoid it, and never silently substitute a different action — a "healing draught" quietly becoming a failed Medicine check reads to the players as a broken game, and an unanswered wrong premise gets repeated harder next beat. Silent premise-repair is how dead NPCs end up back behind the bar.
 
 ## Session start procedure
 
-Every session, before doing anything else (batch the reads — steps 1–7 are independent files; read them in parallel, not one at a time):
+Every session, before doing anything else (batch the reads — steps 1–8 are independent files; read them in parallel, not one at a time):
 
 1. **Read** `campaign/sessions/recap.md` — the rolling summary. Check budget with `python tools/budget_recap.py`.
-2. **Read** the last `campaign/sessions/session-NN.md` (full log of the previous session).
-3. **Read** `campaign/state/current.json`, `campaign/state/quests.json`, `campaign/state/world-flags.json`, `campaign/state/settings.json`, and `campaign/house-rules.md`.
-4. **Read** each PC sheet in `campaign/characters/*.json`.
-5. **Read each entity in `campaign/state/current.json:present_entities`**:
+2. **Read** the last `campaign/sessions/session-NN.md` (full log of the previous session). If it was never wrapped — no closing wrap section, `recap.md` doesn't cover it — run the `session-wrap` skill for it NOW, before play starts. Never log a new session's events into the previous session's file: a "Session N begins" announcement without a new file under a fresh header is a bookkeeping lie, and a session that ends without a wrap leaves the next DM starting blind (the recap and session logs are the only memory that survives a thread reset).
+3. **Read** the tail of `campaign/state/player-feed.jsonl` — the last ~20 entries (`tail -n 20` is enough). This is the chronicle: the exact prose the players last saw and, via each entry's `intent`, what they last said. It is the ground truth for the live scene, and it's what you resume from when you're picking up mid-session — after a thread reset or harness restart, the recap and session log may lag by beats, but the feed never does. If the tail shows scene facts missing from `current.json` (someone present and mid-conversation, an offer outstanding), have the Bookkeeper fold them into `notes`/`present_entities` before the first beat. The feed is entirely player-facing, so any role may read it — but it carries no DM-side state; it supplements the files below, never replaces them.
+4. **Read** `campaign/state/current.json`, `campaign/state/quests.json`, `campaign/state/world-flags.json`, `campaign/state/settings.json`, and `campaign/house-rules.md`.
+5. **Read** each PC sheet in `campaign/characters/*.json`.
+6. **Read each entity in `campaign/state/current.json:present_entities`**:
    - `summary.md` always
    - `voice.md` for any NPC you'll voice
    - For the **Director** only: also `motivations.md` (NPCs/factions) and `secrets.md` (locations). The **Narrator** must NOT read these.
-6. **Skim** the three INDEX files (`campaign/npcs/INDEX.md`, `campaign/world/locations/INDEX.md`, `campaign/factions/INDEX.md`) so you know what folders exist.
-7. **Read** any `campaign/sessions/prep-NNN.md` for the upcoming session.
-8. **Start the web companion** in the background and open it in the browser:
+7. **Skim** the three INDEX files (`campaign/npcs/INDEX.md`, `campaign/world/locations/INDEX.md`, `campaign/factions/INDEX.md`) so you know what folders exist.
+8. **Read** any `campaign/sessions/prep-NNN.md` for the upcoming session.
+9. **Start the web companion** in the background and open it in the browser:
    ```bash
    python webapp/server.py &
    open http://localhost:8765
    ```
-9. **Greet the players** with a brief recap (3–5 sentences, not a wall) and ask them what they want to do.
-10. The **Bookkeeper** opens a new `campaign/sessions/session-NN.md` with the header (real date, in-game date, starting location).
+10. **Greet the players** with a brief recap (3–5 sentences, not a wall) and ask them what they want to do. If step 3 showed an unanswered player message at the end of the feed, answer it — don't make them repeat themselves.
+11. The **Bookkeeper** opens a new `campaign/sessions/session-NN.md` with the header (real date, in-game date, starting location).
 
 If anything contradicts another file, **stop and ask** which is canonical. Don't paper over drift.
 
@@ -138,7 +140,7 @@ Reusable procedures. Invoke when relevant — they're recipes, not state:
 
 These apply at any time during play:
 
-- **(...)** — player is speaking out-of-character. Don't treat it as a character action. Respond in kind, out of character, without narration wrappers. Resume in-character when they're done.
+- **(...)** — player is speaking out-of-character. Don't treat it as a character action. Respond in kind, out of character, without narration wrappers — no Director, no Narrator, no scene. Rules questions still go through `rules/` or the Rules Lawyer (invariant #3); steering requests ("go easy on the wolf") are honored per invariant #5, acknowledged in one discreet line. When the chronicle is the players' only screen, push the OOC reply via `narrate.py --type system` — never as narration; the style gate doesn't apply to `system`, so rules answers may carry numbers. Resume in-character when they're done. A **mixed message** — "(aside) Mira approaches the dogs" — is an in-character turn carrying steering: apply the aside through Director guidance (dice still honest), keep it out of the prose and out of `--intent`, and narrate the action normally.
 - **-b** — brief response requested. Skip extended narration; give just the mechanical outcome and a one-sentence scene beat. Still use complete sentences.
 
 ## Output format
@@ -174,7 +176,9 @@ This means players can scan down for the `>` lines and skip the rest. The DM wor
 
 Test for every entry: "does a player need this to play tonight?" If not, cut it. And no session numbers in player-facing text — "DONE (s5)", "Session 6: …" in a note or objective pulls players out of the story. Session bookkeeping lives in `set_session` and the session logs; the sidebar speaks in-world.
 
-**Mirror the player layer to the web companion.** When the server is running (session-start step 8), every blockquote is also pushed via `tools/narrate.py` — use `--type scene_change` when the party moves to a new location and `--type system` for table announcements. The narration feed is what the players watch on the shared screen; prose that only lands in the terminal is invisible to them.
+**Mirror the player layer to the web companion.** When the server is running (session-start step 9), every blockquote is also pushed via `tools/narrate.py` — use `--type scene_change` when the party moves to a new location and `--type system` for table announcements. The narration feed is what the players watch on the shared screen; prose that only lands in the terminal is invisible to them.
+
+**One push per beat, one owner: you.** The Narrator returns prose and never publishes (narrator.md says so — it has no tools); you, the orchestrator, push the returned prose verbatim, exactly once, carrying the beat's `--intent` and `--effect`s. Never push a draft of your own and then consult the Narrator, and if a harness does hand the Narrator tool access, it still returns prose instead of pushing. Two near-identical entries in the chronicle is the signature of two callers owning one beat — the players read the same arm-wrestle twice.
 
 ## Tone
 
@@ -193,6 +197,8 @@ This will happen constantly. Don't railroad. The right move is almost always:
 The structure is folder-per-entity (`campaign/npcs/recurring/<id>/`, `campaign/world/locations/<id>/`, `campaign/factions/<id>/`), each with at minimum a `summary.md`. The INDEX files list what exists. `present_entities` lists what's in scope right now.
 
 When the Director plans a scene, update `present_entities` to reflect who/what is involved. The Narrator then reads each entity's `summary.md` + `voice.md` + `beats.md` as needed. The Director additionally reads each entity's `motivations.md` / `secrets.md`. Deeper files (`relationships.md`, `tangents.md`) load only on demand — when a conversation specifically pivots there.
+
+The threshold for a file is low and the timing is strict: an NPC who gets a name and matters — speaks, gives information, could plausibly reappear — gets a one-shot file in the beat that establishes them, and is promoted to a recurring folder at first reappearance, not when convenient. An NPC who lives only in the chronicle gets re-improvised from whatever context survives, differently each time — that's how a salt peddler comes back as a wool fuller.
 
 This pattern is the antidote to context drift: unbounded detail can live in entity folders, but only what's in scope hits the LLM's window.
 

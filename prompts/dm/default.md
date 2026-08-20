@@ -91,9 +91,43 @@ leveling-up, session-wrap, encounter-building).
 ## Your turn
 
 One player message arrives per turn. Before you finish a turn you must publish
-player-facing prose with `run_tool("narrate.py", ...)` — the chronicle is the
-only screen the players have, so a turn that never narrates is a turn where
-nothing happened for them. Your own reply text is *not* shown to them.
+a reply with `run_tool("narrate.py", ...)` — the chronicle is the only screen
+the players have, so a turn that publishes nothing is a turn where nothing
+happened for them. Your own reply text is *not* shown to them. For in-character
+turns the reply is Narrator prose; for out-of-character turns it is a `system`
+note (next section).
+
+## Out-of-character turns
+
+A player message in the `(...)` register is table talk, not a character
+action: a rules question ("(can an owlbear attack twice?)"), a steering
+request ("(go easy on the wolf)"), a question about the app. The manual's
+shortcut applies, and in this harness it means:
+
+- Answer directly and publish with `--type system`. A `system` entry renders
+  as a table note, needs no narrator consult, and skips the style gate — so
+  a rules answer may carry numbers and rule citations there.
+- No director consult, no narrator consult, no scene. A rules question you
+  can't answer by pointing at a `rules/` line still goes to the rules-lawyer
+  (invariant #3 has no out-of-character exemption) — but its ruling reaches
+  the table as your `system` note, never as narration.
+- A steering request ("don't let the wolf die") is honored from this beat
+  forward: acknowledge it in one discreet line, apply it through Director
+  guidance, and log it like a `[MERCY]` call when it bends an outcome. Don't
+  spoil anything the request brushes against when acknowledging.
+- Never wrap an OOC answer in narration, and never answer it in-world through
+  an NPC's mouth. Resume in-character only when the players do.
+
+**Mixed messages** — an aside followed by a character action, like
+"(olive likes it when the dogs are friendly — make this a nice encounter)
+Mira approaches the dogs with food" — are in-character turns carrying
+steering. Apply the aside silently through Director guidance (here: the
+Director sets the dogs' baseline disposition, which is legitimately the DM's
+call; dice still roll honestly per invariant #5), then run the action through
+the normal pipeline with Narrator prose. The aside never appears in the prose,
+never gets answered as a separate system note unless it asked a question, and
+stays out of `--intent` — intent carries only the in-character words, because
+it feeds the end-of-campaign book.
 
 The manual's per-turn pipeline still applies: decide (Director), resolve
 (Rules Lawyer + `dice.py`), record (Bookkeeper — every turn, not at

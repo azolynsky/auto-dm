@@ -857,8 +857,18 @@ def session_brief() -> str:
     if logs:
         add(f"campaign/sessions/{logs[-1].name} (most recent)",
             logs[-1].read_text(encoding="utf-8"), tail=True)
+    feed = config.CAMPAIGN / "state" / "player-feed.jsonl"
+    if feed.exists():
+        entries = feed.read_text(encoding="utf-8").splitlines()[-20:]
+        add("campaign/state/player-feed.jsonl (last 20 entries — the exact prose "
+            "the players last saw, and their words via `intent`)",
+            "\n".join(entries), tail=True)
     return ("Session start. Here is the current state — the manual's session-start "
-            "reads, inlined. Read any entity folders you still need.\n\n"
+            "reads, inlined. Read any entity folders you still need. The feed tail "
+            "is the ground truth for the live scene: if it shows facts missing from "
+            "current.json (someone mid-conversation, an offer outstanding), have the "
+            "Bookkeeper fold them in before the first beat, and if it ends on an "
+            "unanswered player message, answer it.\n\n"
             + "\n\n".join(chunks))
 
 
@@ -1041,6 +1051,27 @@ def generate_character(description: str) -> dict:
                   "Try describing the hero again.")
 
 
+def _is_ooc(msg: str) -> bool:
+    """True when the WHOLE message is out-of-character — parenthetical asides
+    with nothing in-character between or after them. A mixed message like
+    "(make this nice) Mira approaches the dogs" is an in-character turn that
+    carries a steering aside, and still gets the narrator backstops."""
+    rest = msg.strip()
+    while rest.startswith("("):
+        depth = 0
+        for i, ch in enumerate(rest):
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    rest = rest[i + 1:].lstrip()
+                    break
+        else:
+            return True  # unclosed paren — nothing in-character follows
+    return not rest
+
+
 def run_turn(player_message: str) -> dict:
     """One player turn. Publishes to the chronicle; returns a small summary."""
     global _narrated, _narrator_ok
@@ -1101,12 +1132,20 @@ def run_turn(player_message: str) -> dict:
 
         final = _final_text(result)
 
+        # A wholly out-of-character message — the manual's "(...)" register:
+        # rules questions, steering requests, table talk — wants a direct
+        # answer, not a scene. Don't nudge the narrator into manufacturing
+        # prose for it; the fallback below publishes the DM's reply as a
+        # system note, which IS the answer. Mixed messages (an aside followed
+        # by a character action) are in-character turns and keep the backstops.
+        ooc = _is_ooc(player_message)
+
         # The turn ended without the beat reaching the players. Observed live:
         # the DM took the Director's decision, then stopped — no narrator
         # consult, no push, nothing on screen. One nudge on the same thread
         # (it still has the decision and the rolls) costs nothing on the happy
         # path and saves the turn on the unhappy one.
-        if not _narrated and not players_text(final, quoted_only=True):
+        if not _narrated and not ooc and not players_text(final, quoted_only=True):
             _activity("The Narrator is finding the words")
             try:
                 result = agent.invoke({"messages": [HumanMessage(
@@ -1128,7 +1167,9 @@ def run_turn(player_message: str) -> dict:
         # as narration, and only if it passes the same gate narrate.py applies;
         # anything else is a visibly out-of-character table note.
         if not _narrated:
-            quoted = players_text(final, quoted_only=True)
+            # An OOC turn never mints narration from the fallback — the reply
+            # goes out as an explicitly out-of-character system note.
+            quoted = "" if ooc else players_text(final, quoted_only=True)
             gate = narrate_gate(quoted) if quoted else []
             if quoted and not gate:
                 campaign_lib.append_feed(config.CAMPAIGN, quoted,

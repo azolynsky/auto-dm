@@ -40,14 +40,23 @@ Markdown you write follows the vault convention: first mention per file of any e
 
 # Entity lifecycle
 
-- **New one-shot NPC**: write `campaign/npcs/one-shot/<id>.md` (flat file with stats + voice + disposition).
-- **One-shot promoted to recurring** (they appeared again, or play has made them important): copy `campaign/npcs/recurring/_TEMPLATE/` to `campaign/npcs/recurring/<id>/`, port the one-shot content into `summary.md`, delete the one-shot file, add a line to `campaign/npcs/INDEX.md`.
+- **New one-shot NPC**: write `campaign/npcs/one-shot/<id>.md` (flat file with stats + voice + disposition). The threshold is low and the timing is strict: an NPC who gets a name and matters — speaks, gives information, could plausibly reappear — gets this file **in the beat that establishes them**. An NPC who exists only in the chronicle gets re-improvised differently every time context turns over.
+- **One-shot promoted to recurring** (they appeared again, or play has made them important): copy `campaign/npcs/recurring/_TEMPLATE/` to `campaign/npcs/recurring/<id>/`, port the one-shot content into `summary.md`, delete the one-shot file, add a line to `campaign/npcs/INDEX.md`. Promote at first reappearance, not when convenient.
+- **NPC dies**: same-beat, never deferred — flip `status:` in their `summary.md` (or one-shot file) frontmatter and Status section, set the world flag, recategorize their Who's Who entry. See the reset-lossless section above.
 - **New location**: copy `campaign/world/locations/_TEMPLATE/` to `campaign/world/locations/<id>/`, populate `summary.md`, add to `campaign/world/locations/INDEX.md`.
 - **New faction**: same pattern with `campaign/factions/_TEMPLATE/`.
 
 # Updating present_entities
 
-When the Director's DECISION moves the party or shifts the scene, update `campaign/state/current.json:present_entities` to the list of entity paths now in scope. This is the discovery mechanism that triggers Narrator/Director auto-loads next turn.
+When the Director's DECISION moves the party or shifts the scene, update `campaign/state/current.json:present_entities` to the list of entity paths now in scope. This is the discovery mechanism that triggers Narrator/Director auto-loads next turn. Entries are entity paths, not free-text — a string like `"Piven (injured, resting)"` can't be auto-loaded; give the entity a file and list its path, and put the condition in the entity file or `notes`.
+
+# Reset-lossless: scene-critical facts are same-beat writes
+
+Chat history is disposable — harnesses trim it, and the desktop app resets the DM's thread wholesale. The test for every beat: **if the DM's conversation vanished right now, could a fresh DM resume the scene from files alone?** Anything that fails the test gets written in the beat it happened, never at the next checkpoint:
+
+- **A death**: flip `status:` in the entity's `summary.md` frontmatter (one-line cause and session in the Status section), set the world flag, and move their Who's Who entry to the appropriate category — all in one write batch. A `summary.md` that still says `alive` after the funeral is a loaded gun: every role reads that file first, and it will eventually put the corpse back behind the bar.
+- **An NPC enters or leaves the scene**: update `present_entities` now; a newly named NPC also gets their one-shot file and Who's Who entry now (see Entity lifecycle), not "when they matter later."
+- **The scene snapshot** (`current.json:notes`): who is mid-conversation, offers outstanding, what the party is in the middle of doing. Rewrite it whole every time it changes — a stale snapshot is worse than an empty one, because a post-reset DM trusts it. A note that says "the gnome is at the bar mid-conversation" a day after he went upstairs seeds the next contradiction.
 
 # Already-applied beats are records, not deltas
 
@@ -86,11 +95,13 @@ Apply it. Use `tools/combat_tracker.py` for combat HP/conditions/initiative, `to
 
 # At the start of a session
 
-Append a header to `campaign/sessions/session-NN.md` with the session number, calendar date (real-world), and current `campaign/state/current.json` snapshot.
+Before opening session-NN, check that session-(NN-1).md was wrapped: it ends with a wrap section and `recap.md` covers it. If not, report the gap to the DM so the `session-wrap` skill runs first — **never append a new session's events into the previous session's file**, and never keep logging under a stale header after a "Session N begins" announcement. A session file whose frontmatter says day 1 while you're logging day 2 is a failed write.
+
+Then open the new `campaign/sessions/session-NN.md` with a header: session number, calendar date (real-world), and current `campaign/state/current.json` snapshot.
 
 # At the end of a session
 
-Sync any combat-final HP from `campaign/state/combat.json` to character sheets. Reset `combat.json` to inactive. Increment `campaign_day` if a long rest passed.
+Sync any combat-final HP from `campaign/state/combat.json` to character sheets. Reset `combat.json` to inactive. Increment `campaign_day` if a long rest passed. The session isn't over until the `session-wrap` skill has run (log + recap + XP) — the recap and session logs are the only memory that survives a thread reset, so an unwrapped session starts the next DM blind.
 
 # Reporting back
 
