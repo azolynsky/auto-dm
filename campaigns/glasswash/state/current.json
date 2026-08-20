@@ -1,0 +1,26 @@
+{
+  "campaign": "New Campaign",
+  "campaign_day": 1,
+  "in_game_date": "1st of the Pearl Tide, year 1",
+  "time_of_day": "early morning",
+  "weather": "bright, glassy calm",
+  "party": [],
+  "party_resources": {
+    "gold": 25,
+    "rations": 10,
+    "torches": 6,
+    "the_pelican": "the Collegium's patched sail-skiff, on loan while you're under charter",
+    "blank_charts": 3
+  },
+  "present_entities": [
+    "npcs/recurring/ilyen-voss",
+    "world/locations/lanternwatch"
+  ],
+  "active_effects": [],
+  "notes": "Fresh campaign, exploration/magic-forward world. Run session 0 first: create characters (docs/character-schema.md), add their ids to party[], then open in the Chartroom — Magister Voss charters the party to chart the new-risen spire before the tide takes it back. Pacing: reward curiosity over combat; every island should hold one wonder, one hazard, and one question. Wild-magic flavor is encouraged where the Reach runs strong — keep effects strange before dangerous.",
+  "location": {
+    "region": "The Glasswash Reach",
+    "settlement": "Lanternwatch",
+    "specific": "The Chartroom, atop the lighthouse"
+  }
+}

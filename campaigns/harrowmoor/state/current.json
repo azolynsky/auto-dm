@@ -1,0 +1,25 @@
+{
+  "campaign": "New Campaign",
+  "campaign_day": 1,
+  "in_game_date": "4th of Mistfall, year 1",
+  "time_of_day": "morning",
+  "weather": "low fog, windless",
+  "party": [],
+  "party_resources": {
+    "gold": 25,
+    "rations": 10,
+    "torches": 10,
+    "moor_map": "a cheap one from the market — the middle is blank"
+  },
+  "present_entities": [
+    "npcs/recurring/odo-fenwick",
+    "world/locations/harrowmoor"
+  ],
+  "active_effects": [],
+  "notes": "Fresh campaign, quest-driven world. Run session 0 first: create characters (docs/character-schema.md), add their ids to party[], then open at Bellwether Hall — Odo Fenwick reads the morning's postings aloud. The Ledger is the engine: keep 3-5 hooks posted at all times, retire struck ones, and let players pick their own work. Posting no. 214 (The Widow's Toll) is the seeded opener.",
+  "location": {
+    "region": "The Harrowmoor",
+    "settlement": "Harrowmoor",
+    "specific": "Bellwether Hall, before the Ledger"
+  }
+}

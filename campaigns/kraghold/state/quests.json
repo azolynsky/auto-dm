@@ -1,0 +1,42 @@
+{
+  "_description": "Live quest state. known_to_party=false quests and all secret_truth/obstacles fields are hidden from the web companion.",
+  "active": [
+    {
+      "id": "quest-hold-the-wall",
+      "title": "Hold the Long Wall",
+      "given_by": "Captain Brunna Stonehewn, commander of Kraghold",
+      "summary": "The Red Howl warband has the pass corked and probes Kraghold's outer wall every night — wolf-riders testing for the weak stone. The hold's shields are too few. Brunna is paying steel-rate for anyone who can stand a bastion until the thaw opens the road, or the siege breaks.",
+      "objectives": [
+        "Throw back the night probes on the Long Wall",
+        "Find how the raiders cross the open scree unseen",
+        "Break the siege before the granary runs dry"
+      ],
+      "obstacles": "Wolf-riders strike and vanish; the scree below the wall shows no tracks; stores are counted in weeks.",
+      "secret_truth": "The Red Howl aren't conquering — they're fleeing. Something old is waking deeper in the range (a frost wyrm; rescale freely) and has driven them into the pass. They cross the scree through goat tunnels their shamans found — tunnels that connect to the same under-road Kraghold's sealed Deep Door guards. Kill the warband and the wyrm's problem remains; parley, and the Red Howl know exactly what's coming. Scale and reskin freely.",
+      "rewards": "Steel-rate pay (10 gp/week each), pick of the armory, and Kraghold's shield-oath — dwarves remember",
+      "known_to_party": true
+    }
+  ],
+  "completed": [],
+  "hooks": [
+    {
+      "id": "hook-sortie",
+      "title": "The Sortie",
+      "pitch": "The raiders are building ladders in the tree line. Brunna wants a night crew to go out and burn them.",
+      "summary": "GM: commando mission — stealth in, fight out. First clear look at how organized (and how scared) the Red Howl actually are."
+    },
+    {
+      "id": "hook-wolf-riders-duel",
+      "title": "The Champion's Challenge",
+      "pitch": "Each dawn a scarred wolf-rider rides the scree and bellows a challenge at the wall. Nobody has answered it.",
+      "summary": "GM: single combat, formal rules, warband honor. Winning earns a parley channel; refusing costs the wall's morale."
+    },
+    {
+      "id": "hook-deep-door",
+      "title": "The Deep Door",
+      "pitch": "The sealed gate in Kraghold's cellar has started thudding at night, from the other side.",
+      "summary": "GM: the under-road. Opens the dungeon leg of the campaign and the truth about what drives the Red Howl. Don't open it before the table's ready."
+    }
+  ],
+  "rumored": []
+}

@@ -1,0 +1,47 @@
+{
+  "_description": "Live quest state. known_to_party=false quests and all secret_truth/obstacles fields are hidden from the web companion.",
+  "active": [
+    {
+      "id": "quest-widows-toll",
+      "title": "The Widow's Toll",
+      "given_by": "The Bellwether Ledger, posting no. 214 (Odo Fenwick, Keeper)",
+      "summary": "The Meregate causeway is the only cart road across the mere, and its toll-keeper drowned a year back. Now something in an oilcloak collects the toll after dark — and travelers who won't pay are run off the road. The town posts 30 gp to whoever settles the causeway.",
+      "objectives": [
+        "Cross the Meregate causeway after dark and meet the toll-taker",
+        "Settle the matter so carts can cross again"
+      ],
+      "obstacles": "The causeway is a mile of rotten planking over black water; locals refuse to guide anyone after sundown.",
+      "secret_truth": "The 'ghost' is Sela Tolliver, the drowned toll-keeper's widow, in her husband's oilcloak. The causeway's mid-span is rotted through and would drop a loaded cart into the mere; she warned the town, nobody believed her, so she scares traffic off the road every night instead. She has no coin to fix it and too much pride to beg. Violence solves nothing here; carpentry, coin, or shaming the town does. Scale and reskin freely.",
+      "rewards": "30 gp from the town purse, and the Ledger marks the party as reliable — better postings open up",
+      "known_to_party": true
+    }
+  ],
+  "completed": [],
+  "hooks": [
+    {
+      "id": "hook-sunken-bell",
+      "title": "The Sunken Bell",
+      "pitch": "The drowned chapel out on the mere rings its bell on windless nights, and posting no. 209 pays to know why.",
+      "summary": "GM: the bell is rung by an air-filled crypt beneath the chapel — something sealed in it wants out, or wants found. Decide which when the party bites."
+    },
+    {
+      "id": "hook-letters-loomhollow",
+      "title": "Letters for Loomhollow",
+      "pitch": "Three villages on the far moor haven't answered the post in a month. The courier's satchel pays 15 gp, delivered.",
+      "summary": "GM: escort/courier run. Loomhollow is fine — it's the road that isn't. Something has moved onto the old pilgrim way."
+    },
+    {
+      "id": "hook-cartographers-gap",
+      "title": "The Cartographer's Gap",
+      "pitch": "Every map of the Harrowmoor has the same blank patch in the middle, and the mapmakers' guild pays well to fill it.",
+      "summary": "GM: the gap is real — compasses spin and paths loop back. Long-arc seed; ties to the Ledger's hidden cycle (see location secrets)."
+    },
+    {
+      "id": "hook-six-geese",
+      "title": "Six Geese, One Thief",
+      "pitch": "Widow Praskin's prize geese vanish one per night, pen locked, no tracks. Posting no. 217. She pays in pies.",
+      "summary": "GM: a starveling boggart under the pen floor. Small, comic, kind-hearted resolution available — good first posting for cautious tables."
+    }
+  ],
+  "rumored": []
+}

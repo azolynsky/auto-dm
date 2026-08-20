@@ -1,4 +1,5 @@
 {
   "name": "The Vale of Emberwick",
-  "blurb": "A quiet sheep-farming valley at level-1 scale: one village, one inn, and a hill-shrine lantern that has just gone dark. The classic start."
+  "blurb": "A quiet sheep-farming valley at level-1 scale: one village, one inn, and a hill-shrine lantern that has just gone dark. The classic start.",
+  "order": 1
 }

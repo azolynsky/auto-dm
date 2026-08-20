@@ -1,0 +1,26 @@
+{
+  "campaign": "New Campaign",
+  "campaign_day": 1,
+  "in_game_date": "12th of Deepwinter, year 1",
+  "time_of_day": "dusk",
+  "weather": "hard frost, snow on the wind",
+  "party": [],
+  "party_resources": {
+    "gold": 20,
+    "rations": 12,
+    "torches": 8,
+    "bandages": 6,
+    "arrows_common_stock": 60
+  },
+  "present_entities": [
+    "npcs/recurring/brunna-stonehewn",
+    "world/locations/kraghold"
+  ],
+  "active_effects": [],
+  "notes": "Fresh campaign, combat-forward world. Run session 0 first: create characters (docs/character-schema.md), add their ids to party[], then open on the Long Wall at dusk with Captain Brunna assigning the party a bastion — the night probe comes before the first watch ends. Pacing: a real fight most sessions, built with the encounter-building skill; between fights, the siege itself is the clock (stores, morale, the sealed Deep Door). Enemy morale matters — raiders who lose half their number withdraw.",
+  "location": {
+    "region": "The High Saddle",
+    "settlement": "Kraghold",
+    "specific": "The Long Wall, west bastion"
+  }
+}

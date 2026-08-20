@@ -1,0 +1,42 @@
+{
+  "_description": "Live quest state. known_to_party=false quests and all secret_truth/obstacles fields are hidden from the web companion.",
+  "active": [
+    {
+      "id": "quest-spire",
+      "title": "The Spire That Wasn't There",
+      "given_by": "Magister Ilyen Voss, for the Lantern Collegium",
+      "summary": "Two nights ago a glass spire rose from the shallows off Gullsgrave Bank where every chart shows open water. The Collegium wants it charted before the sea changes its mind: soundings around it, a look inside if it can be entered, and one true thing brought back — a rubbing, a sketch, an object.",
+      "objectives": [
+        "Reach the spire and sound the waters around it",
+        "Find a way inside, if one exists",
+        "Bring the Collegium one true thing from it"
+      ],
+      "obstacles": "The shallows around the spire unmake compasses; the glass shows lights inside at night.",
+      "secret_truth": "The spire is an archive-tower of the drowned empire, surfacing on a 111-year tide for nine days only. Inside, a glass simulacrum — the empire's last archivist — still catalogues, courteous and lonely. It will trade answers for news of the surface world. Removing any object starts the tower sinking early (the archivist will say so, sadly, if asked); a rubbing or sketch is safe. What the archive says about why the empire drowned seeds the campaign's long arc. Scale and reskin freely.",
+      "rewards": "50 gp charter fee, the skiff's loan extended, and Collegium credit — access to its library and spell-copying at cost",
+      "known_to_party": true
+    }
+  ],
+  "completed": [],
+  "hooks": [
+    {
+      "id": "hook-ninth-tide",
+      "title": "The Ninth Tide",
+      "pitch": "The tide-charts agree: nine days from now the sea will ebb so far that Sunken Vel's streets stand dry for one day. Everyone with a shovel is getting ready.",
+      "summary": "GM: a one-day dungeon crawl with a hard, visible clock, and every rival crew in the Reach down there at the same time."
+    },
+    {
+      "id": "hook-unlit-lighthouse",
+      "title": "The Unlit Lighthouse",
+      "pitch": "Lanternwatch's sister-light on the far side of the Reach went dark a week ago. The supply boat hasn't come back.",
+      "summary": "GM: rescue/mystery at an isolated station. Decide what found them by what the table fears most."
+    },
+    {
+      "id": "hook-songlines",
+      "title": "Songlines",
+      "pitch": "The grey whales are singing this season — and a Collegium linguist swears the song is in the drowned empire's tongue.",
+      "summary": "GM: the whales learned it from something that still speaks it, down deep. Breadcrumb to the long arc."
+    }
+  ],
+  "rumored": []
+}
