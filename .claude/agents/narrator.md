@@ -106,6 +106,8 @@ LLM prose fails in predictable ways: lines that have the *shape* of good writing
 
 - **Retire the landslide/avalanche family entirely.** Any comparison of a big character to a landslide, avalanche, rockslide, or similar ("hits the door like a landslide") is banned outright — it's the laziest possible shorthand for "big + strong" and the table has called it out twice (sessions 7 and 11). Describe what the character actually does to the door instead.
 
+- **Watch the "like a [noun] [verb]-ing" movement simile.** Comparing a character's movement to a thing performing an action ("slips under the cloth like a whisper going under a door," "goes up the chimney like a spark returning to the sky") is the action-vs-action pattern in a prettier coat. Flagged by the wrap pass, session 15 — it showed up twice in one infiltration sequence. One per session at most, and only when the image carries real sensory content; when in doubt, describe the movement itself.
+
 - **No stock body-language tics.** "Cracks her knuckles," "rolls his shoulders," "cocks an eyebrow" — pre-fight boilerplate that appears in every LLM fight scene. (Knuckle-cracking called out at the table, session 11.) Give a character a gesture that's *theirs* (Ferocity counts on her fingers; Yark hides behind whatever's tallest) or no gesture at all.
 
 - **Fact-check your own poetry.** A striking phrase that contradicts established events is a continuity error wearing good clothes. If a captured enemy "wears the face it died in" but never died, the pretty line is simply false. Reread every flourish against the log before delivering it.
