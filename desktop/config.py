@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Where the desktop app keeps its two pieces of state: the OpenRouter key and
-the player's campaign.
+the player's campaigns (side by side under campaigns/<slug>/, with the
+active one named in config.json).
 
 In the repo, the campaign lives at <repo>/campaign. In an installed app the
 bundle is read-only, so both move to the OS's per-user app directory. Nothing
@@ -46,10 +47,27 @@ def app_dir() -> Path:
 
 APP_DIR = app_dir()
 CONFIG_FILE = APP_DIR / "config.json"
-# Honour an explicit CAMPAIGN_ROOT (tests, multiple tables, running from a
-# checkout) exactly like tools/campaign_lib.py does.
+
+
+def _load_config_file() -> dict:
+    try:
+        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+# Campaigns live side by side under APP_DIR/campaigns/<slug>/; config.json's
+# "campaign" key names the active one. The slug is internal and stable — the
+# display name lives in each campaign's state/current.json ("campaign" field)
+# and is set by the setup screen. Honour an explicit CAMPAIGN_ROOT (tests,
+# running from a checkout) exactly like tools/campaign_lib.py does.
+#
+# CAMPAIGN is a per-process constant on purpose: the companion server, the DM
+# agent thread, and the tools' env are all rooted in it at import/startup, so
+# changing campaigns means relaunching the app (desktop/app.py does), never
+# re-rooting a live process.
 CAMPAIGN = Path(os.environ["CAMPAIGN_ROOT"]) if os.environ.get("CAMPAIGN_ROOT") \
-    else APP_DIR / "campaign"
+    else APP_DIR / "campaigns" / (_load_config_file().get("campaign") or "table-1")
 
 # The fallback for a role with no shipped default. There is deliberately no
 # single "global model" setting: every role's model is picked individually.
@@ -149,10 +167,7 @@ def dev_settings() -> dict:
 
 
 def load() -> dict:
-    try:
-        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
+    return _load_config_file()
 
 
 def save(**fields) -> dict:
@@ -211,15 +226,81 @@ def is_ready() -> bool:
     return bool(current.get("party"))
 
 
-def ensure_campaign() -> Path:
-    """Create the campaign from the bundled starter template on first launch."""
-    if (CAMPAIGN / "state" / "current.json").exists():
-        return CAMPAIGN
+def campaigns_dir() -> Path:
+    return APP_DIR / "campaigns"
+
+
+def campaign_label(path: Path) -> str:
+    """A campaign's display name, from its own state; the slug as fallback."""
+    try:
+        current = json.loads((path / "state" / "current.json").read_text(encoding="utf-8"))
+        return str(current.get("campaign") or path.name)
+    except (OSError, json.JSONDecodeError):
+        return path.name
+
+
+def list_campaigns() -> list[tuple[str, str]]:
+    """(slug, display name) for every campaign on this machine."""
+    root = campaigns_dir()
+    return [(p.name, campaign_label(p))
+            for p in (sorted(root.iterdir()) if root.is_dir() else [])
+            if (p / "state" / "current.json").exists()]
+
+
+def _starter_template() -> Path:
     template = BUNDLE / "campaigns" / "starter"
     if not (template / "state" / "current.json").exists():
         raise SystemExit(f"starter template missing from the bundle: {template}")
+    return template
+
+
+def create_campaign() -> str:
+    """New campaign from the starter template; returns its slug.
+
+    No name is asked for here: an unseated party sends the next boot to the
+    setup screen, which names the campaign (set_campaign_name). The slug
+    stays internal."""
+    root = campaigns_dir()
+    n = 1
+    while (root / f"table-{n}").exists():
+        n += 1
+    target = root / f"table-{n}"
+    root.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(_starter_template(), target)
+    return target.name
+
+
+def set_active_campaign(slug: str) -> None:
+    """Point config.json at another campaign. Takes effect on next launch —
+    CAMPAIGN is a per-process constant (see its comment)."""
+    if not (campaigns_dir() / slug / "state" / "current.json").exists():
+        raise ValueError(f"no campaign at {campaigns_dir() / slug}")
+    save(campaign=slug)
+
+
+def _migrate_legacy_campaign() -> None:
+    """Move the pre-multi-campaign layout (APP_DIR/campaign) into
+    campaigns/<active slug>. A same-volume rename: atomic, idempotent, and a
+    re-run after any crash converges. Skipped under an explicit CAMPAIGN_ROOT
+    — that pins a root from outside; nothing here should move it."""
+    legacy = APP_DIR / "campaign"
+    if os.environ.get("CAMPAIGN_ROOT") \
+            or not (legacy / "state" / "current.json").exists() \
+            or (CAMPAIGN / "state" / "current.json").exists():
+        return
     CAMPAIGN.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(template, CAMPAIGN)
+    legacy.rename(CAMPAIGN)
+    save(campaign=CAMPAIGN.name)
+
+
+def ensure_campaign() -> Path:
+    """Make the active campaign exist: adopt a legacy single-campaign install,
+    else create from the bundled starter template on first launch."""
+    _migrate_legacy_campaign()
+    if (CAMPAIGN / "state" / "current.json").exists():
+        return CAMPAIGN
+    CAMPAIGN.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(_starter_template(), CAMPAIGN)
     return CAMPAIGN
 
 

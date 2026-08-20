@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import socket
+import subprocess
 import sys
 import threading
 import time
@@ -22,6 +23,40 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import config  # noqa: E402
 
 WINDOW_TITLE = "Auto-DM"
+
+
+def relaunch() -> None:
+    """Replace this process with a fresh copy of itself.
+
+    The whole app is campaign-scoped — the server's path constants, the
+    CAMPAIGN_ROOT env, the DM's conversation thread — so a campaign change
+    boots clean instead of re-rooting a live process. We set CAMPAIGN_ROOT
+    ourselves at startup; drop it so the fresh process derives the new
+    campaign from config.json rather than inheriting the old root."""
+    os.environ.pop("CAMPAIGN_ROOT", None)
+    argv = sys.argv if getattr(sys, "frozen", False) else [sys.executable] + sys.argv
+    if os.name == "nt":
+        # execv on Windows detaches oddly from the console; spawn-and-exit.
+        subprocess.Popen(argv)
+        return
+    os.execv(argv[0], argv)
+
+
+def campaign_menu(on_new, on_switch) -> list:
+    """The native Campaign menu: new, then one entry per campaign, the
+    active one checked. Built once per process — every campaign change
+    relaunches, so the menu is always fresh."""
+    import webview.menu as wm
+
+    campaigns = config.list_campaigns()
+    labels = [label for _, label in campaigns]
+    items = [wm.MenuAction("New Campaign", on_new), wm.MenuSeparator()]
+    for slug, label in campaigns:
+        if labels.count(label) > 1:  # two unnamed tables: show the slug too
+            label = f"{label} ({slug})"
+        mark = "✓  " if slug == config.CAMPAIGN.name else "     "
+        items.append(wm.MenuAction(mark + label, lambda s=slug: on_switch(s)))
+    return [wm.Menu("Campaign", items)]
 
 
 def free_port() -> int:
@@ -43,6 +78,11 @@ def wait_for_server(port: int, timeout: float = 60.0) -> bool:
 
 
 def main() -> int:
+    # An external CAMPAIGN_ROOT pins the root from outside (tests, sandboxes);
+    # the Campaign menu is hidden then, because a switch written to config.json
+    # would silently not take effect. Decide before we set the env ourselves.
+    external_root = bool(os.environ.get("CAMPAIGN_ROOT"))
+
     # The campaign has to exist before the server imports, because
     # campaign_lib.resolve_root() refuses to start without one.
     config.ensure_campaign()
@@ -71,9 +111,26 @@ def main() -> int:
         sys.exit("The companion server didn't start. Run `python desktop/app.py` "
                  "from a terminal to see why.")
 
-    webview.create_window(WINDOW_TITLE, f"http://127.0.0.1:{port}",
-                          width=1400, height=900, min_size=(900, 600))
-    webview.start()   # blocks until the window closes; the server thread is a daemon
+    switching = threading.Event()
+    window = webview.create_window(
+        f"{WINDOW_TITLE} — {config.campaign_label(config.CAMPAIGN)}",
+        f"http://127.0.0.1:{port}", width=1400, height=900, min_size=(900, 600))
+
+    def change_to(slug: str) -> None:
+        if slug == config.CAMPAIGN.name:
+            return
+        config.set_active_campaign(slug)
+        switching.set()
+        window.destroy()  # unblocks webview.start(); relaunch happens below
+
+    menu = [] if external_root else campaign_menu(
+        on_new=lambda: change_to(config.create_campaign()),
+        on_switch=change_to)
+
+    # blocks until the window closes; the server thread is a daemon
+    webview.start(menu=menu)
+    if switching.is_set():
+        relaunch()
     return 0
 
 

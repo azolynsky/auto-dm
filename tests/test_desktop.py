@@ -73,6 +73,68 @@ class TestReadiness(DesktopTestCase):
         self.assertFalse(self.config.is_ready())
 
 
+class TestMultiCampaign(DesktopTestCase):
+    """Campaigns live side by side under APP_DIR/campaigns/<slug>/; the
+    active one is named in config.json and only changes across a relaunch."""
+
+    def setUp(self):
+        super().setUp()
+        self.config.APP_DIR.mkdir(parents=True)
+        # These tests exercise the config-derived layout, not the env override.
+        os.environ.pop("CAMPAIGN_ROOT", None)
+        self.config.CAMPAIGN = self.config.campaigns_dir() / "table-1"
+
+    def test_create_campaign_mints_unique_slugs(self):
+        first = self.config.create_campaign()
+        second = self.config.create_campaign()
+        self.assertNotEqual(first, second)
+        for slug in (first, second):
+            self.assertTrue(
+                (self.config.campaigns_dir() / slug / "state" / "current.json").exists())
+
+    def test_list_campaigns_reads_display_names(self):
+        slug = self.config.create_campaign()
+        current_file = (self.config.campaigns_dir() / slug / "state" / "current.json")
+        current = json.loads(current_file.read_text())
+        current["campaign"] = "Curse of the Salt Peddler"
+        current_file.write_text(json.dumps(current))
+        self.assertIn((slug, "Curse of the Salt Peddler"), self.config.list_campaigns())
+
+    def test_set_active_campaign_validates(self):
+        slug = self.config.create_campaign()
+        self.config.set_active_campaign(slug)
+        self.assertEqual(self.config.load()["campaign"], slug)
+        with self.assertRaises(ValueError):
+            self.config.set_active_campaign("no-such-table")
+
+    def test_legacy_campaign_migrates_once(self):
+        legacy = self.config.APP_DIR / "campaign"
+        shutil.copytree(REPO / "campaigns" / "starter", legacy)
+        marker = legacy / "state" / "current.json"
+        current = json.loads(marker.read_text())
+        current["campaign"] = "The Old Table"
+        marker.write_text(json.dumps(current))
+
+        self.config.ensure_campaign()
+        self.assertFalse(legacy.exists())
+        self.assertEqual(self.config.campaign_label(self.config.CAMPAIGN),
+                         "The Old Table")
+        self.assertEqual(self.config.load()["campaign"], "table-1")
+
+        # idempotent: a second boot (even with a stray legacy dir) is a no-op
+        shutil.copytree(REPO / "campaigns" / "starter", legacy)
+        self.config.ensure_campaign()
+        self.assertEqual(self.config.campaign_label(self.config.CAMPAIGN),
+                         "The Old Table")
+
+    def test_env_override_skips_migration_and_menu_layout(self):
+        os.environ["CAMPAIGN_ROOT"] = str(self.campaign)
+        legacy = self.config.APP_DIR / "campaign"
+        shutil.copytree(REPO / "campaigns" / "starter", legacy)
+        self.config.ensure_campaign()
+        self.assertTrue(legacy.exists())  # pinned root: nothing moves
+
+
 class TestConsultBrief(DesktopTestCase):
     """Every consult gets the scene state and PC sheet paths pre-injected,
     so stateless specialists don't burn model rounds rediscovering them."""
