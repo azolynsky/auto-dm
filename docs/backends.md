@@ -6,7 +6,9 @@ prose-editor) picks its own **backend** and its own **model**. A backend is the
 thing that runs an agent loop; a model is what that loop thinks with.
 
 This file is the contract. `desktop/backends/*.py` implements it, and
-`tests/test_backends.py` holds it in place.
+`tests/test_desktop.py` holds it in place — `TestBackendRouting`,
+`TestClaudeCliBackend`, `TestClaudeAgentBackend`, `TestMcpServer`,
+`TestSubscriptionOnlyTable`.
 
 ## Why this exists
 
@@ -57,11 +59,19 @@ Claude-via-OpenRouter path, deliberately: this is subscription compute.
 | Extra dependency | langgraph, langchain-openai | none | claude-agent-sdk |
 
 `claude-cli` is the honest baseline: literally the command you would type. It
-pays a process start per turn and reaches the tools over a stdio pipe.
-`claude-agent` is the same binary and the same login with the tools in-process,
-so a tool call is a Python call rather than a pipe round trip, and tool-use
-events stream back as they happen — which is what feeds the table's activity
-spinner.
+pays a process start per turn and reaches the tools over a stdio pipe, which
+means a second Python process per consult. `claude-agent` is the same binary and
+the same login with the tools in-process, so a tool call is a Python call rather
+than a pipe round trip.
+
+Both still start one `claude` per exchange. Holding a live `ClaudeSDKClient`
+open between turns would save that, at the cost of a long-lived subprocess per
+role; it is the upgrade if process start ever shows up next to a model call,
+which against a 10–50s consult it doesn't.
+
+The activity spinner and the dev log need nothing from any of this: the tools
+write both themselves, so they land identically whether the tool ran in-process
+or inside the MCP subprocess (which writes to the same campaign files).
 
 ## The interface
 
@@ -93,8 +103,13 @@ class Backend(ABC):
 
     def available(self) -> str | None: ...   # None = ready, else the reason
     def run(self, spec: AgentSpec, message: str) -> str: ...
+    def is_fresh(self, spec: AgentSpec) -> bool: ...
     def reset(self, spec: AgentSpec) -> None: ...
 ```
+
+`is_fresh` exists because the caller sends the session brief on a new
+conversation and skips it on a resumed one. It is the single thing `agent.py`
+needs to know about a history it deliberately doesn't own.
 
 One method covers both capabilities because a consult and a DM turn differ only
 in configuration: a consult is `stateful=False` with a role's tool subset, a DM
@@ -171,11 +186,43 @@ client speaks. The installed SDK's own latest is `2025-11-25`; the transport
 shape for a local stdio pipe is unaffected by the stateless-core change, so
 there is no reason to chase the version for this server.
 
+## Credentials
+
+An OpenRouter key is required only if some role is set to spend credit.
+`config.needs_api_key()` answers that by asking whether every configured role
+is on a subscription backend, and both readiness and the setup screen defer to
+it — so a table running entirely on the machine's Claude login is never asked
+for a key it doesn't have. Move one role onto OpenRouter and the key becomes
+required again.
+
+Neither Claude backend reads `ANTHROPIC_API_KEY`. Verified on a machine with no
+key, no auth token and no `primaryApiKey`: both run off the `claude` binary's
+OAuth login, the same credential `claude -p` uses in a terminal.
+
 ## Adding a backend
 
-1. Subclass `Backend` in `desktop/backends/<name>.py`.
-2. Register it in `desktop/backends/__init__.py`.
+1. Subclass `Backend` in `desktop/backends/<name>.py`, and expose it as
+   `BACKEND` at module scope.
+2. Add a `BackendInfo` row to `BACKENDS` in `desktop/backends/base.py` — the
+   registry is data there so `config.py` can build the settings picker without
+   importing any implementation.
 3. Add its ids to `MODEL_CHOICES` in `desktop/config.py` so the picker offers
    them.
 
-Nothing else changes. `agent.py` never names a backend.
+Nothing else changes. `agent.py` never names a backend, and
+`backends/__init__.py` imports implementations by name at first use, so a
+backend whose dependency isn't installed costs nothing until someone selects
+it — and then reports itself unavailable, with the fix.
+
+## What was verified live
+
+Real runs against a throwaway campaign, not inferred from mocks (2026-08-20):
+
+| Check | Result |
+|---|---|
+| Consult on `claude-agent:haiku` | 14s; flagged an impossible premise from its brief |
+| Consult on `claude-cli:haiku` over MCP | 9s; cited `rules/combat-flow.md`, which it had actually read |
+| `tools/mcp_server.py` driven by a real MCP client | 5 tools unscoped, 2 for the narrator; `motivations.md` refused; `dice.py` rolled |
+| Full turn, DM `claude-agent:sonnet`, narrator on OpenRouter | 105s; director consult, narrator consult, `narrate.py` push, one chronicle entry |
+| Two turns, backend instances cleared between them | the second resumed the session and answered from the transcript |
+| Full turn with no OpenRouter key at all | `needs_api_key` false; turn completed and narrated |
