@@ -34,6 +34,7 @@ BUNDLE = Path(os.environ.get("AUTODM_BUNDLE")
               or Path(__file__).resolve().parent.parent)
 sys.path.insert(0, str(BUNDLE / "desktop"))
 
+import agent  # noqa: E402
 import campaign_tools  # noqa: E402
 import config  # noqa: E402
 import prompts  # noqa: E402
@@ -41,10 +42,22 @@ from backends.base import ToolSpec  # noqa: E402
 
 
 def tool_specs(role: str | None) -> list[ToolSpec]:
-    """The tools to serve: one role's subset, or everything."""
-    functions = (campaign_tools.role_tools(role) if role
-                 else campaign_tools.TOOLS)
-    return [ToolSpec.of(fn) for fn in functions]
+    """The tools to serve: one role's subset, or the whole DM surface.
+
+    The DM surface includes consult_role and consult_pair, and it has to: an
+    orchestrator that can't reach its specialists can't consult the narrator,
+    so it can't publish a beat — the gate refuses prose that didn't come from
+    the Narrator. Serving it the file tools alone produced a DM that argued
+    with the gate and got its own complaint published.
+
+    Those two run the backends, so serving them here means this process runs
+    them: a specialist on `claude-cli` spawns its own `claude` and its own copy
+    of this server, one level down. Bounded at that — specialists don't
+    consult.
+    """
+    if role:
+        return [ToolSpec.of(fn) for fn in campaign_tools.role_tools(role)]
+    return [ToolSpec.of(fn) for fn in agent.DM_TOOLS]
 
 
 def build_server(role: str | None = None):

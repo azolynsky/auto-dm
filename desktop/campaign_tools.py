@@ -125,10 +125,9 @@ def _read_activity(path: str) -> str | None:
 # ── Tools ─────────────────────────────────────────────────────────────────────
 # Docstrings are what the model sees, so they carry the usage rules.
 
-_narrated = False   # set when a narrate.py push lands; read once per turn
-_narrator_ok = False  # set when the narrator role is consulted this turn —
-                      # narration/scene_change pushes are refused without it,
-                      # so player-facing prose always comes from the narrator
+# The turn-in-progress flags (has the narrator been consulted, has a push
+# landed) live in a file — see the "Per-turn flags" section at the bottom for
+# why. run_tool reads and writes them through those accessors.
 
 
 def _tool_error(e: Exception) -> str:
@@ -156,6 +155,11 @@ _log_lock = threading.Lock()
 
 # run_tool swaps process-global sys.argv/sys.stdin (see its comment).
 _tool_lock = threading.Lock()
+
+# The per-turn flag file. Within one process this serialises read-modify-write;
+# across processes only one of them is ever mid-turn, because the app runs one
+# player turn at a time.
+_turn_lock = threading.Lock()
 
 
 def _utcnow() -> datetime.datetime:
@@ -304,10 +308,9 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
     --char takes a character id or name, not a file path.
     Pass multi-paragraph or quote-bearing prose through stdin with args ["-"].
     """
-    global _narrated
     if tool not in TOOL_SCRIPTS:
         return f"error: unknown tool {tool!r}; available: {', '.join(TOOL_SCRIPTS)}"
-    if tool == "narrate.py" and not _narrator_ok and _narrate_type(argv) in (
+    if tool == "narrate.py" and not narration_allowed() and _narrate_type(argv) in (
             "narration", "scene_change"):
         return ("error: player-facing prose must come from the narrator — "
                 "consult_role('narrator', ...) with the Director's decision and "
@@ -347,7 +350,7 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
             sys.argv, sys.stdin = saved_argv, saved_stdin
     body = out.getvalue().strip() or err.getvalue().strip() or "(no output)"
     if tool == "narrate.py" and code == 0:
-        _narrated = True
+        _set_turn_flags(narrated=True)
     return body if code == 0 else f"exit {code}\n{body}"
 
 
@@ -395,28 +398,58 @@ def role_tools(role: str) -> list:
 
 
 # ── Per-turn flags ────────────────────────────────────────────────────────────
-# run_tool sets these; agent.py reads them to decide whether a turn ever
-# reached the players. Functions rather than exported globals: `from
-# campaign_tools import _narrated` would copy the value at import time and then
-# never see a push land.
+# Two facts about the turn in progress: has the narrator been consulted (so a
+# narration push is allowed at all), and has a push actually landed. run_tool
+# reads the first and sets the second; agent.py sets the first and reads the
+# second to decide whether the beat ever reached the players.
+#
+# They live in a file, not module globals, because run_tool does not always run
+# in this process. On the claude-cli backend the tools are served over MCP from
+# a subprocess, which gets its own copy of every global — so a memory-only gate
+# refused every narration push there AND left the parent believing nothing was
+# published. A file is the only thing both processes can see.
+#
+# Under the campaign, not /tmp: it is per-campaign state, and the MCP subprocess
+# is already rooted there by CAMPAIGN_ROOT.
+
+def _turn_path() -> Path:
+    return config.CAMPAIGN / "state" / "dm-turn.json"
+
+
+def _turn_flags() -> dict:
+    try:
+        return json.loads(_turn_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        # Unreadable means "not unlocked": a lost gate must refuse narration,
+        # never wave it through.
+        return {}
+
+
+def _set_turn_flags(**fields) -> None:
+    with _turn_lock:
+        flags = {**_turn_flags(), **fields}
+        try:
+            path = _turn_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(flags), encoding="utf-8")
+        except OSError:
+            pass  # the read side defaults to locked, which is the safe way to fail
+
 
 def begin_turn() -> None:
     """Reset the narration flags. Called once per player turn."""
-    global _narrated, _narrator_ok
-    _narrated = False
-    _narrator_ok = False
+    _set_turn_flags(narrator_ok=False, narrated=False)
 
 
 def allow_narration() -> None:
     """The narrator has been consulted — narration pushes are unlocked."""
-    global _narrator_ok
-    _narrator_ok = True
+    _set_turn_flags(narrator_ok=True)
 
 
 def narration_allowed() -> bool:
-    return _narrator_ok
+    return bool(_turn_flags().get("narrator_ok"))
 
 
 def narrated() -> bool:
     """True once a narrate.py push has landed this turn."""
-    return _narrated
+    return bool(_turn_flags().get("narrated"))

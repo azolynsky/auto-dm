@@ -915,9 +915,14 @@ class TestMcpServer(DesktopTestCase):
                       {s.name for s in self.server.tool_specs("bookkeeper")})
 
     def test_the_full_surface_is_the_dm_surface(self):
+        # Including the consults. A DM that can't reach its specialists can't
+        # consult the narrator, so it can't publish a beat at all — the gate
+        # refuses prose the Narrator didn't write. Observed: it argued with the
+        # gate and the fallback published the argument.
         served = {s.name for s in self.server.tool_specs(None)}
         self.assertEqual(served, {"read_file", "write_file", "edit_file",
-                                  "list_files", "run_tool"})
+                                  "list_files", "run_tool",
+                                  "consult_role", "consult_pair"})
 
     def test_the_narrators_read_still_refuses_gm_files(self):
         # Same function object every backend gets, so the refusal travels with
@@ -932,6 +937,40 @@ class TestMcpServer(DesktopTestCase):
     def test_it_builds_a_real_server(self):
         built = self.server.build_server("director")
         self.assertTrue(built.name)
+
+    def test_the_narration_gate_crosses_the_process_boundary(self):
+        # The bug this guards: the gate used to be a module global, so on the
+        # claude-cli path (tools served from a subprocess) every narration push
+        # was refused and the parent never learned one had landed. A DM on that
+        # backend could not publish at all. The flags live in a campaign file
+        # for exactly this reason — assert the file is the channel, not memory.
+        import campaign_tools
+        campaign_tools.begin_turn()
+        campaign_tools.allow_narration()
+
+        flags = json.loads(
+            (self.campaign / "state" / "dm-turn.json").read_text(encoding="utf-8"))
+        self.assertEqual(flags, {"narrator_ok": True, "narrated": False})
+
+        # A second import of the module — what a subprocess gets — must see it.
+        sys.modules.pop("campaign_tools", None)
+        import campaign_tools as reloaded
+        self.assertTrue(reloaded.narration_allowed())
+        self.assertFalse(reloaded.narrated())
+
+        # ...and a push from that copy must be visible to the first one.
+        reloaded._set_turn_flags(narrated=True)
+        self.assertTrue(campaign_tools.narrated())
+
+    def test_an_unreadable_gate_refuses_narration(self):
+        # Failing closed matters more than failing gracefully: a lost gate that
+        # waves prose through publishes un-narrated DM chatter to the players.
+        import campaign_tools
+        campaign_tools.begin_turn()
+        campaign_tools.allow_narration()
+        (self.campaign / "state" / "dm-turn.json").write_text("{not json",
+                                                             encoding="utf-8")
+        self.assertFalse(campaign_tools.narration_allowed())
 
 
 class TestActivity(DesktopTestCase):
