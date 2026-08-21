@@ -21,17 +21,107 @@
       <span class="header-divider" id="header-div-2">·</span>
       <span id="header-weather"></span>
     </span>
-    <button id="chars-toggle" title="Characters" aria-label="Toggle character sheet">🛡</button>
-    <button id="sidebar-toggle" title="Quests & world info" aria-label="Toggle quests and world info">📜</button>
+    <button id="panels-toggle" title="Sheets, quests & settings" aria-label="Toggle the side panel">🛡</button>
     <button id="settings-btn" title="Table settings" aria-label="Table settings">⚙</button>
   </header>
 
   <main id="main-grid">
 
-    <!-- LEFT: Character sheet, one at a time — party tabs across the top -->
-    <section id="characters-column">
-      <div id="char-tabs"></div>
-      <div id="characters-inner"></div>
+    <!-- LEFT: one panel at a time. Every pane below declares its own tab
+         (data-tab); the strip is built from whatever is in the markup, so
+         adding a panel is an HTML edit and nothing else. -->
+    <section id="panel-column">
+      <div id="panel-tabs" role="tablist"></div>
+      <div id="panel-panes">
+
+        <section class="panel" data-panel="characters" data-tab="Sheets">
+          <div id="char-tabs"></div>
+          <div id="characters-inner"></div>
+        </section>
+
+        <section class="panel" data-panel="quests" data-tab="Quests">
+          <div class="panel-scroll"><ul id="quests-list"></ul></div>
+        </section>
+
+        <section class="panel" data-panel="whoswho" data-tab="Who's Who">
+          <div class="panel-scroll"><ul id="whoswho-list"></ul></div>
+        </section>
+
+        <section class="panel" data-panel="resources" data-tab="Party Pack">
+          <div class="panel-scroll"><ul id="resources-list"></ul></div>
+        </section>
+
+        <section class="panel" data-panel="settings" data-tab="Settings">
+          <div class="panel-scroll">
+            <p class="settings-hint">How the DM runs the table. Changes reach the DM on their next narration.</p>
+
+            <label class="setting-row">
+              <span class="setting-label">Rules strictness</span>
+              <select id="set-rules-strictness">
+                <option value="strict">Strict — rules as written, dice fall where they fall</option>
+                <option value="flexible">Flexible — DM may soften outcomes (hand of god)</option>
+              </select>
+            </label>
+
+            <label class="setting-row setting-check">
+              <input type="checkbox" id="set-beginner-mode">
+              <span><span class="setting-label">Beginner mode</span>
+              <span class="setting-desc">DM suggests options and reminds you of your abilities</span></span>
+            </label>
+
+            <label class="setting-row setting-check">
+              <input type="checkbox" id="set-kid-friendly">
+              <span><span class="setting-label">Kid-friendly</span>
+              <span class="setting-desc">Keep violence and horror gentle</span></span>
+            </label>
+
+            <label class="setting-row">
+              <span class="setting-label">Narration style</span>
+              <select id="set-narration-style">
+                <option value="brief">Brief — outcomes and a scene beat</option>
+                <option value="standard">Standard</option>
+                <option value="cinematic">Cinematic — rich, longer scenes</option>
+              </select>
+            </label>
+
+            <label class="setting-row">
+              <span class="setting-label">House rules</span>
+              <textarea id="set-custom-rules" rows="4"
+                placeholder="Free text — the DM treats these as active house rules."></textarea>
+            </label>
+
+            <label class="setting-row">
+              <span class="setting-label">DM model</span>
+              <select id="set-dm-model"></select>
+            </label>
+
+            <label class="setting-row setting-check">
+              <input type="checkbox" id="set-dev-mode">
+              <span><span class="setting-label">Developer mode</span>
+              <span class="setting-desc">Pick each role's model and add a Dev Log tab — applies instantly, saved on this device</span></span>
+            </label>
+
+            <div class="settings-actions">
+              <span id="settings-status"></span>
+              <button id="settings-save">Save</button>
+            </div>
+
+            <!-- Developer section — shown by the Developer mode toggle above.
+                 Per-role model choice; see prompts/README.md. -->
+            <section id="dev-section" class="hidden">
+              <h2 class="section-label">Developer</h2>
+              <div id="dev-body"></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- Dev-mode only: every tool call and result, newest first. The tab
+             appears and disappears with the Developer mode toggle. -->
+        <section class="panel panel-off" data-panel="devlog" data-tab="Dev Log">
+          <div class="panel-scroll"><ul id="devlog-list"></ul></div>
+        </section>
+
+      </div>
     </section>
 
     <!-- CENTER: Narration Feed -->
@@ -49,33 +139,6 @@
 
   </main>
 
-  <!-- RIGHT: Sidebar drawer — collapsed by default, toggled from the header -->
-  <aside id="sidebar-column">
-      <section class="sidebar-section" id="quests-section">
-        <h2 class="section-label">Quests</h2>
-        <ul id="quests-list"></ul>
-      </section>
-      <section class="sidebar-section" id="whoswho-section">
-        <h2 class="section-label">Who's Who</h2>
-        <ul id="whoswho-list"></ul>
-      </section>
-      <section class="sidebar-section" id="resources-section">
-        <h2 class="section-label">Party Pack</h2>
-        <ul id="resources-list"></ul>
-      </section>
-      <section class="sidebar-section" id="location-section">
-        <h2 class="section-label">Where You Are</h2>
-        <div id="location-detail"></div>
-      </section>
-      <!-- Dev-mode only: every tool call and result, newest first -->
-      <section class="sidebar-section hidden" id="devlog-section">
-        <details id="devlog-details">
-          <summary class="section-label">Dev Log</summary>
-          <ul id="devlog-list"></ul>
-        </details>
-      </section>
-  </aside>
-
   <!-- COMBAT BAR — hidden until combat is active -->
   <footer id="combat-bar" class="hidden">
     <span class="combat-label">⚔ Combat</span>
@@ -88,73 +151,6 @@
     <div class="modal" role="dialog" aria-modal="true">
       <button class="modal-close" data-close="char-modal" aria-label="Close">✕</button>
       <div id="char-modal-body"></div>
-    </div>
-  </div>
-
-  <!-- Table settings modal -->
-  <div id="settings-modal" class="modal-backdrop hidden">
-    <div class="modal modal-narrow" role="dialog" aria-modal="true">
-      <button class="modal-close" data-close="settings-modal" aria-label="Close">✕</button>
-      <h2 class="modal-title">Table Settings</h2>
-      <p class="settings-hint">How the DM runs the table. Changes reach the DM on their next narration.</p>
-
-      <label class="setting-row">
-        <span class="setting-label">Rules strictness</span>
-        <select id="set-rules-strictness">
-          <option value="strict">Strict — rules as written, dice fall where they fall</option>
-          <option value="flexible">Flexible — DM may soften outcomes (hand of god)</option>
-        </select>
-      </label>
-
-      <label class="setting-row setting-check">
-        <input type="checkbox" id="set-beginner-mode">
-        <span><span class="setting-label">Beginner mode</span>
-        <span class="setting-desc">DM suggests options and reminds you of your abilities</span></span>
-      </label>
-
-      <label class="setting-row setting-check">
-        <input type="checkbox" id="set-kid-friendly">
-        <span><span class="setting-label">Kid-friendly</span>
-        <span class="setting-desc">Keep violence and horror gentle</span></span>
-      </label>
-
-      <label class="setting-row">
-        <span class="setting-label">Narration style</span>
-        <select id="set-narration-style">
-          <option value="brief">Brief — outcomes and a scene beat</option>
-          <option value="standard">Standard</option>
-          <option value="cinematic">Cinematic — rich, longer scenes</option>
-        </select>
-      </label>
-
-      <label class="setting-row">
-        <span class="setting-label">House rules</span>
-        <textarea id="set-custom-rules" rows="4"
-          placeholder="Free text — the DM treats these as active house rules."></textarea>
-      </label>
-
-      <label class="setting-row">
-        <span class="setting-label">DM model</span>
-        <select id="set-dm-model"></select>
-      </label>
-
-      <label class="setting-row setting-check">
-        <input type="checkbox" id="set-dev-mode">
-        <span><span class="setting-label">Developer mode</span>
-        <span class="setting-desc">Pick each role's model and show the Dev Log in the sidebar — applies instantly, saved on this device</span></span>
-      </label>
-
-      <div class="settings-actions">
-        <span id="settings-status"></span>
-        <button id="settings-save">Save</button>
-      </div>
-
-      <!-- Developer section — shown by the Developer mode toggle above.
-           Per-role model choice; see prompts/README.md. -->
-      <section id="dev-section" class="hidden">
-        <h2 class="modal-title">Developer</h2>
-        <div id="dev-body"></div>
-      </section>
     </div>
   </div>
 

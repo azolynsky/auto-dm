@@ -47,6 +47,55 @@ function el(tag, cls, text) {
 // Latest full data for every character, for the full-sheet modal
 const _charData = {};
 
+// ── Panel tabs (left column) ───────────────────────────────────────────────────
+// Sheets, quests, who's who, the party pack and settings all share one column,
+// one at a time. The panes declare their own tab label in the markup
+// (data-panel / data-tab), so this builds the strip from whatever is there —
+// adding a panel is an HTML edit and nothing else.
+
+let _activePanel = localStorage.getItem('active-panel') || 'characters';
+
+function panelPanes() {
+  return Array.from(document.querySelectorAll('#panel-panes > .panel'));
+}
+
+function renderPanelTabs() {
+  const bar = document.getElementById('panel-tabs');
+  // .panel-off is a pane that isn't offered right now (Dev Log outside dev mode)
+  const shown = panelPanes().filter(p => !p.classList.contains('panel-off'));
+  if (!shown.some(p => p.dataset.panel === _activePanel)) {
+    _activePanel = shown.length ? shown[0].dataset.panel : null;
+  }
+  bar.innerHTML = '';
+  shown.forEach(pane => {
+    const name = pane.dataset.panel;
+    const btn = el('button', `panel-tab${name === _activePanel ? ' active' : ''}`, pane.dataset.tab);
+    btn.type = 'button';
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', String(name === _activePanel));
+    btn.addEventListener('click', () => selectPanel(name));
+    bar.appendChild(btn);
+  });
+  panelPanes().forEach(p => p.classList.toggle('active', p.dataset.panel === _activePanel));
+}
+
+function selectPanel(name) {
+  _activePanel = name;
+  localStorage.setItem('active-panel', name);
+  renderPanelTabs();
+  // fresh each time settings comes up — the dev panel can change the model too
+  if (name === 'settings') loadDmModel();
+}
+
+// Offer (or withdraw) a whole tab. Withdrawing the active one falls back to the
+// first tab still standing.
+function setPanelOffered(name, offered) {
+  const pane = document.querySelector(`#panel-panes > .panel[data-panel="${name}"]`);
+  if (!pane) return;
+  pane.classList.toggle('panel-off', !offered);
+  renderPanelTabs();
+}
+
 // ── Character rendering ────────────────────────────────────────────────────────
 
 function buildCharCard(char) {
@@ -709,7 +758,6 @@ function renderSidebar(quests, worldFlags, current, dramatis, questHooks) {
   renderQuests(quests, questHooks);
   renderWhosWho(dramatis);
   renderResources(current);
-  renderLocationDetail(current);
 }
 
 function renderResources(current) {
@@ -830,21 +878,6 @@ function renderQuests(quests, hooks) {
       if (h.pitch) li.appendChild(el('div', 'quest-summary', h.pitch));
       list.appendChild(li);
     });
-  }
-}
-
-function renderLocationDetail(current) {
-  const detail = document.getElementById('location-detail');
-  detail.innerHTML = '';
-  if (!current) return;
-  const loc = current.location || {};
-  if (loc.specific) detail.appendChild(el('div', 'loc-specific', loc.specific));
-  if (loc.settlement && loc.settlement !== loc.specific) {
-    detail.appendChild(el('div', 'loc-settlement', loc.settlement));
-  }
-  if (loc.region) detail.appendChild(el('div', null, loc.region));
-  if (current.in_game_date) {
-    detail.appendChild(el('div', 'loc-date', current.in_game_date));
   }
 }
 
@@ -1086,7 +1119,7 @@ async function resetThread() {
 
 async function toggleDev(on) {
   document.getElementById('dev-section').classList.toggle('hidden', !on);
-  document.getElementById('devlog-section').classList.toggle('hidden', !on);
+  setPanelOffered('devlog', on);
   if (on && !document.getElementById('dev-body').childElementCount) {
     try {
       renderDev(await (await fetch('/api/dev')).json());
@@ -1162,9 +1195,10 @@ function initModals() {
         .forEach(b => closeModal(b.id));
     }
   });
+  // ⚙ is a shortcut to the Settings tab (and, on a phone, opens the drawer on it)
   document.getElementById('settings-btn').addEventListener('click', () => {
-    document.getElementById('settings-modal').classList.remove('hidden');
-    loadDmModel(); // fresh each open — the dev panel can change it too
+    selectPanel('settings');
+    document.body.classList.add('panels-open');
   });
   document.getElementById('settings-save').addEventListener('click', saveSettings);
 
@@ -1194,37 +1228,17 @@ function initModals() {
     }
   });
 
-  // Sidebar drawer — open by default on wide screens (it docks there, so the
-  // chronicle keeps full width), collapsed on smaller ones. An explicit
-  // toggle is remembered per browser and beats the default.
-  const stored = localStorage.getItem('sidebar');
-  const wide = window.matchMedia('(min-width: 1800px)').matches;
-  if (stored ? stored === 'open' : wide) {
-    document.body.classList.add('sidebar-open');
-  }
-  document.getElementById('sidebar-toggle').addEventListener('click', () => {
-    const open = document.body.classList.toggle('sidebar-open');
-    localStorage.setItem('sidebar', open ? 'open' : 'closed');
-  });
-  // Character sheet drawer (phone only — the toggle is hidden on desktop).
-  document.getElementById('chars-toggle').addEventListener('click', () => {
-    document.body.classList.toggle('chars-open');
+  // Panel drawer (phone only — the toggle is hidden on desktop, where the
+  // column is always on screen).
+  document.getElementById('panels-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('panels-open');
   });
   // pointerdown, not click: tab clicks re-render the tab bar, so by the time
   // a click bubbles here its target is detached and looks "outside".
   document.addEventListener('pointerdown', e => {
-    if (!document.body.classList.contains('chars-open')) return;
-    if (e.target.closest('#characters-column, #chars-toggle')) return;
-    document.body.classList.remove('chars-open');
-  });
-
-  // On narrow screens, a click outside the sidebar (and its toggle) closes it.
-  document.addEventListener('click', e => {
-    if (window.matchMedia('(min-width: 1800px)').matches) return;
-    if (!document.body.classList.contains('sidebar-open')) return;
-    if (e.target.closest('#sidebar-column, #sidebar-toggle')) return;
-    document.body.classList.remove('sidebar-open');
-    localStorage.setItem('sidebar', 'closed');
+    if (!document.body.classList.contains('panels-open')) return;
+    if (e.target.closest('#panel-column, #panels-toggle, #settings-btn')) return;
+    document.body.classList.remove('panels-open');
   });
 }
 
@@ -1272,9 +1286,7 @@ function connectSSE() {
   });
 
   es.addEventListener('state_update', e => {
-    const current = JSON.parse(e.data);
-    renderHeader(current);
-    renderLocationDetail(current);
+    renderHeader(JSON.parse(e.data));
   });
 
   es.addEventListener('sidebar_update', e => {
@@ -1308,7 +1320,9 @@ function connectSSE() {
 
 async function init() {
   initModals();
-  initDev();
+  renderPanelTabs();
+  initDev(); // may add the Dev Log tab, which re-renders the strip
+  if (_activePanel === 'settings') loadDmModel();
   try {
     applySnapshot(await fetch('/api/state').then(r => r.json()));
     connectSSE();
