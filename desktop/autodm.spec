@@ -49,16 +49,29 @@ hiddenimports = [
     "uvicorn.lifespan.on", "uvicorn.loops.auto",
 ]
 
+# Submodules to leave out. collect_all imports every submodule to find the
+# hidden ones, so a single unimportable corner aborts the whole package — and
+# the except below then skips it silently. mcp.cli needs typer, which we don't
+# ship and don't use; without this filter the build came out with no mcp
+# package in it at all, which breaks claude_agent_sdk (it imports mcp.types)
+# and the --mcp-server entry point. Verified by grepping the built .app.
+SKIP_SUBMODULES = {"mcp": ("mcp.cli",)}
+
 # LangChain/LangGraph resolve providers and serializers dynamically, and the
 # MCP/Agent SDKs load transports the same way, so let the hooks pull in what
 # static analysis misses. claude_agent_sdk and mcp are optional at runtime —
-# a build without them just leaves the claude-agent backend reporting itself
-# unavailable, which is what its available() is for.
+# a build without them leaves the claude-agent backend reporting itself
+# unavailable, which is what its available() is for. That fallback is why this
+# loop tolerates a missing package, and why a package that goes missing by
+# accident has to be caught here rather than at the table.
 for package in ("langgraph", "langgraph_checkpoint", "langchain_core",
                 "langchain_openai", "openai", "webview",
                 "claude_agent_sdk", "mcp"):
+    skip = SKIP_SUBMODULES.get(package, ())
     try:
-        pkg_datas, pkg_binaries, pkg_hidden = collect_all(package)
+        pkg_datas, pkg_binaries, pkg_hidden = collect_all(
+            package,
+            filter_submodules=lambda name, skip=skip: not name.startswith(skip))
     except Exception as e:
         print(f"autodm.spec: collect_all({package}) skipped: {e}")
         continue
