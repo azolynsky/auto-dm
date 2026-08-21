@@ -656,7 +656,10 @@ def reset_thread() -> None:
     switched backends mid-campaign has a stale conversation parked in the other
     one, and "new session" has to mean it everywhere.
     """
-    spec = spec_for("dm", "")
+    # Only the thread matters here, so don't build the full dm spec — that
+    # reads CLAUDE.md and every prompt file to throw a conversation away.
+    spec = AgentSpec(role="dm", model="", system_prompt="",
+                     stateful=True, thread=THREAD_ID)
     for info in backends.BACKENDS:
         try:
             backends.get(info.name).reset(spec)

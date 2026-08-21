@@ -36,8 +36,7 @@ sys.path.insert(0, str(BUNDLE / "desktop"))
 
 import campaign_tools  # noqa: E402
 import config  # noqa: E402
-
-sys.path.insert(0, str(BUNDLE / "desktop" / "backends"))
+import prompts  # noqa: E402
 from backends.base import ToolSpec  # noqa: E402
 
 
@@ -73,7 +72,7 @@ def build_server(role: str | None = None):
 
 def main() -> int:
     role = os.environ.get("AUTODM_ROLE") or None
-    if role and role not in ("dm", *campaign_tools.prompts.ROLES):
+    if role and role not in prompts.ROLES:
         print(f"unknown AUTODM_ROLE: {role}", file=sys.stderr)
         return 2
     if not config.CAMPAIGN.exists():
