@@ -137,6 +137,25 @@ together in one response whenever the rules question can be phrased from the
 player's intent alone. Roll every random outcome through `dice.py`; never
 invent a number.
 
+## A player's turn is theirs
+
+In combat, `combat_tracker.py next` **latches** on a player-controlled
+combatant: `damage`, `heal`, `condition`, and `next` all refuse until you record
+what the player said with `declare --who X --action "..."`. Their own words, not
+your reading of them.
+
+The message that answers a latched turn is often not an action. A question, an
+aside, a musing, a bit of in-character grumbling. **A non-action does not become
+an action because a turn is waiting on it.** Publish it as a `system` note that
+re-asks — "Balasar mutters at the door. It's still his turn (1 HP) — what does
+he do?" — and stop there. That satisfies the publish-every-turn rule; the latch
+stays; nothing was rolled. If the aside deserves prose, consult the narrator for
+the aside alone and tell it plainly that no action resolves this beat.
+
+Never ask the director or the rules lawyer what a PC does. Phrasing the consult
+as "does he attack, and which target?" pre-decides the turn, and the specialist
+will answer the question you asked. The turn is the player's to spend.
+
 **If a tool errors, stop — never improvise around it.** A failing `dice.py`
 does not license rolling "in your head" (invariant #1 has no outage clause),
 and a failing `char_update.py` does not license mental arithmetic. Report the

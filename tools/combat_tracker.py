@@ -5,17 +5,23 @@ Combat tracker. Stores per-encounter state in <campaign>/state/combat.json.
 Usage:
     python combat_tracker.py start --participants "Ren:+3" "Goblin1:+2:7" "Goblin2:+2:7" --pcs Ren
         # optional third field = starting/max HP — saves a sethp call per monster
-        # --pcs: comma-separated player-controlled names; 'next' marks their
-        # turns with a STOP field so the DM asks the player instead of acting
+        # --pcs: comma-separated player-controlled names, for combatants
+        # without a sheet to bind to
     python combat_tracker.py status
     python combat_tracker.py damage --who Goblin1 --amount 7
     python combat_tracker.py heal --who Ren --amount 4
     python combat_tracker.py condition --who Ren --add prone
     python combat_tracker.py condition --who Ren --remove prone
+    python combat_tracker.py declare --who Ren --action "swings at the goblin"
     python combat_tracker.py next            # advance turn
     python combat_tracker.py end             # clear encounter
 
 Every command prints one JSON object (status prints the full state).
+
+A player's turn is theirs: when start/next lands on a player-controlled
+combatant who can act, the turn is LATCHED (state["pending"]) and
+damage/heal/condition/next all refuse until `declare` records what the
+player said their character does. See "The player's turn is theirs" below.
 
 Feed discipline: start/end post a system banner to the player feed
 immediately. Damage/heal/conditions do NOT — they queue as effects that
@@ -138,6 +144,7 @@ def cmd_start(args) -> None:
     order.sort(key=lambda x: (-x["init"], -x["mod"]))
     state = {"active": True, "round": 1, "turn_index": 0, "order": order, "log": []}
     state["log"].append("Combat started. Initiative: " + ", ".join(f"{o['name']}({o['init']})" for o in order))
+    pending = set_pending(state)
     save(state)
     for o in order:
         if o.get("char_id"):
@@ -147,8 +154,12 @@ def cmd_start(args) -> None:
         "⚔ Combat! Initiative: " + " → ".join(f"{o['name']} ({o['init']})" for o in order),
         type="system",
     )
-    out({"action": "start", "round": 1,
-         "turn": order[0]["name"], "order": order})
+    result = {"action": "start", "round": 1,
+              "turn": order[0]["name"], "order": order}
+    if pending:
+        result["pc_turn"] = True
+        result["STOP"] = stop_message(pending["who"])
+    out(result)
 
 
 def cmd_status(args) -> None:
@@ -162,8 +173,59 @@ def find(state: dict, who: str) -> dict:
     raise SystemExit(f"not in initiative: {who}")
 
 
+# ── The player's turn is theirs ────────────────────────────────────────────────
+# `next` used to hand back a STOP sentence and hope. It got ignored once: a
+# player answered a STOP with a musing about the inn's front door, and the DM
+# filled the blank with a longsword swing, rolled it, and published it. So the
+# STOP is a latch now — while a player-controlled combatant's turn is pending,
+# nothing in this file will move.
+
+# Conditions that leave a character with no action to declare. Their turn is a
+# death save or nothing, so gating on a player's answer would just stall.
+NO_ACTION = ("unconscious", "paralyzed", "petrified", "stunned")
+
+
+def can_act(entry: dict) -> bool:
+    if entry.get("hp") is not None and entry["hp"] <= 0:
+        return False
+    return not any(c.lower().startswith(NO_ACTION)
+                   for c in entry.get("conditions", []))
+
+
+def set_pending(state: dict) -> dict | None:
+    """Latch the turn if it belongs to a player who can act."""
+    state.pop("pending", None)
+    current = state["order"][state["turn_index"]]
+    if current.get("pc") and can_act(current):
+        state["pending"] = {"who": current["name"], "round": state["round"]}
+    return state.get("pending")
+
+
+def stop_message(who: str) -> str:
+    return (f"{who} is player-controlled — ask the player what they do, then "
+            f"record it with `declare --who {who} --action \"...\"`. Nothing "
+            f"else in this tool will move until you do. Do not act for them.")
+
+
+def require_declared(state: dict, action: str) -> None:
+    """Refuse to change combat while a player still owes an answer."""
+    pending = state.get("pending")
+    if not pending:
+        return
+    who = pending["who"]
+    raise SystemExit(
+        f"REFUSED ({action}): it is {who}'s turn and {who} is player-controlled "
+        f"with no declared action. Ask the player what {who} does and record "
+        f'their answer:\n    combat_tracker.py declare --who {who} --action '
+        f'"<what the player said>"\nIf their message was not an action — a '
+        f"question, an aside, a musing — publish a system note that re-asks. "
+        f"Do not choose for them, and do not narrate an action they never took."
+    )
+
+
 def cmd_damage(args) -> None:
     s = load()
+    require_declared(s, "damage")
     p = find(s, args.who)
     if p["hp"] is None:
         p["hp"] = (p["max_hp"] or 0)
@@ -182,6 +244,7 @@ def cmd_damage(args) -> None:
 
 def cmd_heal(args) -> None:
     s = load()
+    require_declared(s, "heal")
     p = find(s, args.who)
     p["hp"] = (p["hp"] or 0) + args.amount
     if p["max_hp"] is not None:
@@ -209,6 +272,7 @@ def cmd_sethp(args) -> None:
 
 def cmd_condition(args) -> None:
     s = load()
+    require_declared(s, "condition")
     p = find(s, args.who)
     root = campaign_lib.resolve_root()
     if args.add:
@@ -229,6 +293,7 @@ def cmd_next(args) -> None:
     s = load()
     if not s["active"]:
         raise SystemExit("no active combat")
+    require_declared(s, "next")
     s["turn_index"] += 1
     if s["turn_index"] >= len(s["order"]):
         s["turn_index"] = 0
@@ -236,17 +301,37 @@ def cmd_next(args) -> None:
         s["log"].append(f"--- Round {s['round']} ---")
     current = s["order"][s["turn_index"]]
     s["log"].append(f"Turn: {current['name']}")
+    pending = set_pending(s)
     save(s)
     result = {"action": "next", "round": s["round"], "turn": current["name"]}
-    if current.get("pc"):
+    if pending:
         result["pc_turn"] = True
-        result["STOP"] = f"{current['name']} is player-controlled — ask the player what they do. Do not act for them."
+        result["STOP"] = stop_message(current["name"])
     out(result)
+
+
+def cmd_declare(args) -> None:
+    """Record what the player said their character does, and unlatch the turn."""
+    s = load()
+    p = find(s, args.who)
+    pending = s.get("pending")
+    if not pending:
+        raise SystemExit(
+            f"nothing pending — it is {s['order'][s['turn_index']]['name']}'s "
+            "turn and no player declaration is owed")
+    if pending["who"].lower() != p["name"].lower():
+        raise SystemExit(f"{pending['who']} owes the declaration, not {p['name']}")
+    s.pop("pending")
+    s["log"].append(f"{p['name']} declares: {args.action}")
+    save(s)
+    out({"action": "declare", "who": p["name"], "declared": args.action,
+         "round": s["round"]})
 
 
 def cmd_end(args) -> None:
     s = load()
     rounds = s.get("round", 0)
+    s.pop("pending", None)
     s["active"] = False
     s["log"].append("Combat ended.")
     save(s)
@@ -265,6 +350,7 @@ def main() -> int:
     s = sub.add_parser("sethp"); s.add_argument("--who", required=True); s.add_argument("--current", type=int, required=True); s.add_argument("--max", type=int); s.set_defaults(func=cmd_sethp)
     s = sub.add_parser("condition"); s.add_argument("--who", required=True); s.add_argument("--add"); s.add_argument("--remove"); s.set_defaults(func=cmd_condition)
     sub.add_parser("next").set_defaults(func=cmd_next)
+    s = sub.add_parser("declare"); s.add_argument("--who", required=True); s.add_argument("--action", required=True, help="what the player said their character does, in their words"); s.set_defaults(func=cmd_declare)
     sub.add_parser("end").set_defaults(func=cmd_end)
 
     args = p.parse_args()

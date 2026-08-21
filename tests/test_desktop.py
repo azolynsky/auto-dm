@@ -1017,6 +1017,29 @@ class TestToolWhitelist(DesktopTestCase):
         feed = (self.campaign / "state" / "player-feed.jsonl").read_text().splitlines()
         self.assertEqual(json.loads(feed[-1])["text"], "The gate groans open.")
 
+    def test_a_refused_tool_says_so(self):
+        """Regression: every guard in tools/ refuses with `raise
+        SystemExit("why")`, whose code is that sentence, not a number. Reading
+        a non-int code as 0 turned all of them into "(no output)", exit 0 — the
+        model was told a rejected write had succeeded. A DM believed it had
+        healed a downed PC and woken him for a fight; both calls had been
+        refused, and its "if a tool errors, stop" rule never fired."""
+        cases = (
+            ("combat_tracker.py", ["next"], "no active combat"),
+            ("dice.py", ["banana"], "bad dice expression"),
+            ("char_update.py", ["hp", "--char", "Nobody", "--damage", "1"],
+             "no character sheet matches"),
+        )
+        for tool, argv, expected in cases:
+            out = self.agent.run_tool(tool, argv)
+            self.assertIn(expected, out, f"{tool} {argv} refused silently")
+            self.assertTrue(out.startswith("exit "), out)
+        # and a refusal is never mistaken for a narration that landed
+        self.agent.begin_turn()
+        self.agent.allow_narration()
+        self.agent.run_tool("combat_tracker.py", ["next"])
+        self.assertFalse(self.agent.narrated())
+
 
 try:
     import langchain_core  # noqa: F401

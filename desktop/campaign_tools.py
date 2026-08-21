@@ -343,12 +343,27 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
                                  str(script), "exec"),
                          {"__name__": "__main__", "__file__": str(script)})
                 except SystemExit as e:   # every tool ends in sys.exit(main())
-                    code = e.code if isinstance(e.code, int) else 0
+                    # A tool guard refuses with `raise SystemExit("why")`, whose
+                    # code is that sentence, not a number — and CPython prints
+                    # it only when it unwinds to the interpreter, which it never
+                    # does here. Reading a non-int code as 0 turned all 23 of
+                    # those refusals into "(no output)", exit 0: the model was
+                    # told a rejected write had succeeded, so the DM prompt's
+                    # "if a tool errors, stop" could never fire. Silent refusal
+                    # is worse than a crash; say what was refused.
+                    if isinstance(e.code, int) or e.code is None:
+                        code = e.code or 0
+                    else:
+                        code = 1
+                        print(e.code, file=sys.stderr)
         except Exception as e:
             return f"error running {tool}: {type(e).__name__}: {e}"
         finally:
             sys.argv, sys.stdin = saved_argv, saved_stdin
-    body = out.getvalue().strip() or err.getvalue().strip() or "(no output)"
+    # Both streams, not the first non-empty one: a tool that printed a result
+    # and then refused a second edit has to show the refusal too.
+    body = "\n".join(s for s in (out.getvalue().strip(),
+                                 err.getvalue().strip()) if s) or "(no output)"
     if tool == "narrate.py" and code == 0:
         _set_turn_flags(narrated=True)
     return body if code == 0 else f"exit {code}\n{body}"

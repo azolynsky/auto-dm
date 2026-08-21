@@ -308,16 +308,85 @@ class TestCombatTracker(TempRootMixin):
         self.assertFalse(self.state()["active"])
         self.assertEqual(self.feed()[-1]["type"], "system")
 
+    def clear_latch(self):
+        """Declare whatever turn is pending, so a test can get on with it."""
+        pending = self.state().get("pending")
+        if pending:
+            self.run_cmd("declare", "--who", pending["who"], "--action", "attacks")
+
     def test_pcs_flag_marks_player_turns(self):
         self.run_cmd("start", "--participants", "Ren:+3", "Goblin1:+2:7", "--pcs", "Ren")
         by_name = {o["name"]: o for o in self.state()["order"]}
         self.assertTrue(by_name["Ren"]["pc"])
         self.assertFalse(by_name["Goblin1"]["pc"])
-        # advance a full round; Ren's turn carries STOP, the goblin's doesn't
+        # Ren's turn carries STOP and latches; the goblin's does neither
+        self.clear_latch()
         for _ in range(2):
             out = json.loads(self.run_cmd("next").stdout)
             self.assertEqual(out.get("pc_turn", False) and "STOP" in out,
                              out["turn"] == "Ren")
+            self.assertEqual("pending" in self.state(), out["turn"] == "Ren")
+            self.clear_latch()
+
+    def test_a_players_turn_latches_until_they_declare(self):
+        """Regression: a player answered a combat STOP with an idle musing and
+        the DM filled the blank with a longsword swing — rolled it, applied the
+        damage, and published the prose. The STOP was advice; nothing enforced
+        it. Now the turn latches and every mutation refuses until the player's
+        own answer is on the record."""
+        self.run_cmd("start", "--participants", "Ren:+3", "Goblin1:+2:7", "--pcs", "Ren")
+        while self.state()["order"][self.state()["turn_index"]]["name"] != "Ren":
+            self.clear_latch()
+            self.run_cmd("next")
+        self.assertEqual(self.state()["pending"]["who"], "Ren")
+
+        # every way the DM could act for Ren is refused, including hitting the
+        # goblin Ren never declared an attack on
+        for args in (("damage", "--who", "Goblin1", "--amount", "6"),
+                     ("heal", "--who", "Ren", "--amount", "3"),
+                     ("condition", "--who", "Goblin1", "--add", "prone"),
+                     ("next",)):
+            proc = self.run_cmd(*args, check=False)
+            self.assertNotEqual(proc.returncode, 0, f"{args} was allowed")
+            self.assertIn("REFUSED", proc.stderr)
+            self.assertIn("declare", proc.stderr)
+        self.assertEqual(next(o for o in self.state()["order"]
+                              if o["name"] == "Goblin1")["hp"], 7)
+
+        # the declaration is recorded verbatim, so a fabricated one is auditable
+        self.run_cmd("declare", "--who", "Ren", "--action", "swings at Goblin1")
+        self.assertNotIn("pending", self.state())
+        self.assertIn("Ren declares: swings at Goblin1", self.state()["log"])
+        self.run_cmd("damage", "--who", "Goblin1", "--amount", "6")
+        self.assertEqual(next(o for o in self.state()["order"]
+                              if o["name"] == "Goblin1")["hp"], 1)
+
+    def test_declare_refuses_when_it_is_not_that_pcs_turn(self):
+        self.run_cmd("start", "--participants", "Ren:+3", "Bel:+3", "--pcs", "Ren,Bel")
+        owed = self.state()["pending"]["who"]
+        other = "Bel" if owed == "Ren" else "Ren"
+        proc = self.run_cmd("declare", "--who", other, "--action", "x", check=False)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("owes the declaration", proc.stderr)
+
+    def test_a_downed_pc_does_not_latch_the_turn(self):
+        """A PC at 0 HP has no action to declare — their turn is a death save.
+        Latching there would just stall the fight."""
+        chars = self.root / "characters"
+        chars.mkdir(parents=True, exist_ok=True)
+        (chars / "pc-ren.json").write_text(json.dumps(
+            {"id": "pc-ren", "name": "Ren", "hp": {"max": 20, "current": 0},
+             "conditions": ["Unconscious"]}))
+        self.run_cmd("start", "--participants", "Ren:+9", "Goblin1:+0:7")
+        self.assertEqual(self.state()["order"][0]["name"], "Ren")
+        self.assertNotIn("pending", self.state())
+        self.run_cmd("damage", "--who", "Goblin1", "--amount", "1")
+
+    def test_end_clears_a_pending_turn(self):
+        self.run_cmd("start", "--participants", "Ren:+3", "--pcs", "Ren")
+        self.assertIn("pending", self.state())
+        self.run_cmd("end")
+        self.assertNotIn("pending", self.state())
 
     def test_pc_hp_loads_from_sheet_and_syncs_back(self):
         chars = self.root / "characters"
@@ -325,6 +394,7 @@ class TestCombatTracker(TempRootMixin):
         sheet = chars / "pc-ren.json"
         sheet.write_text(json.dumps({"name": "Ren", "hp": {"max": 28, "current": 25, "temp": 0}}))
         self.run_cmd("start", "--participants", "Ren:+3", "Goblin1:+2:7", "--pcs", "Ren")
+        self.clear_latch()   # Ren may have won initiative; this test isn't about that
         ren = next(o for o in self.state()["order"] if o["name"] == "Ren")
         # HP loaded from the character sheet, not null
         self.assertEqual((ren["hp"], ren["max_hp"]), (25, 28))

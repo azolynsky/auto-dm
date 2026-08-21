@@ -14,7 +14,7 @@ Combat is the highest-state-density part of the game. Use this skill as the proc
    ```bash
    python tools/combat_tracker.py start --participants "Ren:+3" "Bel:+1" "Goblin1:+2:7" "Goblin2:+2:7" "Goblin3:+2:7" --pcs Ren,Bel
    ```
-   `--pcs` lists every player-controlled combatant — including guest PCs and any character a player has ever directed (when in doubt, include them). `next` then emits a STOP field on their turns: ask the player, never act for them.
+   `--pcs` lists every player-controlled combatant — including guest PCs and any character a player has ever directed (when in doubt, include them). `start` and `next` then **latch** on their turns: `damage`, `heal`, `condition`, and `next` all refuse until `declare` records what the player said.
    Modifier = Dex bonus + any feature (Alert = +5; Advantage from a feature → `--mode advantage` on that expression, mixable per-roll in a batch). Use `sethp` only for HP discovered mid-fight.
 3. **Narrator** establishes the scene (positions, terrain, light, distances).
 
@@ -23,12 +23,21 @@ Combat is the highest-state-density part of the game. Use this skill as the proc
 Order: top of initiative → bottom → repeat.
 
 ### PC turn
-1. **Apply start-of-turn effects** (regen, ongoing saves to end conditions).
-2. **STOP. Ask the player what they do.** State whose turn it is and their current HP. Do not assume, guess, or auto-resolve their action. Wait for explicit declaration.
+1. **STOP. Ask the player what they do.** State whose turn it is and their current HP. Do not assume, guess, or auto-resolve their action. Wait for an explicit declaration.
    Example: `It's Ren's turn (14 HP). What do you do?`
-3. Once they declare: Rules Lawyer validates mechanics if anything is non-obvious.
-4. Roll via `tools/dice.py`; Bookkeeper applies; Narrator describes.
-5. Advance: `python tools/combat_tracker.py next`
+   The tracker enforces this: the turn is latched and nothing in combat will move.
+2. **Record what they said** — their words, not your reading of them:
+   ```bash
+   python tools/combat_tracker.py declare --who Ren --action "cuts the rope holding the chandelier"
+   ```
+   If their message wasn't an action — a question, an aside, a musing, a joke —
+   **do not declare anything.** Answer it as a `system` note, re-ask, and leave
+   the latch alone. A waiting turn does not convert an aside into a swing, and
+   the Director must never be asked to supply the missing action.
+3. **Apply start-of-turn effects** (regen, ongoing saves to end conditions) — after the declaration, since the latch holds every mutation.
+4. Rules Lawyer validates mechanics if anything is non-obvious.
+5. Roll via `tools/dice.py`; Bookkeeper applies; Narrator describes.
+6. Advance: `python tools/combat_tracker.py next`
 
 ### NPC/monster turn
 1. **Apply start-of-turn effects.**
@@ -84,4 +93,5 @@ When the last enemy is down, surrendered, or fled:
 - **Forgetting reactions.** Opportunity attacks, Shield, Counterspell, Hellish Rebuke. Each creature has 1 per round, refreshing at start of their turn.
 - **Forgetting end-of-turn saves** (poisoned, restrained from web spell, etc.).
 - **Letting Concentration slip silently.** When a concentrator takes damage, prompt the Con save before continuing.
+- **Filling a latched turn yourself.** The one that actually happened: a player answered a STOP with "Balasar wonders how the door broke this many times" and the DM published a full longsword hit on the strength of it. A non-action is not a lost turn and not a licence to choose — it's a re-ask.
 - **Lethality drift.** Goblins shouldn't roleplay as tactical geniuses — they have Int 10 at best. Run dumb monsters dumb.
