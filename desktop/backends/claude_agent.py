@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
 import sys
 import threading
 from pathlib import Path
@@ -26,10 +27,29 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config  # noqa: E402
 
 from .base import AgentSpec, Backend, BackendError, ToolSpec  # noqa: E402
-from .claude_cli import claude_binary  # noqa: E402
 
 MCP_NAME = "campaign"
 RUN_TIMEOUT = 900
+
+
+def claude_binary() -> str | None:
+    """Path to the claude CLI, or None if it isn't installed.
+
+    A GUI-launched .app gets a bare PATH (/usr/bin:/bin:/usr/sbin:/sbin), not
+    the login shell's — so PATH lookup alone finds nothing even when `claude`
+    works fine in a terminal. Check the usual install locations too.
+    """
+    found = shutil.which("claude")
+    if found:
+        return found
+    for candidate in (Path.home() / ".local/bin/claude",
+                      Path("/opt/homebrew/bin/claude"),
+                      Path("/usr/local/bin/claude"),
+                      Path.home() / ".claude/local/claude",
+                      Path.home() / ".npm-global/bin/claude"):
+        if candidate.is_file():
+            return str(candidate)
+    return None
 
 
 def _sync(coro):

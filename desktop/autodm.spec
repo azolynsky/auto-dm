@@ -7,8 +7,9 @@ PyInstaller spec for the Auto-DM desktop app.
 The campaign tools are shipped as SOURCE files and executed in-process (see
 desktop/campaign_tools.py), because a frozen app has no python interpreter to
 subprocess out to. For the same reason the bundled binary answers to
-`--mcp-server`: the claude-cli backend needs to launch tools/mcp_server.py as a
-child process, and re-executing itself is the only interpreter it has.
+`--mcp-server`: that is how an installed app serves the campaign to a terminal
+`claude` or any other MCP client, and re-executing itself is the only
+interpreter it has.
 Reference content (rules/, .claude/, prompts/, CLAUDE.md, the
 starter campaign) ships read-only; the player's own campaign is created in their
 app-data directory on first launch.
@@ -42,8 +43,7 @@ binaries = []
 hiddenimports = [
     "campaign_lib", "config", "prompts", "agent", "campaign_tools", "server",
     # Backends load by name at first use, so nothing imports them statically.
-    "backends", "backends.base", "backends.openrouter", "backends.claude_cli",
-    "backends.claude_agent",
+    "backends", "backends.base", "backends.openrouter", "backends.claude_agent",
     "mcp_server",   # app.py --mcp-server re-executes this binary into it
     "uvicorn.protocols.http.h11_impl", "uvicorn.protocols.websockets.auto",
     "uvicorn.lifespan.on", "uvicorn.loops.auto",

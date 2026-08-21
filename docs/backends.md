@@ -39,59 +39,46 @@ OpenRouter model id, which keeps suffixed ids like
 |---|---|---|
 | `google/gemini-3.7-flash` | openrouter | OpenRouter credit |
 | `openrouter:openai/gpt-5.6-luna-pro` | openrouter | OpenRouter credit |
-| `claude-cli:opus` | claude-cli | your Claude subscription |
 | `claude-agent:opus` | claude-agent | your Claude subscription |
+| `claude-cli:opus` | claude-agent (alias) | your Claude subscription |
 
-Neither Claude backend touches `ANTHROPIC_API_KEY`. Both spawn the `claude`
-binary already installed on the machine and use its OAuth login — the same
+The Claude backend never touches `ANTHROPIC_API_KEY`. It spawns the `claude`
+binary already installed on the machine and uses its OAuth login — the same
 credential `claude -p` uses in a terminal. There is no Claude-via-API and no
 Claude-via-OpenRouter path, deliberately: this is subscription compute.
 
-## The three backends
+## The two backends
 
-| | openrouter | claude-cli | claude-agent |
-|---|---|---|---|
-| Mechanism | LangGraph ReAct over an OpenAI-compatible endpoint | `claude -p` subprocess | `claude-agent-sdk` driving the same binary |
-| Drives the `dm` loop | yes | yes, with the MCP server | yes |
-| Campaign tools | in-process Python | over stdio MCP (`tools/mcp_server.py`) | in-process MCP (`create_sdk_mcp_server`) |
-| History | LangGraph SQLite checkpoint | `--resume <session>` | `resume=<session_id>` |
-| Cost | OpenRouter credit | subscription | subscription |
-| Extra dependency | langgraph, langchain-openai | none | claude-agent-sdk |
-
-`claude-cli` is the honest baseline: literally the command you would type. It
-pays a process start per turn and reaches the tools over a stdio pipe, which
-means a second Python process per consult. `claude-agent` is the same binary and
-the same login with the tools in-process, so a tool call is a Python call rather
-than a pipe round trip.
-
-### What the overhead actually is
-
-Measured on this machine, 2026-08-20:
-
-| | cost | how often |
+| | openrouter | claude-agent |
 |---|---|---|
-| `claude` start-up | ~2–3s (a whole minimal `-p` round trip is 3.7–5.0s) | once per exchange |
-| MCP server boot (claude-cli only) | 276ms | once per `claude` launch |
-| one tool call, in-process | ~1ms | per call |
-| one tool call, over the MCP pipe | 5–7ms | per call |
-| a real specialist consult | 9–47s | |
-| a real player turn | 42–105s | |
+| Mechanism | LangGraph ReAct over an OpenAI-compatible endpoint | `claude-agent-sdk` driving the local `claude` binary |
+| Drives the `dm` loop | yes | yes |
+| Campaign tools | in-process Python | in-process MCP (`create_sdk_mcp_server`) |
+| History | LangGraph SQLite checkpoint | `resume=<session_id>` |
+| Cost | OpenRouter credit | subscription |
+| Extra dependency | langgraph, langchain-openai | claude-agent-sdk |
 
-Start-up is **per exchange, not per tool call** — a turn that rolls twelve dice
-pays it once, not twelve times. A turn is one DM exchange plus one launch per
-consult, so a light turn (DM + narrator) carries ~5s of start-up in ~42s, and a
-heavy one (DM + four specialists) carries ~12–15s. Real but not dominant.
+### The one that was removed
 
-Holding a live `ClaudeSDKClient` open between turns would remove it on the SDK
-path, at the cost of a long-lived subprocess per role. That is the upgrade if it
-ever starts to matter; it isn't the first thing to optimise while a single
-specialist consult can take 47s.
+A third backend, `claude-cli`, shelled out to the plain `claude -p` command and
+reached the tools over `tools/mcp_server.py`. It worked — a whole turn ran on it
+in 42s — and it was cut anyway, for two reasons that both come down to it being
+a second way to do one thing:
 
-The activity spinner and the dev log need nothing from any of this: the tools
-write both themselves, so they land identically whether the tool ran in-process
-or inside the MCP subprocess (which writes to the same campaign files). The
-per-turn narration flags are the exception, and getting that wrong is what
-broke the claude-cli DM path — see below.
+- **The picker.** Same binary, same login, same four models as `claude-agent`,
+  so every model appeared twice in a row nobody could choose between: "Claude on
+  this Mac: Opus" against "Claude on this Mac, plain CLI: Opus".
+- **The bug surface.** Both defects found during this work reproduced *only*
+  on that path — the narration gate held in memory across a process boundary,
+  and a DM served a tool surface with no `consult_role` in it. Neither was the
+  CLI's fault; both were the cost of maintaining the second path.
+
+`claude-cli:*` ids still resolve, as an alias to `claude-agent` — saved configs
+are full of them. The picker never offers one.
+
+The MCP server stays. It was never only a transport for that backend: it is how
+a terminal `claude`, Codex, or any other client runs the table, which is the
+portability `CLAUDE.md` promises.
 
 ## The interface
 
@@ -163,11 +150,14 @@ because the firewall is a property of the function, not of the loop calling it.
 
 ## The MCP server
 
-`tools/mcp_server.py` exposes the same surface over stdio MCP. It is what lets
-the `claude-cli` backend drive the DM loop, and it makes the campaign reachable
-from any MCP client — a plain interactive `claude` in a terminal, Codex, or
-another harness. That is the multi-LLM promise in `CLAUDE.md` made mechanical
-rather than aspirational.
+`tools/mcp_server.py` exposes the same surface over stdio MCP, which makes the
+campaign reachable from any MCP client — a plain interactive `claude` in a
+terminal, Codex, another harness. That is the multi-LLM promise in `CLAUDE.md`
+made mechanical rather than aspirational.
+
+Unscoped it serves the whole DM surface, `consult_role` and `consult_pair`
+included, so a client driving it is a real orchestrator and not a file browser.
+`AUTODM_ROLE` narrows it to one role's subset instead.
 
 Run it standalone:
 
@@ -215,8 +205,8 @@ it — so a table running entirely on the machine's Claude login is never asked
 for a key it doesn't have. Move one role onto OpenRouter and the key becomes
 required again.
 
-Neither Claude backend reads `ANTHROPIC_API_KEY`. Verified on a machine with no
-key, no auth token and no `primaryApiKey`: both run off the `claude` binary's
+The Claude backend never reads `ANTHROPIC_API_KEY`. Verified on a machine with
+no key, no auth token and no `primaryApiKey`: it runs off the `claude` binary's
 OAuth login, the same credential `claude -p` uses in a terminal.
 
 ## Adding a backend
@@ -241,16 +231,18 @@ Real runs against a throwaway campaign, not inferred from mocks (2026-08-20):
 | Check | Result |
 |---|---|
 | Consult on `claude-agent:haiku` | 14s; flagged an impossible premise from its brief |
-| Consult on `claude-cli:haiku` over MCP | 9s; cited `rules/combat-flow.md`, which it had actually read |
+| Consult over MCP on the since-removed `claude-cli` | 9s; cited `rules/combat-flow.md`, which it had actually read |
 | `tools/mcp_server.py` driven by a real MCP client | 5 tools unscoped, 2 for the narrator; `motivations.md` refused; `dice.py` rolled |
 | Full turn, DM `claude-agent:sonnet`, narrator on OpenRouter | 105s; director consult, narrator consult, `narrate.py` push, one chronicle entry |
-| Full turn, everything on `claude-cli` | 42s; nested narrator consult, push, one entry with its effect |
+| Full turn on the since-removed `claude-cli` | 42s; nested narrator consult, push, one entry with its effect |
 | Two turns, backend instances cleared between them | the second resumed the session and answered from the transcript |
 | Full turn with no OpenRouter key at all | `needs_api_key` false; turn completed and narrated |
 
 Running a whole turn is not optional coverage. A specialist consult exercises
 neither the narration gate nor `consult_role`, and both were broken on the
-claude-cli path while its consult test passed:
+MCP-served path while its consult test passed. Both fixes outlived the backend
+that surfaced them — the gate is still a file, because the MCP server still
+runs the tools in a subprocess for any external client:
 
 - **The gate was in memory.** On that backend the tools run in the MCP
   subprocess, which gets its own copy of every module global — so every
@@ -262,6 +254,6 @@ claude-cli path while its consult test passed:
   surface, which has no `consult_role` — those live in `agent.py` because they
   run the backends. An orchestrator that can't reach the Narrator can't publish
   anything, since the gate exists to refuse prose the Narrator didn't write.
-  The unscoped surface is now `agent.DM_TOOLS`, so this process runs the
-  consults; a specialist on claude-cli spawns its own `claude` and its own copy
-  of this server, one level down and no further.
+  The unscoped surface is now `agent.DM_TOOLS`, so the server process runs the
+  consults, spawning whatever each specialist's own backend needs — one level
+  down and no further.

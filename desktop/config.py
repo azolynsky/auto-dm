@@ -87,9 +87,9 @@ FALLBACK_MODEL = "google/gemini-3.7-flash"
 # cost, and latency.
 #
 # An id of the form "<backend>:<model>" names where the role runs; the grammar
-# and the backend table are in docs/backends.md. Both claude-* backends spawn
-# the `claude` binary already installed on this machine and use its own login,
-# so they spend subscription usage rather than API credit — there is no
+# and the backend table are in docs/backends.md. The claude-agent backend spawns
+# the `claude` binary already installed on this machine and uses its own login,
+# so it spends subscription usage rather than API credit — there is no
 # Claude-over-API path here on purpose.
 MODEL_CHOICES = [
     ("google/gemini-3.7-flash", "Gemini 3.7 Flash — recommended, fast live play"),
@@ -99,17 +99,13 @@ MODEL_CHOICES = [
     ("claude-agent:sonnet", "Claude on this Mac: Sonnet — balanced, no API cost"),
     ("claude-agent:opus", "Claude on this Mac: Opus — strong judgment, slower"),
     ("claude-agent:fable", "Claude on this Mac: Fable — most capable, slowest"),
-    ("claude-cli:haiku", "Claude on this Mac, plain CLI: Haiku"),
-    ("claude-cli:sonnet", "Claude on this Mac, plain CLI: Sonnet"),
-    ("claude-cli:opus", "Claude on this Mac, plain CLI: Opus"),
-    ("claude-cli:fable", "Claude on this Mac, plain CLI: Fable"),
 ]
 
-# Always name the model. A bare "claude-agent" or "claude-cli" still resolves,
-# but it passes no model flag, so the role silently inherits whatever the
-# machine's own Claude Code is set to (a `model` key in ~/.claude/settings.json,
-# else the CLI default) — which changes under the app without warning. The
-# picker offers only the explicit ids for that reason.
+# Always name the model. A bare "claude-agent" still resolves, but it passes no
+# model flag, so the role silently inherits whatever the machine's own Claude
+# Code is set to (a `model` key in ~/.claude/settings.json, else the CLI
+# default) — which changes under the app without warning. The picker offers only
+# the explicit ids for that reason.
 
 
 def parse_model(model_id: str) -> tuple[str, str]:

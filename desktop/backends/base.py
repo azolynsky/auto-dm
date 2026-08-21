@@ -164,32 +164,39 @@ class BackendInfo:
 
 BACKENDS: tuple[BackendInfo, ...] = (
     BackendInfo("openrouter", "OpenRouter", "openrouter", supports_dm=True),
-    BackendInfo("claude-cli", "Claude Code on this Mac (CLI)", "claude_cli",
-                supports_dm=True, subscription=True),
-    BackendInfo("claude-agent", "Claude Code on this Mac (SDK)", "claude_agent",
-                supports_dm=True, subscription=True),
+    # `claude-cli` was a second backend that ran the plain `claude -p` command
+    # and reached the tools over the stdio MCP server. Same binary, same login,
+    # same models as this one — so the picker offered two near-identical rows
+    # per model, and every bug that only reproduced on one path lived there.
+    # Removed; the id is kept as an alias because saved configs use it.
+    BackendInfo("claude-agent", "Claude Code on this Mac", "claude_agent",
+                supports_dm=True, subscription=True,
+                aliases=("claude-cli",)),
 )
 
 DEFAULT_BACKEND = "openrouter"
 
 _BY_NAME = {info.name: info for info in BACKENDS}
+_ALIASES = {alias: info.name for info in BACKENDS for alias in info.aliases}
 
 
 def parse_model(model_id: str) -> tuple[str, str]:
     """Split a configured id into (backend name, backend-local model).
 
     Splits on the FIRST colon and only accepts the head if it names a
-    registered backend — so an OpenRouter id that carries its own colon
-    (`deepseek/deepseek-v4-flash-latest:free`) stays intact, and a bare id
-    still means OpenRouter.
+    registered backend or one of its aliases — so an OpenRouter id that carries
+    its own colon (`deepseek/deepseek-v4-flash-latest:free`) stays intact, and
+    a bare id still means OpenRouter.
 
-        parse_model("claude-agent:opus")      -> ("claude-agent", "opus")
+        parse_model("claude-agent:opus")       -> ("claude-agent", "opus")
+        parse_model("claude-cli:opus")         -> ("claude-agent", "opus")
         parse_model("google/gemini-3.7-flash") -> ("openrouter", "google/...")
-        parse_model("claude-cli")             -> ("claude-cli", "")
+        parse_model("claude-agent")            -> ("claude-agent", "")
     """
     head, _, tail = str(model_id or "").strip().partition(":")
-    if head in _BY_NAME:
-        return head, tail.strip()
+    resolved = head if head in _BY_NAME else _ALIASES.get(head)
+    if resolved:
+        return resolved, tail.strip()
     return DEFAULT_BACKEND, str(model_id or "").strip()
 
 

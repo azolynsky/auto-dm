@@ -577,12 +577,33 @@ class TestBackendRouting(DesktopTestCase):
 
     def test_model_id_parsing(self):
         c = self.config
-        self.assertEqual(c.parse_model("claude-cli:opus"), ("claude-cli", "opus"))
         self.assertEqual(c.parse_model("claude-agent:fable"),
                          ("claude-agent", "fable"))
-        self.assertEqual(c.parse_model("claude-cli"), ("claude-cli", ""))
-        self.assertIsNone(c.model_alias("claude-cli"))
+        self.assertEqual(c.parse_model("claude-agent"), ("claude-agent", ""))
+        self.assertIsNone(c.model_alias("claude-agent"))
         self.assertEqual(c.model_alias("claude-agent:opus"), "opus")
+
+    def test_saved_claude_cli_ids_still_resolve(self):
+        # claude-cli was a second backend running the plain `claude -p` command
+        # — same binary, same login, same models, so it gave the picker two
+        # near-identical rows per model and doubled the paths a bug could hide
+        # in. Removed, but saved configs are full of its ids and must keep
+        # working rather than falling through to a bogus OpenRouter model.
+        c = self.config
+        self.assertEqual(c.parse_model("claude-cli:opus"),
+                         ("claude-agent", "opus"))
+        self.assertEqual(c.parse_model("claude-cli"), ("claude-agent", ""))
+        self.assertTrue(c.on_subscription("claude-cli:sonnet"))
+        self.assertTrue(c.supports_dm("claude-cli:sonnet"))
+        self.config.save(role_models={"director": "claude-cli:opus"})
+        import backends
+        backend, model = backends.for_role("director")
+        self.assertEqual((backend.name, model), ("claude-agent", "opus"))
+
+    def test_the_picker_never_offers_a_retired_id(self):
+        # Resolving one is back-compat; offering one is a dead choice.
+        self.assertFalse([i for i, _ in self.config.MODEL_CHOICES
+                          if i.startswith("claude-cli")])
 
     def test_bare_and_suffixed_ids_stay_on_openrouter(self):
         # An OpenRouter id may carry its own colon; splitting on the first one
@@ -595,9 +616,8 @@ class TestBackendRouting(DesktopTestCase):
         self.assertEqual(c.backend_of("~deepseek/deepseek-v4-flash-latest"),
                          "openrouter")
 
-    def test_claude_backends_run_on_the_subscription(self):
+    def test_claude_runs_on_the_subscription(self):
         c = self.config
-        self.assertTrue(c.on_subscription("claude-cli:opus"))
         self.assertTrue(c.on_subscription("claude-agent:opus"))
         self.assertFalse(c.on_subscription("google/gemini-3.7-flash"))
 
@@ -608,8 +628,7 @@ class TestBackendRouting(DesktopTestCase):
                    if self.config.on_subscription(i)]
         self.assertEqual(offered, [
             "claude-agent:haiku", "claude-agent:sonnet", "claude-agent:opus",
-            "claude-agent:fable", "claude-cli:haiku", "claude-cli:sonnet",
-            "claude-cli:opus", "claude-cli:fable"])
+            "claude-agent:fable"])
 
     def test_the_dm_can_now_run_locally(self):
         # The whole point of the backend split: every shipped backend can drive
@@ -627,7 +646,7 @@ class TestBackendRouting(DesktopTestCase):
 
         def stub(name):
             spec = real(name)
-            if spec and spec.name == "claude-cli":
+            if spec and spec.name == "claude-agent":
                 return base.BackendInfo(spec.name, spec.label, spec.module,
                                         supports_dm=False,
                                         subscription=spec.subscription)
@@ -635,10 +654,10 @@ class TestBackendRouting(DesktopTestCase):
         base.info = stub
         try:
             dm = [i for i, _ in self.config.model_choices("dm")]
-            self.assertNotIn("claude-cli:opus", dm)
-            self.assertIn("claude-agent:opus", dm)
+            self.assertNotIn("claude-agent:opus", dm)
+            self.assertIn("google/gemini-3.7-flash", dm)
             # ...and a config hand-edited to it doesn't boot a broken DM.
-            self.config.save(role_models={"dm": "claude-cli:opus"})
+            self.config.save(role_models={"dm": "claude-agent:opus"})
             self.assertEqual(self.config.role_model("dm"),
                              self.config.FALLBACK_MODEL)
         finally:
@@ -678,160 +697,14 @@ class TestSubscriptionOnlyTable(DesktopTestCase):
         self.config.save(api_key="sk-test", role_models={
             "dm": "claude-agent:sonnet",
             "narrator": "google/gemini-3.7-flash",
-            "director": "claude-cli:opus"})
+            "director": "claude-agent:opus"})
         import backends
         self.assertEqual(
             [(r, *[(b.name, m) for b, m in [backends.for_role(r)]][0])
              for r in ("dm", "narrator", "director")],
             [("dm", "claude-agent", "sonnet"),
              ("narrator", "openrouter", "google/gemini-3.7-flash"),
-             ("director", "claude-cli", "opus")])
-
-
-class TestClaudeCliBackend(DesktopTestCase):
-    """`claude -p` on this machine, reaching the campaign tools over MCP."""
-
-    def setUp(self):
-        super().setUp()
-        from backends import claude_cli
-        self.cli = claude_cli
-
-    def _capture(self, role, task, stdout="DECISION\n ok\n", code=0):
-        seen = {}
-
-        def fake_run(cmd, **kw):
-            seen["cmd"], seen["kw"] = cmd, kw
-            return subprocess.CompletedProcess(cmd, code, stdout=stdout,
-                                               stderr="")
-        real_run = self.cli.subprocess.run
-        real_bin = self.cli.claude_binary
-        self.cli.subprocess.run = fake_run
-        self.cli.claude_binary = lambda: "/usr/bin/claude"
-        try:
-            out = self.agent.consult_role(role, task)
-        finally:
-            self.cli.subprocess.run = real_run
-            self.cli.claude_binary = real_bin
-        return out, seen
-
-    def test_consult_routes_to_the_cli(self):
-        self.config.save(role_models={"director": "claude-cli:opus"})
-        out, seen = self._capture("director", "the party opens the door")
-        self.assertIn("DECISION", out)
-        cmd = seen["cmd"]
-        self.assertEqual(cmd[:2], ["/usr/bin/claude", "-p"])
-        self.assertIn("the party opens the door", cmd[2])
-        self.assertEqual(cmd[cmd.index("--model") + 1], "opus")
-        # the role's own prompt is the system prompt, and the brief rode along
-        self.assertIn("You are the Director",
-                      cmd[cmd.index("--system-prompt") + 1])
-        self.assertIn("Pre-read state", cmd[2])
-        self.assertEqual(seen["kw"]["timeout"], self.cli.CONSULT_TIMEOUT)
-
-    def test_campaign_tools_arrive_over_mcp_and_builtins_are_denied(self):
-        self.config.save(role_models={"director": "claude-cli:opus"})
-        _, seen = self._capture("director", "the party opens the door")
-        cmd = seen["cmd"]
-        # Our server, and only ours — not whatever the user has configured for
-        # their own Claude Code.
-        self.assertIn("--strict-mcp-config", cmd)
-        mcp = json.loads(cmd[cmd.index("--mcp-config") + 1])
-        server = mcp["mcpServers"]["campaign"]
-        self.assertEqual(server["type"], "stdio")
-        self.assertTrue(server["args"][-1].endswith("mcp_server.py"))
-        self.assertEqual(server["env"]["AUTODM_ROLE"], "director")
-        self.assertEqual(server["env"]["CAMPAIGN_ROOT"], str(self.campaign))
-        allowed = cmd[cmd.index("--allowed-tools") + 1].split()
-        self.assertIn("mcp__campaign__run_tool", allowed)
-        self.assertIn("mcp__campaign__read_file", allowed)
-        denied = cmd[cmd.index("--disallowed-tools") + 1].split()
-        for builtin in ("Bash", "Read", "Write", "Edit", "WebFetch", "Task"):
-            self.assertIn(builtin, denied)
-
-    def test_narrator_on_the_cli_keeps_its_firewall(self):
-        # Before the MCP channel existed the narrator ran with no file access
-        # at all, because `claude -p` had no per-file hook. Now it gets the
-        # same firewalled read every other backend gives it — and still no
-        # tool that could publish.
-        self.config.save(role_models={"narrator": "claude-cli"})
-        _, seen = self._capture("narrator", "render the beat", stdout="> prose")
-        cmd = seen["cmd"]
-        allowed = cmd[cmd.index("--allowed-tools") + 1].split()
-        self.assertIn("mcp__campaign__read_file", allowed)
-        self.assertNotIn("mcp__campaign__run_tool", allowed)
-        self.assertNotIn("mcp__campaign__write_file", allowed)
-        self.assertNotIn("--model", cmd)  # a bare id inherits the CLI default
-
-    def test_only_the_bookkeeper_may_write(self):
-        for role, may_write in (("bookkeeper", True), ("director", False),
-                                ("narrator", False)):
-            self.config.save(role_models={role: "claude-cli:haiku"})
-            _, seen = self._capture(role, "do the thing")
-            allowed = seen["cmd"][seen["cmd"].index("--allowed-tools") + 1]
-            self.assertEqual("mcp__campaign__write_file" in allowed, may_write,
-                             f"{role} write access")
-
-    def test_missing_cli_is_a_clear_error_not_a_crash(self):
-        self.config.save(role_models={"director": "claude-cli"})
-        real_bin = self.cli.claude_binary
-        self.cli.claude_binary = lambda: None
-        try:
-            out = self.agent.consult_role("director", "x")
-        finally:
-            self.cli.claude_binary = real_bin
-        self.assertIn("isn't installed", out)
-        self.assertIn("Settings", out)
-
-    def test_a_failed_run_comes_back_as_tool_output(self):
-        # A specialist that fails must not kill the player's turn — the
-        # orchestrator gets the error and can route around it.
-        self.config.save(role_models={"director": "claude-cli:opus"})
-        out, _ = self._capture("director", "x", stdout="", code=1)
-        self.assertIn("error consulting director", out)
-
-    def test_binary_resolution_falls_back_off_path(self):
-        # A GUI-launched .app has a bare PATH; the resolver checks real
-        # install locations too.
-        real_which = self.cli.shutil.which
-        self.cli.shutil.which = lambda _: None
-        try:
-            found = self.cli.claude_binary()
-        finally:
-            self.cli.shutil.which = real_which
-        if found is not None:  # this machine has it installed somewhere known
-            self.assertTrue(Path(found).is_file())
-
-    def test_the_dm_session_survives_a_restart(self):
-        # The CLI owns the transcript; we keep the id that names it in campaign
-        # state, so a closed app resumes rather than starting the session over.
-        from backends.base import AgentSpec
-        backend = self.cli.BACKEND()
-        spec = AgentSpec(role="dm", model="opus", system_prompt="x",
-                         stateful=True, thread="dm")
-        self.assertTrue(backend.is_fresh(spec))
-
-        seen = {}
-
-        def fake_run(cmd, **kw):
-            seen.setdefault("cmds", []).append(cmd)
-            return subprocess.CompletedProcess(cmd, 0, stdout="ok", stderr="")
-        real_run, real_bin = self.cli.subprocess.run, self.cli.claude_binary
-        self.cli.subprocess.run = fake_run
-        self.cli.claude_binary = lambda: "/usr/bin/claude"
-        try:
-            backend.run(spec, "first turn")
-            self.assertFalse(backend.is_fresh(spec))
-            backend.run(spec, "second turn")
-        finally:
-            self.cli.subprocess.run = real_run
-            self.cli.claude_binary = real_bin
-        first, second = seen["cmds"]
-        self.assertIn("--session-id", first)
-        self.assertIn("--resume", second)
-        self.assertEqual(second[second.index("--resume") + 1],
-                         first[first.index("--session-id") + 1])
-        backend.reset(spec)
-        self.assertTrue(backend.is_fresh(spec))
+             ("director", "claude-agent", "opus")])
 
 
 class TestClaudeAgentBackend(DesktopTestCase):

@@ -11,16 +11,16 @@ CLI does the thinking. That needs a developer's machine and a Claude
 subscription.
 
 Here every role picks its own **backend** — see [backends.md](backends.md) for
-the contract and the model-id grammar. Three ship: OpenRouter, the local
-`claude -p`, and the local Claude Agent SDK. The orchestrator loop runs on any
-of them, so "the DM is Claude Code" is now a setting rather than a fork.
+the contract and the model-id grammar. Two ship: OpenRouter, and the `claude`
+binary this machine already has, driven as a library. The orchestrator loop runs
+on either, so "the DM is Claude Code" is now a setting rather than a fork.
 
 | | `main` | desktop app |
 |---|---|---|
-| DM brain | `claude -p --continue` subprocess | any backend, per role (`desktop/backends/`) |
+| DM brain | `claude -p --continue` subprocess | either backend, per role (`desktop/backends/`) |
 | Credentials | Claude Code subscription | an OpenRouter key, or that same subscription, or both |
 | Roles/skills | Claude's `Agent` / `Skill` tools | real subagents — one consult per role, own model |
-| History | Claude Code's session | LangGraph SQLite checkpoint, or the CLI's own session |
+| History | Claude Code's session | LangGraph SQLite checkpoint, or Claude Code's own session |
 | Chat | optional, gated by `web_input` | always under the adventure log |
 | Campaign files | `<repo>/campaign` | the OS app-data directory |
 
@@ -103,21 +103,22 @@ the id by hand:
 "role_models": { "dm": "claude-agent:opus", "narrator": "google/gemini-3.7-flash" }
 ```
 
-Two Claude backends, because they are good at different things:
+It runs through `claude-agent-sdk` — Claude Code as a library — with the
+campaign tools in-process. Four models, fastest first: `haiku`, `sonnet`,
+`opus`, `fable`. The alias passes straight through, so anything the installed
+CLI accepts works.
 
-| Prefix | What runs | Tools reach it via | Use when |
-|---|---|---|---|
-| `claude-agent:` | `claude-agent-sdk` driving the binary | an in-process MCP server | default — a tool call is a Python call |
-| `claude-cli:` | the plain `claude -p` command | a stdio MCP server (`tools/mcp_server.py`) | you want no extra dependency, or to debug the exact command |
+There was briefly a second Claude backend that shelled out to the plain
+`claude -p` command. Same binary, same login, same models, so it gave the picker
+two indistinguishable rows per model — and both bugs found while building this
+reproduced only on it. Removed; `claude-cli:*` ids still resolve as an alias so
+saved configs keep working. See [backends.md](backends.md).
 
-Four models each, fastest first: `haiku`, `sonnet`, `opus`, `fable`. The alias
-passes straight through, so anything the installed CLI accepts works.
-
-**Name the model.** A bare `claude-agent` or `claude-cli` resolves, but sends no
-model flag, so that role inherits whatever the machine's Claude Code is set to —
-a `model` key in `~/.claude/settings.json`, else the CLI's default. That setting
-changes outside the app, which silently changes who is narrating your game. The
-picker offers only the explicit ids.
+**Name the model.** A bare `claude-agent` resolves, but sends no model flag, so
+that role inherits whatever the machine's Claude Code is set to — a `model` key
+in `~/.claude/settings.json`, else the CLI's default. That setting changes
+outside the app, which silently changes who is narrating your game. The picker
+offers only the explicit ids.
 
 The role's prompt file becomes the system prompt and the task — pre-read brief
 included — the user turn, so a role runs identically on any backend and can be
@@ -128,24 +129,23 @@ narrator 7.1s local vs 11–15s on OpenRouter; rules-lawyer 32.4s local vs ~14s.
 Local is free but the CLI has its own start-up cost per call, so it suits roles
 you aren't waiting on more than the ones you are.
 
-What both Claude backends deliberately do *not* get:
+What the Claude backend deliberately does *not* get:
 
 - **Claude Code's own tools.** `Read`, `Write`, `Edit`, `Bash`, `Glob`, `Grep`,
   `WebFetch`, `WebSearch` and `Task` are all denied. Every capability arrives
   through the campaign tools instead, which is where the path guardrails and
   the motivations firewall live — Claude Code's own `Read` would walk straight
   past both.
-- **Your MCP servers and your `CLAUDE.md`.** The CLI backend passes
-  `--strict-mcp-config`; the SDK backend sets `setting_sources=None`. The run
-  is the game, not your working directory.
+- **Your MCP servers and your `CLAUDE.md`.** `setting_sources=None`. The run is
+  the game, not your working directory.
 - **A permission prompt.** The allow-list is the whole surface and nobody is
   sitting at a terminal to answer one.
 
-The Narrator's firewall now holds here too. It used to run with no file access
-at all on the CLI path, because `claude -p` had no per-file hook to enforce
-invariant #7; it now gets the same `read_file` that refuses `motivations.md` and
-`secrets.md`, because the firewall lives in the function and the function is
-what every backend binds.
+The Narrator's firewall holds here too. It used to run with no file access at
+all when this ran through `claude -p`, because there was no per-file hook to
+enforce invariant #7; it now gets the same `read_file` that refuses
+`motivations.md` and `secrets.md`, because the firewall lives in the function
+and the function is what every backend binds.
 
 Requires Claude Code installed. A GUI-launched `.app` gets a bare `PATH`, so
 the app also checks `~/.local/bin`, Homebrew, `/usr/local/bin`, and the npm

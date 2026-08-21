@@ -2,9 +2,8 @@
 """
 The campaign tools as an MCP server, over stdio.
 
-This is how a Claude that isn't inside the desktop app reaches the table: the
-`claude-cli` backend points `claude -p --mcp-config` at it, and so can any
-other MCP client — an interactive `claude` in a terminal, Codex, another
+This is how a Claude that isn't inside the desktop app reaches the table. Point
+any MCP client at it — an interactive `claude` in a terminal, Codex, another
 harness. CLAUDE.md promises the campaign is portable across LLMs; this is that
 promise with a socket on it.
 
@@ -51,9 +50,8 @@ def tool_specs(role: str | None) -> list[ToolSpec]:
     with the gate and got its own complaint published.
 
     Those two run the backends, so serving them here means this process runs
-    them: a specialist on `claude-cli` spawns its own `claude` and its own copy
-    of this server, one level down. Bounded at that — specialists don't
-    consult.
+    them, spawning whatever each specialist's own backend needs. Bounded at one
+    level: specialists don't consult.
     """
     if role:
         return [ToolSpec.of(fn) for fn in campaign_tools.role_tools(role)]

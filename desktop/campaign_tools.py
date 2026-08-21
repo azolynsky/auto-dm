@@ -404,8 +404,8 @@ def role_tools(role: str) -> list:
 # second to decide whether the beat ever reached the players.
 #
 # They live in a file, not module globals, because run_tool does not always run
-# in this process. On the claude-cli backend the tools are served over MCP from
-# a subprocess, which gets its own copy of every global — so a memory-only gate
+# in this process. Served over MCP (tools/mcp_server.py), the tools run in a
+# subprocess that gets its own copy of every global — so a memory-only gate
 # refused every narration push there AND left the parent believing nothing was
 # published. A file is the only thing both processes can see.
 #

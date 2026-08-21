@@ -1031,9 +1031,8 @@ function renderDev(data) {
   document.getElementById('dev-body').innerHTML = `
     <p class="settings-hint">Every role picks its own model — the roles are
       separate agents the DM consults, and each one's tool calls show up in the
-      Dev Log in the sidebar. A <code>claude-agent:</code> or
-      <code>claude-cli:</code> model runs on this machine's own Claude login
-      instead of OpenRouter credit. Add
+      Dev Log in the sidebar. A <code>claude-agent:</code> model runs on this
+      machine's own Claude login instead of OpenRouter credit. Add
       <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code> to offer that role a
       second prompt variant — see <code>prompts/README.md</code>.</p>
     ${backendNote}
