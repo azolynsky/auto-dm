@@ -11,6 +11,7 @@ turn and gets text back.
 """
 from __future__ import annotations
 
+import contextlib
 import sqlite3
 import sys
 import threading
@@ -100,6 +101,42 @@ def friendly(e: Exception, model: str) -> BackendError:
                         f"{type(e).__name__}: {str(e)[:300]}")
 
 
+# ── The thread file ───────────────────────────────────────────────────────────
+# History trimming deletes checkpoints, and SQLite keeps the freed pages rather
+# than handing them back to the filesystem — so the thread file only ever grows.
+# One campaign's reached 793MB around 9.7MB of live checkpoints: 200,712 free
+# pages out of 203,071. VACUUM reclaims all of it with nothing lost, so do it
+# whenever the file is mostly hole.
+
+# Two conditions, so neither a small file nor a merely fragmented one is
+# rewritten: the file must be more hole than data, AND the hole must be worth
+# reclaiming on its own (5k pages is ~20MB at SQLite's 4KB default).
+VACUUM_MIN_FREE_PAGES = 5_000
+VACUUM_FREE_RATIO = 0.5
+
+
+def reclaim(path: Path) -> None:
+    """Shrink a bloated checkpoint file. Safe to call on every connect.
+
+    Its own short-lived connection: VACUUM can't run inside a transaction, and
+    the saver's connection is handed to langgraph. Any failure is ignored — a
+    thread file we couldn't shrink still works, and this is disk hygiene, not
+    correctness.
+    """
+    if not path.exists():
+        return
+    try:
+        with contextlib.closing(sqlite3.connect(str(path))) as conn:
+            conn.isolation_level = None
+            pages = conn.execute("pragma page_count").fetchone()[0]
+            free = conn.execute("pragma freelist_count").fetchone()[0]
+            if (free >= VACUUM_MIN_FREE_PAGES
+                    and free > pages * VACUUM_FREE_RATIO):
+                conn.execute("vacuum")
+    except sqlite3.Error:
+        pass
+
+
 class OpenRouterBackend(Backend):
     name = "openrouter"
 
@@ -119,6 +156,7 @@ class OpenRouterBackend(Backend):
         from langgraph.checkpoint.sqlite import SqliteSaver
         path = config.CAMPAIGN / "state" / "dm-thread.sqlite"
         path.parent.mkdir(parents=True, exist_ok=True)
+        reclaim(path)
         saver = SqliteSaver(sqlite3.connect(str(path), check_same_thread=False))
         saver.setup()
         return saver

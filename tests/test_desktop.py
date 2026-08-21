@@ -12,6 +12,7 @@ Stdlib only — none of this needs langgraph installed.
 """
 from __future__ import annotations
 
+import contextlib
 import datetime
 import json
 import threading
@@ -1046,6 +1047,60 @@ try:
     HAVE_LANGCHAIN = True
 except ImportError:
     HAVE_LANGCHAIN = False
+
+
+class TestThreadFileReclaim(DesktopTestCase):
+    """A campaign's dm-thread.sqlite reached 793MB holding 9.7MB of
+    checkpoints — 200,712 free pages out of 203,071. History trimming deletes
+    checkpoints and SQLite never hands the pages back on its own."""
+
+    def bloated(self) -> Path:
+        import sqlite3
+        path = self.campaign / "state" / "dm-thread.sqlite"
+        conn = sqlite3.connect(path)
+        conn.execute("create table blobs (id integer primary key, v blob)")
+        conn.executemany("insert into blobs (v) values (?)",
+                         [(b"x" * 100_000,) for _ in range(400)])
+        keeper = conn.execute("insert into blobs (v) values (?)",
+                              (b"keep",)).lastrowid
+        conn.commit()
+        # blob vs text comparison never matches in SQLite — delete by rowid
+        conn.execute("delete from blobs where id != ?", (keeper,))
+        conn.commit()
+        conn.close()
+        return path
+
+    def test_a_mostly_empty_thread_file_is_reclaimed(self):
+        from backends import openrouter
+        path = self.bloated()
+        before = path.stat().st_size
+        self.assertGreater(before, 30_000_000)
+        openrouter.reclaim(path)
+        self.assertLess(path.stat().st_size, before // 10)
+        # and the surviving row is still there
+        import sqlite3
+        with contextlib.closing(sqlite3.connect(path)) as conn:
+            self.assertEqual(conn.execute("select count(*) from blobs")
+                             .fetchone()[0], 1)
+
+    def test_a_healthy_file_is_left_alone(self):
+        from backends import openrouter
+        import sqlite3
+        path = self.campaign / "state" / "dm-thread.sqlite"
+        with contextlib.closing(sqlite3.connect(path)) as conn:
+            conn.execute("create table t (v text)")
+            conn.execute("insert into t values ('x')")
+            conn.commit()
+        before = path.stat().st_size
+        openrouter.reclaim(path)
+        self.assertEqual(path.stat().st_size, before)
+
+    def test_a_missing_or_unreadable_file_is_not_an_error(self):
+        from backends import openrouter
+        openrouter.reclaim(self.campaign / "state" / "nope.sqlite")
+        junk = self.campaign / "state" / "junk.sqlite"
+        junk.write_text("not a database")
+        openrouter.reclaim(junk)   # must not raise
 
 
 @unittest.skipUnless(HAVE_LANGCHAIN, "langchain not installed")
