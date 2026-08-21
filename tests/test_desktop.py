@@ -40,6 +40,10 @@ class DesktopTestCase(unittest.TestCase):
         # Reimport under the temp root: config caches CAMPAIGN at import time.
         for name in ("config", "prompts", "campaign_tools", "agent", "campaign_lib"):
             sys.modules.pop(name, None)
+        # The backends hold config-bound state (graph caches, one instance per
+        # process), so they have to be rebuilt under the temp root too.
+        for name in [n for n in sys.modules if n.split(".")[0] == "backends"]:
+            sys.modules.pop(name, None)
         import agent
         import config
         import prompts
@@ -52,6 +56,8 @@ class DesktopTestCase(unittest.TestCase):
         os.environ.pop("CAMPAIGN_ROOT", None)
         shutil.rmtree(self.tmp, ignore_errors=True)
         for name in ("config", "prompts", "campaign_tools", "agent", "campaign_lib"):
+            sys.modules.pop(name, None)
+        for name in [n for n in sys.modules if n.split(".")[0] == "backends"]:
             sys.modules.pop(name, None)
 
 
@@ -566,116 +572,323 @@ class TestConsultBrief(DesktopTestCase):
         self.agent._consult_brief("director")  # must not raise
 
 
-class TestLocalClaudeCli(DesktopTestCase):
-    """Any specialist role can run on `claude -p` locally instead of OpenRouter."""
+class TestBackendRouting(DesktopTestCase):
+    """The model-id grammar and the picker built from it."""
 
     def test_model_id_parsing(self):
         c = self.config
-        self.assertTrue(c.is_cli_model("claude-cli"))
-        self.assertTrue(c.is_cli_model("claude-cli:opus"))
-        self.assertFalse(c.is_cli_model("google/gemini-3.7-flash"))
-        self.assertIsNone(c.cli_model_alias("claude-cli"))
-        self.assertEqual(c.cli_model_alias("claude-cli:opus"), "opus")
+        self.assertEqual(c.parse_model("claude-cli:opus"), ("claude-cli", "opus"))
+        self.assertEqual(c.parse_model("claude-agent:fable"),
+                         ("claude-agent", "fable"))
+        self.assertEqual(c.parse_model("claude-cli"), ("claude-cli", ""))
+        self.assertIsNone(c.model_alias("claude-cli"))
+        self.assertEqual(c.model_alias("claude-agent:opus"), "opus")
 
-    def test_picker_names_every_cli_model_explicitly(self):
-        # A bare "claude-cli" inherits the machine's own Claude Code model
+    def test_bare_and_suffixed_ids_stay_on_openrouter(self):
+        # An OpenRouter id may carry its own colon; splitting on the first one
+        # without checking the head against the registry would eat it.
+        c = self.config
+        self.assertEqual(c.parse_model("google/gemini-3.7-flash"),
+                         ("openrouter", "google/gemini-3.7-flash"))
+        self.assertEqual(c.parse_model("deepseek/deepseek-v4:free"),
+                         ("openrouter", "deepseek/deepseek-v4:free"))
+        self.assertEqual(c.backend_of("~deepseek/deepseek-v4-flash-latest"),
+                         "openrouter")
+
+    def test_claude_backends_run_on_the_subscription(self):
+        c = self.config
+        self.assertTrue(c.on_subscription("claude-cli:opus"))
+        self.assertTrue(c.on_subscription("claude-agent:opus"))
+        self.assertFalse(c.on_subscription("google/gemini-3.7-flash"))
+
+    def test_picker_names_every_claude_model_explicitly(self):
+        # A bare "claude-agent" inherits the machine's own Claude Code model
         # setting, so the picker must not offer it — every choice names one.
-        cli = [i for i, _ in self.config.MODEL_CHOICES
-               if self.config.is_cli_model(i)]
-        self.assertEqual(cli, ["claude-cli:haiku", "claude-cli:sonnet",
-                               "claude-cli:opus", "claude-cli:fable"])
+        offered = [i for i, _ in self.config.MODEL_CHOICES
+                   if self.config.on_subscription(i)]
+        self.assertEqual(offered, [
+            "claude-agent:haiku", "claude-agent:sonnet", "claude-agent:opus",
+            "claude-agent:fable", "claude-cli:haiku", "claude-cli:sonnet",
+            "claude-cli:opus", "claude-cli:fable"])
 
-    def test_dm_is_never_offered_a_cli_model(self):
-        # Rejecting the save is not enough: an unpickable option in the dm's
-        # dropdown is a defect. The setup screen (which sets the dm) and the
-        # dm's dev-panel row both render from model_choices("dm").
+    def test_the_dm_can_now_run_locally(self):
+        # The whole point of the backend split: every shipped backend can drive
+        # the orchestrator, so none of them is filtered out of the dm's picker.
         dm = [i for i, _ in self.config.model_choices("dm")]
-        self.assertTrue(dm, "the dm must still have models to pick")
-        self.assertFalse([i for i in dm if self.config.is_cli_model(i)])
-        for role in (None, "narrator", "bookkeeper"):
-            offered = [i for i, _ in self.config.model_choices(role)]
-            self.assertTrue([i for i in offered if self.config.is_cli_model(i)],
-                            f"{role} should be offered the local CLI")
+        self.assertEqual(dm, [i for i, _ in self.config.MODEL_CHOICES])
+        self.config.save(role_models={"dm": "claude-agent:opus"})
+        self.assertEqual(self.config.role_model("dm"), "claude-agent:opus")
 
-    def test_dm_never_runs_on_the_cli(self):
-        # It needs structured tool-calling; a hand-edited config must not brick.
-        self.config.save(role_models={"dm": "claude-cli", "director": "claude-cli"})
-        self.assertFalse(self.config.is_cli_model(self.config.role_model("dm")))
-        self.assertTrue(self.config.is_cli_model(self.config.role_model("director")))
+    def test_a_backend_that_cannot_orchestrate_is_filtered_out(self):
+        # The rule is structural, not a hard-coded name list: mark a backend
+        # unable to drive the loop and it leaves the dm's picker on its own.
+        import backends.base as base
+        real = base.info
 
-    def test_consult_routes_to_the_cli(self):
-        self.config.save(role_models={"director": "claude-cli:opus"})
+        def stub(name):
+            spec = real(name)
+            if spec and spec.name == "claude-cli":
+                return base.BackendInfo(spec.name, spec.label, spec.module,
+                                        supports_dm=False,
+                                        subscription=spec.subscription)
+            return spec
+        base.info = stub
+        try:
+            dm = [i for i, _ in self.config.model_choices("dm")]
+            self.assertNotIn("claude-cli:opus", dm)
+            self.assertIn("claude-agent:opus", dm)
+            # ...and a config hand-edited to it doesn't boot a broken DM.
+            self.config.save(role_models={"dm": "claude-cli:opus"})
+            self.assertEqual(self.config.role_model("dm"),
+                             self.config.FALLBACK_MODEL)
+        finally:
+            base.info = real
+
+
+class TestClaudeCliBackend(DesktopTestCase):
+    """`claude -p` on this machine, reaching the campaign tools over MCP."""
+
+    def setUp(self):
+        super().setUp()
+        from backends import claude_cli
+        self.cli = claude_cli
+
+    def _capture(self, role, task, stdout="DECISION\n ok\n", code=0):
         seen = {}
 
         def fake_run(cmd, **kw):
             seen["cmd"], seen["kw"] = cmd, kw
-            return subprocess.CompletedProcess(cmd, 0, stdout="DECISION\n ok\n",
+            return subprocess.CompletedProcess(cmd, code, stdout=stdout,
                                                stderr="")
-        real_run, real_bin = self.agent.subprocess.run, self.agent.claude_binary
-        self.agent.subprocess.run = fake_run
-        self.agent.claude_binary = lambda: "/usr/bin/claude"
+        real_run = self.cli.subprocess.run
+        real_bin = self.cli.claude_binary
+        self.cli.subprocess.run = fake_run
+        self.cli.claude_binary = lambda: "/usr/bin/claude"
         try:
-            out = self.agent.consult_role("director", "the party opens the door")
+            out = self.agent.consult_role(role, task)
         finally:
-            self.agent.subprocess.run = real_run
-            self.agent.claude_binary = real_bin
+            self.cli.subprocess.run = real_run
+            self.cli.claude_binary = real_bin
+        return out, seen
+
+    def test_consult_routes_to_the_cli(self):
+        self.config.save(role_models={"director": "claude-cli:opus"})
+        out, seen = self._capture("director", "the party opens the door")
         self.assertIn("DECISION", out)
         cmd = seen["cmd"]
         self.assertEqual(cmd[:2], ["/usr/bin/claude", "-p"])
         self.assertIn("the party opens the door", cmd[2])
-        self.assertIn("--model", cmd)
         self.assertEqual(cmd[cmd.index("--model") + 1], "opus")
         # the role's own prompt is the system prompt, and the brief rode along
-        self.assertIn("You are the Director", cmd[cmd.index("--system-prompt") + 1])
+        self.assertIn("You are the Director",
+                      cmd[cmd.index("--system-prompt") + 1])
         self.assertIn("Pre-read state", cmd[2])
-        # never blocks on a permission prompt, never gets a shell
-        self.assertIn("Bash WebFetch WebSearch Task",
-                      cmd[cmd.index("--disallowed-tools") + 1])
-        self.assertEqual(seen["kw"]["timeout"], self.agent.CLI_TIMEOUT)
+        self.assertEqual(seen["kw"]["timeout"], self.cli.CONSULT_TIMEOUT)
 
-    def test_narrator_on_cli_gets_no_file_access(self):
-        # The motivations firewall is a tool-level guarantee; `claude -p` has no
-        # per-file hook, so the narrator runs brief-only.
-        self.assertEqual(self.agent._CLI_ROLE_TOOLS["narrator"], [])
+    def test_campaign_tools_arrive_over_mcp_and_builtins_are_denied(self):
+        self.config.save(role_models={"director": "claude-cli:opus"})
+        _, seen = self._capture("director", "the party opens the door")
+        cmd = seen["cmd"]
+        # Our server, and only ours — not whatever the user has configured for
+        # their own Claude Code.
+        self.assertIn("--strict-mcp-config", cmd)
+        mcp = json.loads(cmd[cmd.index("--mcp-config") + 1])
+        server = mcp["mcpServers"]["campaign"]
+        self.assertEqual(server["type"], "stdio")
+        self.assertTrue(server["args"][-1].endswith("mcp_server.py"))
+        self.assertEqual(server["env"]["AUTODM_ROLE"], "director")
+        self.assertEqual(server["env"]["CAMPAIGN_ROOT"], str(self.campaign))
+        allowed = cmd[cmd.index("--allowed-tools") + 1].split()
+        self.assertIn("mcp__campaign__run_tool", allowed)
+        self.assertIn("mcp__campaign__read_file", allowed)
+        denied = cmd[cmd.index("--disallowed-tools") + 1].split()
+        for builtin in ("Bash", "Read", "Write", "Edit", "WebFetch", "Task"):
+            self.assertIn(builtin, denied)
+
+    def test_narrator_on_the_cli_keeps_its_firewall(self):
+        # Before the MCP channel existed the narrator ran with no file access
+        # at all, because `claude -p` had no per-file hook. Now it gets the
+        # same firewalled read every other backend gives it — and still no
+        # tool that could publish.
         self.config.save(role_models={"narrator": "claude-cli"})
-        seen = {}
+        _, seen = self._capture("narrator", "render the beat", stdout="> prose")
+        cmd = seen["cmd"]
+        allowed = cmd[cmd.index("--allowed-tools") + 1].split()
+        self.assertIn("mcp__campaign__read_file", allowed)
+        self.assertNotIn("mcp__campaign__run_tool", allowed)
+        self.assertNotIn("mcp__campaign__write_file", allowed)
+        self.assertNotIn("--model", cmd)  # a bare id inherits the CLI default
 
-        def fake_run(cmd, **kw):
-            seen["cmd"] = cmd
-            return subprocess.CompletedProcess(cmd, 0, stdout="> prose", stderr="")
-        real_run, real_bin = self.agent.subprocess.run, self.agent.claude_binary
-        self.agent.subprocess.run = fake_run
-        self.agent.claude_binary = lambda: "/usr/bin/claude"
-        try:
-            self.agent.consult_role("narrator", "render the beat")
-        finally:
-            self.agent.subprocess.run = real_run
-            self.agent.claude_binary = real_bin
-        self.assertEqual(seen["cmd"][seen["cmd"].index("--allowed-tools") + 1], "")
-        self.assertNotIn("--add-dir", seen["cmd"])
+    def test_only_the_bookkeeper_may_write(self):
+        for role, may_write in (("bookkeeper", True), ("director", False),
+                                ("narrator", False)):
+            self.config.save(role_models={role: "claude-cli:haiku"})
+            _, seen = self._capture(role, "do the thing")
+            allowed = seen["cmd"][seen["cmd"].index("--allowed-tools") + 1]
+            self.assertEqual("mcp__campaign__write_file" in allowed, may_write,
+                             f"{role} write access")
 
     def test_missing_cli_is_a_clear_error_not_a_crash(self):
         self.config.save(role_models={"director": "claude-cli"})
-        real_bin = self.agent.claude_binary
-        self.agent.claude_binary = lambda: None
+        real_bin = self.cli.claude_binary
+        self.cli.claude_binary = lambda: None
         try:
             out = self.agent.consult_role("director", "x")
         finally:
-            self.agent.claude_binary = real_bin
+            self.cli.claude_binary = real_bin
         self.assertIn("isn't installed", out)
         self.assertIn("Settings", out)
+
+    def test_a_failed_run_comes_back_as_tool_output(self):
+        # A specialist that fails must not kill the player's turn — the
+        # orchestrator gets the error and can route around it.
+        self.config.save(role_models={"director": "claude-cli:opus"})
+        out, _ = self._capture("director", "x", stdout="", code=1)
+        self.assertIn("error consulting director", out)
 
     def test_binary_resolution_falls_back_off_path(self):
         # A GUI-launched .app has a bare PATH; the resolver checks real
         # install locations too.
-        real_which = self.agent.shutil.which
-        self.agent.shutil.which = lambda _: None
+        real_which = self.cli.shutil.which
+        self.cli.shutil.which = lambda _: None
         try:
-            found = self.agent.claude_binary()
+            found = self.cli.claude_binary()
         finally:
-            self.agent.shutil.which = real_which
+            self.cli.shutil.which = real_which
         if found is not None:  # this machine has it installed somewhere known
             self.assertTrue(Path(found).is_file())
+
+    def test_the_dm_session_survives_a_restart(self):
+        # The CLI owns the transcript; we keep the id that names it in campaign
+        # state, so a closed app resumes rather than starting the session over.
+        from backends.base import AgentSpec
+        backend = self.cli.BACKEND()
+        spec = AgentSpec(role="dm", model="opus", system_prompt="x",
+                         stateful=True, thread="dm")
+        self.assertTrue(backend.is_fresh(spec))
+
+        seen = {}
+
+        def fake_run(cmd, **kw):
+            seen.setdefault("cmds", []).append(cmd)
+            return subprocess.CompletedProcess(cmd, 0, stdout="ok", stderr="")
+        real_run, real_bin = self.cli.subprocess.run, self.cli.claude_binary
+        self.cli.subprocess.run = fake_run
+        self.cli.claude_binary = lambda: "/usr/bin/claude"
+        try:
+            backend.run(spec, "first turn")
+            self.assertFalse(backend.is_fresh(spec))
+            backend.run(spec, "second turn")
+        finally:
+            self.cli.subprocess.run = real_run
+            self.cli.claude_binary = real_bin
+        first, second = seen["cmds"]
+        self.assertIn("--session-id", first)
+        self.assertIn("--resume", second)
+        self.assertEqual(second[second.index("--resume") + 1],
+                         first[first.index("--session-id") + 1])
+        backend.reset(spec)
+        self.assertTrue(backend.is_fresh(spec))
+
+
+class TestClaudeAgentBackend(DesktopTestCase):
+    """The Agent SDK backend: same binary, campaign tools in-process."""
+
+    def setUp(self):
+        super().setUp()
+        try:
+            import claude_agent_sdk  # noqa: F401
+        except ImportError:
+            self.skipTest("claude-agent-sdk not installed")
+        from backends import claude_agent
+        self.mod = claude_agent
+
+    def _options(self, role):
+        backend = self.mod.BACKEND()
+        return backend._options(self.agent.spec_for(role, "opus"))
+
+    def test_no_builtin_tools_only_the_campaign_server(self):
+        # Claude Code's own Read would walk straight past the guardrails and
+        # the motivations firewall, so the built-in surface is emptied and
+        # every capability arrives through our in-process server.
+        opts = self._options("director")
+        self.assertEqual(opts.tools, [])
+        self.assertEqual(list(opts.mcp_servers), ["campaign"])
+        self.assertTrue(all(t.startswith("mcp__campaign__")
+                            for t in opts.allowed_tools))
+        self.assertIsNone(opts.setting_sources)  # not the user's own CLAUDE.md
+        self.assertEqual(opts.permission_mode, "bypassPermissions")
+
+    def test_role_subsets_match_every_other_backend(self):
+        self.assertNotIn("mcp__campaign__write_file",
+                         self._options("narrator").allowed_tools)
+        self.assertIn("mcp__campaign__write_file",
+                      self._options("bookkeeper").allowed_tools)
+        self.assertNotIn("mcp__campaign__run_tool",
+                         self._options("narrator").allowed_tools)
+
+    def test_the_dm_gets_the_orchestrator_surface(self):
+        allowed = self._options("dm").allowed_tools
+        for tool in ("run_tool", "consult_role", "consult_pair", "write_file"):
+            self.assertIn(f"mcp__campaign__{tool}", allowed)
+
+    def test_tools_carry_a_schema_derived_from_the_signature(self):
+        from backends.base import ToolSpec
+        spec = ToolSpec.of(self.agent.run_tool)
+        self.assertEqual(spec.name, "run_tool")
+        self.assertIn("dice.py", spec.description)
+        props = spec.schema["properties"]
+        self.assertEqual(props["tool"], {"type": "string"})
+        self.assertEqual(props["argv"], {"type": "array",
+                                         "items": {"type": "string"}})
+        self.assertEqual(props["stdin"], {"type": "string"})
+        # stdin has a default, so it is not required
+        self.assertEqual(spec.schema["required"], ["tool", "argv"])
+
+    def test_missing_sdk_reports_the_fix(self):
+        real = self.mod.claude_binary
+        self.mod.claude_binary = lambda: None
+        try:
+            self.assertIn("isn't installed", self.mod.BACKEND().available())
+        finally:
+            self.mod.claude_binary = real
+
+
+class TestMcpServer(DesktopTestCase):
+    """tools/mcp_server.py — the campaign tools for any MCP client."""
+
+    def setUp(self):
+        super().setUp()
+        sys.modules.pop("mcp_server", None)
+        import mcp_server
+        self.server = mcp_server
+
+    def test_role_scoping_is_the_firewall(self):
+        served = {s.name for s in self.server.tool_specs("narrator")}
+        self.assertIn("read_file", served)
+        self.assertNotIn("run_tool", served)
+        self.assertNotIn("write_file", served)
+        self.assertIn("write_file",
+                      {s.name for s in self.server.tool_specs("bookkeeper")})
+
+    def test_the_full_surface_is_the_dm_surface(self):
+        served = {s.name for s in self.server.tool_specs(None)}
+        self.assertEqual(served, {"read_file", "write_file", "edit_file",
+                                  "list_files", "run_tool"})
+
+    def test_the_narrators_read_still_refuses_gm_files(self):
+        # Same function object every backend gets, so the refusal travels with
+        # it rather than being re-implemented per transport.
+        secret = self.campaign / "npcs" / "x" / "motivations.md"
+        secret.parent.mkdir(parents=True, exist_ok=True)
+        secret.write_text("he is the traitor", encoding="utf-8")
+        read = next(s.fn for s in self.server.tool_specs("narrator")
+                    if s.name == "read_file")
+        self.assertIn("GM-eyes-only", read("campaign/npcs/x/motivations.md"))
+
+    def test_it_builds_a_real_server(self):
+        built = self.server.build_server("director")
+        self.assertTrue(built.name)
 
 
 class TestActivity(DesktopTestCase):
@@ -778,7 +991,7 @@ class TestActivity(DesktopTestCase):
 
     def test_narrator_firewall_refusal_is_logged(self):
         read = [t for t in self.agent.role_tools("narrator")
-                if t.__name__ == "read_file_safe"][0]
+                if t.__name__ == "read_file" and t is not self.agent.read_file][0]
         self.assertIn("GM-eyes-only", read("campaign/npcs/x/secrets.md"))
         entry = json.loads(self._devlog()[-1])
         self.assertEqual(entry["tool"], "read_file")
@@ -881,6 +1094,11 @@ class TestPromptCache(DesktopTestCase):
     empty content, and surviving serialization into the request payload —
     a marker langchain silently drops caches nothing."""
 
+    def setUp(self):
+        super().setUp()
+        from backends import openrouter
+        self.openrouter = openrouter
+
     def _msgs(self):
         from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
         return [HumanMessage(content="attack the goblin"),
@@ -890,11 +1108,11 @@ class TestPromptCache(DesktopTestCase):
 
     def test_marks_newest_two_and_skips_empty(self):
         msgs = self._msgs()
-        marked = self.agent._mark_cache(msgs)
+        marked = self.openrouter.mark_cache(msgs)
         self.assertEqual(marked[2].content[-1]["cache_control"],
-                         self.agent.CACHE_CONTROL)   # tool result
+                         self.openrouter.CACHE_CONTROL)   # tool result
         self.assertEqual(marked[0].content[-1]["cache_control"],
-                         self.agent.CACHE_CONTROL)   # human, skipping empty AI
+                         self.openrouter.CACHE_CONTROL)   # human, skipping empty AI
         self.assertEqual(marked[1].content, "")      # empty AIMessage untouched
         self.assertEqual(msgs[0].content, "attack the goblin")  # originals intact
 
@@ -902,13 +1120,13 @@ class TestPromptCache(DesktopTestCase):
         from langchain_openai import ChatOpenAI
         model = ChatOpenAI(model="x", api_key="k", base_url="http://localhost")
         payload = model._get_request_payload(
-            [self.agent._cached_system("manual")] +
-            self.agent._mark_cache(self._msgs()))
+            [self.openrouter.cached_system("manual")] +
+            self.openrouter.mark_cache(self._msgs()))
         system, human = payload["messages"][0], payload["messages"][1]
         self.assertEqual(system["content"][0]["cache_control"],
-                         self.agent.CACHE_CONTROL)
+                         self.openrouter.CACHE_CONTROL)
         self.assertEqual(human["content"][0]["cache_control"],
-                         self.agent.CACHE_CONTROL)
+                         self.openrouter.CACHE_CONTROL)
 
 
 class TestRoleAgents(DesktopTestCase):

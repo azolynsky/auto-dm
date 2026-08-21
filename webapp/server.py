@@ -677,14 +677,15 @@ async def post_setup(request: Request):
 
     appconfig.save(api_key=key or None)
     chosen = str(body.get("model") or "").strip()
-    if chosen and appconfig.is_cli_model(chosen):
+    if chosen and not appconfig.supports_dm(chosen):
         # Silently ignoring it (role_model falls back) would leave the setup
         # screen claiming a model the DM isn't running on.
         raise HTTPException(
             status_code=400,
-            detail="The DM can't run on the local claude CLI — it needs "
-                   "tool-calling. Pick an API model here; specialist roles "
-                   "can use the CLI from Developer settings.")
+            detail=f"The DM can't run on {appconfig.backend_of(chosen)} — that "
+                   "backend has no way to hand a tool call back, so the DM "
+                   "couldn't roll dice. Pick another model here; specialist "
+                   "roles can still use it from Developer settings.")
     if chosen:  # the setup screen picks the DM's model; the rest are per-role
         appconfig.save(role_models={**(appconfig.load().get("role_models") or {}),
                                     "dm": chosen})
@@ -752,14 +753,15 @@ async def post_dev(request: Request):
             if not isinstance(model_id, str):
                 raise HTTPException(status_code=400,
                                     detail=f"model for {role} must be a string")
-            # The dm drives our tools through structured tool-calling, which
-            # the local CLI can't hand back — refuse it here rather than
-            # letting the table discover a DM that can't roll dice.
-            if role == "dm" and appconfig.is_cli_model(model_id):
+            # The dm drives our tools through structured tool calls. Refuse a
+            # backend with no channel for them here, rather than letting the
+            # table discover a DM that can't roll dice.
+            if role == "dm" and not appconfig.supports_dm(model_id):
                 raise HTTPException(
                     status_code=400,
-                    detail="the DM can't run on the local claude CLI — it "
-                           "needs tool-calling. Specialist roles can.")
+                    detail=f"the dm can't run on {appconfig.backend_of(model_id)}"
+                           " — that backend can't hand a tool call back. "
+                           "Specialist roles can.")
 
     for field in ("history_tokens", "recursion_limit"):
         if field in body and not (isinstance(body[field], int) and body[field] > 0):

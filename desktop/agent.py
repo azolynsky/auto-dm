@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """
-The DM brain: a LangGraph ReAct agent on OpenRouter, replacing the
-`claude -p --continue` worker.
+The DM brain: the orchestrator loop, the specialist pipeline, and the table
+rules that hold whichever model is thinking.
 
-Same contract as the CLI it replaces — take one player message, run the loop
-with file and campaign-tool access, and leave the player-facing result in the
-chronicle via narrate.py. The loop, tool dispatch, retries and history live in
-LangGraph; this module only supplies the tools, the prompt and the guardrails.
+Take one player message, run the loop with file and campaign-tool access, and
+leave the player-facing result in the chronicle via narrate.py. What actually
+runs the loop is a backend (desktop/backends/, docs/backends.md) — OpenRouter,
+the local `claude -p`, or the local Claude Agent SDK — chosen per role from
+config. This module knows nothing about any of them beyond the interface: it
+hands over a spec and a message and gets text back.
 
-History persists in a LangGraph SQLite checkpoint under the campaign, so a
-session survives closing the app.
+What stays here is everything that is true regardless of who is thinking: the
+session brief, the per-role information silo, the narration gate, the
+never-narrated fallback, and the out-of-character register. History belongs to
+the backend, because only the backend knows where it is kept.
 
 Nothing campaign-specific lives here — the DM's knowledge is CLAUDE.md plus the
 files it reads itself.
@@ -18,38 +22,29 @@ Self-check:  python desktop/agent.py --selftest
 """
 from __future__ import annotations
 
-import contextvars
-import datetime
-import functools
-import inspect
-import io
 import json
 import re
-import shutil
-import sqlite3
-import subprocess
 import sys
 import threading
-from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import backends  # noqa: E402
 import config  # noqa: E402
 import prompts  # noqa: E402
+from backends import AgentSpec, BackendError, ToolSpec  # noqa: E402
 
 sys.path.insert(0, str(config.BUNDLE / "tools"))
 import campaign_lib  # noqa: E402
 import campaign_tools  # noqa: E402
-from campaign_tools import (ROLE_ACTIVITY, TOOL_SCRIPTS, TOOLS,  # noqa: E402
+from campaign_tools import (ROLE_ACTIVITY, TOOLS,  # noqa: E402,F401
                             _activity, _devlog, _logged, _thread, _utcnow,
                             allow_narration, begin_turn, edit_file, list_files,
                             narrated, read_file, resolve_path, role_tools,
                             run_tool, write_file)
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1"
 THREAD_ID = "dm"           # one running conversation per campaign
-RECURSION_LIMIT = 80       # graph steps per turn (~40 tool round trips)
-HISTORY_TOKENS = 120_000   # history resent per request, before trimming
+DM_TURN_LIMIT = 40         # tool round trips in one player turn
 
 
 class DMError(RuntimeError):
@@ -86,13 +81,13 @@ def consult_pair(first_role: str, first_task: str,
 
 # ── Role subagents ────────────────────────────────────────────────────────────
 # The manual's Director/Narrator/Rules-Lawyer/Bookkeeper pipeline as actual
-# separate agents: each consult_role call runs a one-shot ReAct agent on that
-# role's prompt file and (optionally) its own model, with no chat history —
-# which is the point: the orchestrator's context stops absorbing every file
-# the specialists read.
+# separate agents: each consult_role call runs a one-shot agent on that role's
+# prompt file and its own backend and model, with no chat history — which is
+# the point: the orchestrator's context stops absorbing every file the
+# specialists read.
 
 SUB_ROLES = tuple(r for r in prompts.ROLES if r != "dm")
-SUB_RECURSION_LIMIT = 32
+SUB_TURN_LIMIT = 16
 
 # Roles that must not sit between a player's message and their narration.
 _AFTER_NARRATION_ROLES = ("continuity-checker", "prose-editor", "session-prep")
@@ -101,113 +96,27 @@ _AFTER_NARRATION_ROLES = ("continuity-checker", "prose-editor", "session-prep")
 role_model = config.role_model
 
 
-_sub_agents: dict = {}
+def spec_for(role: str, model: str) -> AgentSpec:
+    """The AgentSpec one role runs under, on any backend.
 
-
-def _build_sub_agent(role: str):
-    key = (role, role_model(role), prompts.selected(role), config.api_key()[-6:])
-    if key not in _sub_agents:
-        from langchain_openai import ChatOpenAI
-        from langgraph.prebuilt import create_react_agent
-        model = ChatOpenAI(
-            model=role_model(role), api_key=config.api_key(),
-            base_url=OPENROUTER_URL, timeout=600,
-            default_headers={"HTTP-Referer": "https://github.com/auto-dm",
-                             "X-Title": "Auto-DM"})
-        _sub_agents[key] = create_react_agent(
-            model, role_tools(role),
-            prompt=_cached_system(prompts.resolve(role).read_text(encoding="utf-8")),
-            # No trimming (consults are one-shot), but the same rolling cache
-            # breakpoints: a consult that reads five entity files re-sends
-            # them on every step, and repeat consults of the same role within
-            # the cache TTL start from a warm system prompt.
-            pre_model_hook=lambda state: {
-                "llm_input_messages": _mark_cache(state["messages"])})
-    return _sub_agents[key]
-
-
-# Tools a claude-cli specialist may use inside its own agent loop. The
-# narrator gets NONE: the motivations firewall (invariant #7) is a tool-level
-# guarantee here, and `claude -p` has no per-file hook to enforce it — with no
-# file access it can only work from its pre-read brief, which is what it does
-# on OpenRouter anyway. The bookkeeper is the only writer, same as role_tools.
-_CLI_ROLE_TOOLS = {
-    "narrator": [],
-    "bookkeeper": ["Read", "Glob", "Grep", "Edit", "Write"],
-}
-_CLI_DEFAULT_TOOLS = ["Read", "Glob", "Grep"]
-CLI_TIMEOUT = 300
-
-
-def claude_binary() -> str | None:
-    """Path to the claude CLI, or None if it isn't installed.
-
-    A GUI-launched .app gets a bare PATH (/usr/bin:/bin:/usr/sbin:/sbin), not
-    the login shell's — so PATH lookup alone finds nothing even when `claude`
-    works fine in a terminal. Check the usual install locations too.
+    The whole per-role configuration in one place: which prompt, which tools,
+    how many round trips, and whether it keeps history. A backend reads this
+    and nothing else about the role, which is why swapping one backend for
+    another cannot change what a role is allowed to do.
     """
-    found = shutil.which("claude")
-    if found:
-        return found
-    for candidate in (Path.home() / ".local/bin/claude",
-                      Path("/opt/homebrew/bin/claude"),
-                      Path("/usr/local/bin/claude"),
-                      Path.home() / ".claude/local/claude",
-                      Path.home() / ".npm-global/bin/claude"):
-        if candidate.is_file():
-            return str(candidate)
-    return None
+    if role == "dm":
+        return AgentSpec(
+            role="dm", model=model, system_prompt=system_prompt(),
+            tools=tuple(ToolSpec.of(fn) for fn in DM_TOOLS),
+            turn_limit=int(config.load().get("recursion_limit") or 0) // 2
+            or DM_TURN_LIMIT,
+            stateful=True, thread=THREAD_ID)
+    return AgentSpec(
+        role=role, model=model,
+        system_prompt=prompts.resolve(role).read_text(encoding="utf-8"),
+        tools=tuple(ToolSpec.of(fn) for fn in role_tools(role)),
+        turn_limit=SUB_TURN_LIMIT, stateful=False)
 
-
-def _consult_via_cli(role: str, task: str, model: str) -> str:
-    """Run one specialist through `claude -p` on this machine.
-
-    Uses the user's own Claude subscription instead of OpenRouter. The role's
-    prompt file becomes the system prompt and the task (brief included) the
-    user turn — the same contract the OpenRouter path uses, so a role can be
-    switched either way without touching its prompt.
-    """
-    binary = claude_binary()
-    if not binary:
-        return ("error: the claude CLI isn't installed on this machine (or the "
-                "app can't see it) — install Claude Code, or switch this role "
-                "back to an API model in Settings.")
-    prompt_file = prompts.resolve(role)
-    tools = _CLI_ROLE_TOOLS.get(role, _CLI_DEFAULT_TOOLS)
-    cmd = [binary, "-p", task,
-           "--system-prompt", prompt_file.read_text(encoding="utf-8"),
-           "--output-format", "text",
-           # Explicit allow-list, so a non-interactive run never blocks on a
-           # permission prompt and never gets more reach than the role needs.
-           "--allowed-tools", " ".join(tools),
-           "--disallowed-tools", "Bash WebFetch WebSearch Task"]
-    if tools:
-        cmd += ["--add-dir", str(config.CAMPAIGN), "--add-dir", str(config.BUNDLE)]
-    if alias := config.cli_model_alias(model):
-        cmd += ["--model", alias]
-    try:
-        done = subprocess.run(cmd, capture_output=True, text=True,
-                              timeout=CLI_TIMEOUT, cwd=str(config.BUNDLE))
-    except FileNotFoundError:
-        return ("error: the claude CLI isn't on this machine's PATH — install "
-                "Claude Code or switch this role back to an API model in "
-                "Settings.")
-    except subprocess.TimeoutExpired:
-        return (f"error: the local claude CLI took over {CLI_TIMEOUT}s on the "
-                f"{role} and was stopped.")
-    out = (done.stdout or "").strip()
-    if done.returncode != 0 or not out:
-        detail = (done.stderr or "").strip()[:300] or f"exit {done.returncode}"
-        return f"error running the local claude CLI for the {role}: {detail}"
-    return out
-
-
-def _final_text(result: dict) -> str:
-    for message in reversed(result.get("messages", [])):
-        if message.__class__.__name__ == "AIMessage":
-            return message.text() if callable(getattr(message, "text", None)) \
-                else str(message.content or "")
-    return ""
 
 
 # What each role's brief carries — the information silo. GM-side roles get
@@ -420,19 +329,18 @@ def consult_role(role: str, task: str) -> str:
                 f"do NOT re-read these files)\n{brief}")
     token = _thread.set(role)
     try:
-        model = role_model(role)
-        if config.is_cli_model(model):
-            return _consult_via_cli(role, task, model)
-        result = _build_sub_agent(role).invoke(
-            {"messages": [{"role": "user", "content": task}]},
-            config={"recursion_limit": SUB_RECURSION_LIMIT})
-    except Exception as e:
-        if type(e).__name__ == "GraphRecursionError":
-            return f"error: the {role} got stuck — break the task into smaller pieces"
-        return f"error consulting {role}: {_friendly(e)}"
+        backend, model = backends.for_role(role)
+        reply = backend.run(spec_for(role, model), task)
+    except BackendError as e:
+        # A failed consult is the DM's problem to route around, not the
+        # table's: hand it back as tool output so the orchestrator can try
+        # another way instead of the turn dying here.
+        return f"error consulting {role}: {e}"
+    except Exception as e:  # noqa: BLE001 — same reasoning, unexpected shape
+        return f"error consulting {role}: {type(e).__name__}: {str(e)[:300]}"
     finally:
         _thread.reset(token)
-    return _final_text(result) or "(no reply)"
+    return reply or "(no reply)"
 
 
 DM_TOOLS = TOOLS + [consult_role, consult_pair]
@@ -445,48 +353,6 @@ def system_prompt() -> str:
     adapter = prompts.resolve("dm").read_text(encoding="utf-8")
     manual = (config.BUNDLE / "CLAUDE.md").read_text(encoding="utf-8")
     return adapter + "\n" + manual
-
-
-# ── Prompt caching ────────────────────────────────────────────────────────────
-# A ReAct turn re-sends the whole prompt on every tool round trip, so caching
-# is the difference between paying for CLAUDE.md + history once per turn and
-# once per step. OpenRouter forwards Anthropic-style cache_control breakpoints
-# (reads bill at ~10% of input); providers with automatic prefix caching
-# (OpenAI, Gemini) ignore the markers, so one code path serves every model.
-
-CACHE_CONTROL = {"type": "ephemeral"}
-
-
-def _cached_system(text: str):
-    """A system message whose whole text sits behind a cache breakpoint."""
-    from langchain_core.messages import SystemMessage
-    return SystemMessage(content=[
-        {"type": "text", "text": text, "cache_control": CACHE_CONTROL}])
-
-
-def _mark_cache(messages: list, spots: int = 2) -> list:
-    """Copy `messages` with cache breakpoints on the newest `spots` markable
-    ones (non-empty text content). Two rolling breakpoints let Anthropic's
-    backward prefix lookup find last step's cache even after a long tool
-    result lands between them. Never mutates the checkpointed originals."""
-    marked = list(messages)
-    left = spots
-    for i in range(len(marked) - 1, -1, -1):
-        if left == 0:
-            break
-        content = marked[i].content
-        if isinstance(content, str) and content.strip():
-            new = [{"type": "text", "text": content,
-                    "cache_control": CACHE_CONTROL}]
-        elif (isinstance(content, list) and content
-                and isinstance(content[-1], dict)
-                and content[-1].get("type") == "text" and content[-1].get("text")):
-            new = content[:-1] + [{**content[-1], "cache_control": CACHE_CONTROL}]
-        else:
-            continue  # empty content (e.g. a pure tool-call AIMessage) — skip
-        marked[i] = marked[i].model_copy(update={"content": new})
-        left -= 1
-    return marked
 
 
 BRIEF_FILES = ("sessions/recap.md", "state/current.json", "state/quests.json",
@@ -527,98 +393,6 @@ def session_brief() -> str:
             + "\n\n".join(chunks))
 
 
-# ── The agent ─────────────────────────────────────────────────────────────────
-
-_agent = None
-_agent_key: tuple | None = None
-
-
-def _checkpointer():
-    from langgraph.checkpoint.sqlite import SqliteSaver
-    path = config.CAMPAIGN / "state" / "dm-thread.sqlite"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    saver = SqliteSaver(sqlite3.connect(str(path), check_same_thread=False))
-    saver.setup()
-    return saver
-
-
-def build_agent():
-    """The ReAct graph. Cached until the model or a prompt variant changes."""
-    global _agent, _agent_key
-    cfg = config.load()
-    key = (config.model(), prompts.selected("dm"), config.api_key()[-6:],
-           cfg.get("history_tokens"), cfg.get("recursion_limit"))
-    if _agent is not None and _agent_key == key:
-        return _agent
-
-    from langchain_core.messages.utils import (count_tokens_approximately,
-                                               trim_messages)
-    from langchain_openai import ChatOpenAI
-    from langgraph.prebuilt import create_react_agent
-
-    model = ChatOpenAI(
-        model=config.model(),
-        api_key=config.api_key(),
-        base_url=OPENROUTER_URL,
-        timeout=600,
-        default_headers={"HTTP-Referer": "https://github.com/auto-dm",
-                         "X-Title": "Auto-DM"},
-    )
-
-    budget = int(cfg.get("history_tokens") or HISTORY_TOKENS)
-
-    def keep_recent(state):
-        """Trim history to the token budget without orphaning a tool result,
-        then place the rolling cache breakpoints.
-
-        Hysteresis, not a hard ceiling: trimming every call moves the window
-        forward a little each turn, which changes the prompt prefix and voids
-        the provider's prompt cache on the entire history. Instead history
-        grows untouched until it exceeds the budget, then gets cut hard to
-        half — one cache re-write, then a long stable stretch.
-
-        end_on=("human","tool") plus start_on="human" is what keeps every tool
-        message attached to the assistant turn that requested it — a dangling
-        tool result is a 400 from every provider.
-        """
-        messages = state["messages"]
-        if count_tokens_approximately(messages) > budget:
-            messages = trim_messages(
-                messages, max_tokens=budget // 2,
-                token_counter=count_tokens_approximately,
-                strategy="last", start_on="human", end_on=("human", "tool"),
-                include_system=False, allow_partial=False)
-        return {"llm_input_messages": _mark_cache(messages)}
-
-    _agent = create_react_agent(model, DM_TOOLS,
-                                prompt=_cached_system(system_prompt()),
-                                pre_model_hook=keep_recent,
-                                checkpointer=_checkpointer())
-    _agent_key = key
-    return _agent
-
-
-def _friendly(e: Exception) -> DMError:
-    """Turn a provider error into something readable at the table."""
-    import openai
-    if isinstance(e, openai.AuthenticationError):
-        return DMError("The DM can't sign in to OpenRouter — the API key looks wrong "
-                       "or expired. Check it in Settings.")
-    if isinstance(e, openai.RateLimitError):
-        return DMError("OpenRouter is rate-limiting us. Wait a few seconds and say "
-                       "that again.")
-    if isinstance(e, openai.APIConnectionError):
-        return DMError("The DM can't reach OpenRouter — check the internet connection.")
-    if isinstance(e, openai.APIStatusError):
-        if e.status_code == 402:
-            return DMError("Your OpenRouter account is out of credit, so the DM can't "
-                           "think. Top it up at openrouter.ai and try again.")
-        if e.status_code == 404:
-            return DMError(f"OpenRouter doesn't have the model '{config.model()}'. "
-                           "Pick another one in Settings.")
-        return DMError(f"OpenRouter returned {e.status_code}: {str(e)[:300]}")
-    return DMError(f"The DM hit an unexpected error: {type(e).__name__}: {str(e)[:300]}")
-
 
 LABEL_LINE = re.compile(r"^\s*(\[[A-Z][A-Z ]+\]|roll:|result:)", re.M)
 
@@ -653,26 +427,33 @@ def narrate_gate(prose: str) -> list:
         return []  # never let the gate itself blank the players' screen
 
 
+def _one_shot(system: str, message: str) -> str:
+    """One exchange, no tools, no history — the setup screen's generators.
+
+    Runs on whatever backend the dm is configured for, so a table living
+    entirely on its Claude subscription can build characters and worlds without
+    holding an OpenRouter key at all.
+    """
+    backend, model = backends.for_role("dm")
+    if (reason := backend.available()):
+        raise DMError(reason)
+    spec = AgentSpec(role="dm", model=model, system_prompt=system,
+                     tools=(), turn_limit=4, stateful=False)
+    try:
+        return backend.run(spec, message)
+    except BackendError as e:
+        raise DMError(str(e)) from e
+
+
 def generate_character(description: str) -> dict:
     """One-shot LLM call: a player's free-text concept → a level-1 sheet in
     the campaign's exact JSON shape. Separate from the DM thread — this runs
     on the setup screen, before the table exists."""
-    if not config.api_key():
-        raise DMError("No OpenRouter API key is set yet — open Settings and paste one.")
-    from langchain_core.messages import HumanMessage
-    from langchain_openai import ChatOpenAI
-
     sheets = sorted((config.CAMPAIGN / "characters").glob("pc-*.json"))
     if not sheets:
         raise DMError("No example character sheet found to model the new hero on.")
     example = sheets[0].read_text(encoding="utf-8")
 
-    model = ChatOpenAI(
-        model=config.model(), api_key=config.api_key(), base_url=OPENROUTER_URL,
-        timeout=300,
-        default_headers={"HTTP-Referer": "https://github.com/auto-dm",
-                         "X-Title": "Auto-DM"},
-    )
     system = (
         "You create Dungeons & Dragons 5e LEVEL 1 player characters. Reply with "
         "ONLY a JSON object — no prose, no markdown fences — in exactly the same "
@@ -689,12 +470,8 @@ def generate_character(description: str) -> dict:
     )
     last_err = None
     for _ in range(2):
-        try:
-            raw = model.invoke([_cached_system(system),
-                                HumanMessage(content="Player's concept: " + description)])
-        except Exception as e:
-            raise _friendly(e) from e
-        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", str(raw.content).strip())
+        raw = _one_shot(system, "Player's concept: " + description)
+        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
         try:
             sheet = json.loads(text)
             if isinstance(sheet, dict):
@@ -712,11 +489,6 @@ def generate_campaign(description: str) -> dict:
     generate_character, this runs on the setup screen, before the table
     exists. Examples come from the bundled starter so the shapes are stable
     regardless of what the active campaign currently holds."""
-    if not config.api_key():
-        raise DMError("No OpenRouter API key is set yet — open Settings and paste one.")
-    from langchain_core.messages import HumanMessage
-    from langchain_openai import ChatOpenAI
-
     starter = config.BUNDLE / "campaigns" / "starter"
     overview_example = (starter / "world" / "overview.md").read_text(encoding="utf-8")
     quest_example = json.dumps(
@@ -724,12 +496,6 @@ def generate_campaign(description: str) -> dict:
                     .read_text(encoding="utf-8")).get("active") or [{}])[0],
         indent=2, ensure_ascii=False)
 
-    model = ChatOpenAI(
-        model=config.model(), api_key=config.api_key(), base_url=OPENROUTER_URL,
-        timeout=600,
-        default_headers={"HTTP-Referer": "https://github.com/auto-dm",
-                         "X-Title": "Auto-DM"},
-    )
     system = (
         "You design the opening state of a Dungeons & Dragons 5e campaign for "
         "level 1 characters. Reply with ONLY a JSON object — no prose, no "
@@ -770,12 +536,8 @@ def generate_campaign(description: str) -> dict:
     pitch = description.strip() or "(none — DM's choice)"
     last_err = None
     for _ in range(2):
-        try:
-            raw = model.invoke([_cached_system(system),
-                                HumanMessage(content="The table's pitch: " + pitch)])
-        except Exception as e:
-            raise _friendly(e) from e
-        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", str(raw.content).strip())
+        raw = _one_shot(system, "The table's pitch: " + pitch)
+        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
         try:
             pkg = json.loads(text)
             if isinstance(pkg, dict):
@@ -810,61 +572,24 @@ def _is_ooc(msg: str) -> bool:
 
 def run_turn(player_message: str) -> dict:
     """One player turn. Publishes to the chronicle; returns a small summary."""
-    if not config.api_key():
-        raise DMError("No OpenRouter API key is set yet — open Settings and paste one.")
-
-    from langchain_core.messages import HumanMessage, ToolMessage
+    backend, model = backends.for_role("dm")
+    if (reason := backend.available()):
+        raise DMError(reason)
+    spec = spec_for("dm", model)
 
     begin_turn()
     _activity("The DM is thinking it over")
     try:
-        agent = build_agent()
-        run_config = {"configurable": {"thread_id": THREAD_ID},
-                      "recursion_limit": int(config.load().get("recursion_limit")
-                                             or RECURSION_LIMIT)}
-
-        history = (agent.get_state(run_config).values or {}).get("messages") or []
-        # A turn interrupted mid-tool (app killed, crash) leaves an AIMessage's
-        # tool_calls without ToolMessages, which bricks the thread: the provider
-        # requires results immediately after the calling message. Heal by
-        # writing synthetic results AS the tools node — that supersedes the
-        # graph's pending tasks in a new checkpoint, so the run resumes clean.
-        # (No RemoveMessage surgery: deleting around pending task writes is what
-        # used to re-brick the thread.)
-        answered = {m.tool_call_id for m in history
-                    if getattr(m, "tool_call_id", None)}
-        unanswered = [tc for m in history
-                      for tc in (getattr(m, "tool_calls", None) or [])
-                      if tc["id"] not in answered]
-        if unanswered:
-            # Truthful, not "the tool never ran": run_tool mutates state BEFORE
-            # the result is checkpointed, so a killed app may have applied the
-            # change already. Telling the model it never ran invites a re-apply
-            # (that's how a PC once took the same poison damage twice).
-            agent.update_state(run_config, {"messages": [
-                ToolMessage(content="(the app was closed mid-turn — this call "
-                                    "was interrupted and may or may not have "
-                                    "taken effect; re-read campaign state "
-                                    "before redoing any state change)",
-                            tool_call_id=tc["id"])
-                for tc in unanswered
-            ]}, as_node="tools")
-
-        fresh = not history
-        turn = ([HumanMessage(content=session_brief())] if fresh else []) \
-            + [HumanMessage(content=player_message)]
+        # A fresh conversation gets the session brief ahead of the message; a
+        # resumed one already has it. Asking the backend is the only thing this
+        # function needs to know about a history it deliberately doesn't own.
+        fresh = backend.is_fresh(spec)
+        opening = (session_brief() + "\n\n") if fresh else ""
 
         try:
-            result = agent.invoke({"messages": turn}, config=run_config)
-        except DMError:
-            raise
-        except Exception as e:
-            if type(e).__name__ == "GraphRecursionError":
-                raise DMError("The DM got stuck working on that. Try saying it "
-                              "again, more simply.") from e
-            raise _friendly(e) from e
-
-        final = _final_text(result)
+            final = backend.run(spec, opening + player_message)
+        except BackendError as e:
+            raise DMError(str(e)) from e
 
         # A wholly out-of-character message — the manual's "(...)" register:
         # rules questions, steering requests, table talk — wants a direct
@@ -882,14 +607,12 @@ def run_turn(player_message: str) -> dict:
         if not narrated() and not ooc and not players_text(final, quoted_only=True):
             _activity("The Narrator is finding the words")
             try:
-                result = agent.invoke({"messages": [HumanMessage(
-                    content="(From the app: that turn never reached the "
-                            "players' screen — nothing was published. Consult "
-                            "the narrator with the decision and roll outcomes "
-                            "you already have, then push its prose with "
-                            "narrate.py. Do not redo state changes you have "
-                            "already applied.)")]}, config=run_config)
-                final = _final_text(result) or final
+                final = backend.run(spec, (
+                    "(From the app: that turn never reached the players' "
+                    "screen — nothing was published. Consult the narrator with "
+                    "the decision and roll outcomes you already have, then push "
+                    "its prose with narrate.py. Do not redo state changes you "
+                    "have already applied.)")) or final
             except Exception:
                 pass  # the fallback below still tells the table something
 
@@ -927,13 +650,18 @@ def run_turn(player_message: str) -> dict:
 
 
 def reset_thread() -> None:
-    """Forget the conversation but keep all campaign state (a fresh session)."""
-    global _agent, _agent_key
-    try:
-        _checkpointer().delete_thread(THREAD_ID)
-    except Exception:
-        (config.CAMPAIGN / "state" / "dm-thread.sqlite").unlink(missing_ok=True)
-    _agent = _agent_key = None
+    """Forget the conversation but keep all campaign state (a fresh session).
+
+    Every backend, not just the one the dm currently runs on: a table that
+    switched backends mid-campaign has a stale conversation parked in the other
+    one, and "new session" has to mean it everywhere.
+    """
+    spec = spec_for("dm", "")
+    for info in backends.BACKENDS:
+        try:
+            backends.get(info.name).reset(spec)
+        except Exception:
+            pass  # a backend that can't even load has no history to forget
 
 
 # ── Self-check ────────────────────────────────────────────────────────────────

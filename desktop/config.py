@@ -17,6 +17,12 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# The registry table only — pure data, no implementation. Importing a backend
+# from here would close a loop (backends read config to resolve a role's
+# model), and would drag langgraph or the Agent SDK into every config read.
+from backends import base as backends_base  # noqa: E402
+
 # Reference content (rules/, .claude/, tools/, campaigns/starter/, CLAUDE.md) is
 # read from the PyInstaller bundle when frozen, else from the repo checkout.
 BUNDLE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
@@ -74,56 +80,79 @@ CAMPAIGN = Path(os.environ["CAMPAIGN_ROOT"]) if os.environ.get("CAMPAIGN_ROOT") 
 # single "global model" setting: every role's model is picked individually.
 FALLBACK_MODEL = "google/gemini-3.7-flash"
 
-# Shown on the setup screen. Ids verified against openrouter.ai/api/v1/models —
-# anything else can be typed in by hand, so this list never becomes a cage.
-# Lineup picked by head-to-head DM stress tests (2026-08-18): rules judgment,
-# dice honesty, secret-keeping, cost, and latency.
+# Shown on the setup screen. OpenRouter ids verified against
+# openrouter.ai/api/v1/models — anything else can be typed in by hand, so this
+# list never becomes a cage. The OpenRouter lineup was picked by head-to-head
+# DM stress tests (2026-08-18): rules judgment, dice honesty, secret-keeping,
+# cost, and latency.
+#
+# An id of the form "<backend>:<model>" names where the role runs; the grammar
+# and the backend table are in docs/backends.md. Both claude-* backends spawn
+# the `claude` binary already installed on this machine and use its own login,
+# so they spend subscription usage rather than API credit — there is no
+# Claude-over-API path here on purpose.
 MODEL_CHOICES = [
     ("google/gemini-3.7-flash", "Gemini 3.7 Flash — recommended, fast live play"),
     ("~deepseek/deepseek-v4-flash-latest", "DeepSeek V4 Flash — sharpest rulings, cheapest, slower"),
     ("openai/gpt-5.6-luna-pro", "GPT-5.6 Luna Pro — careful, costs more"),
-    ("claude-cli:haiku", "Claude Code on this Mac: Haiku — fastest, no API cost"),
-    ("claude-cli:sonnet", "Claude Code on this Mac: Sonnet — balanced, no API cost"),
-    ("claude-cli:opus", "Claude Code on this Mac: Opus — strong judgment, slower"),
-    ("claude-cli:fable", "Claude Code on this Mac: Fable — most capable, slowest"),
+    ("claude-agent:haiku", "Claude on this Mac: Haiku — fastest, no API cost"),
+    ("claude-agent:sonnet", "Claude on this Mac: Sonnet — balanced, no API cost"),
+    ("claude-agent:opus", "Claude on this Mac: Opus — strong judgment, slower"),
+    ("claude-agent:fable", "Claude on this Mac: Fable — most capable, slowest"),
+    ("claude-cli:haiku", "Claude on this Mac, plain CLI: Haiku"),
+    ("claude-cli:sonnet", "Claude on this Mac, plain CLI: Sonnet"),
+    ("claude-cli:opus", "Claude on this Mac, plain CLI: Opus"),
+    ("claude-cli:fable", "Claude on this Mac, plain CLI: Fable"),
 ]
 
-# A role model of "claude-cli:<alias>" runs that specialist through the
-# `claude -p` CLI on this machine instead of OpenRouter — the user's own Claude
-# subscription, no API spend. Specialist roles fit it exactly: one-shot task
-# in, answer out, and Claude Code reads the campaign files itself. The dm
-# orchestrator can't: it drives our own tools (dice, narrate, consult) through
-# structured tool-calling, which `claude -p` has no way to hand back.
-#
-# Always name the model. A bare "claude-cli" still works for a hand-written
-# config, but it passes no --model flag, so the role silently inherits whatever
-# the machine's own Claude Code is set to (a `model` key in ~/.claude/
-# settings.json, else the CLI default) — which changes under the app without
-# warning. The picker offers only the explicit ids for that reason.
-CLI_MODEL = "claude-cli"
+# Always name the model. A bare "claude-agent" or "claude-cli" still resolves,
+# but it passes no model flag, so the role silently inherits whatever the
+# machine's own Claude Code is set to (a `model` key in ~/.claude/settings.json,
+# else the CLI default) — which changes under the app without warning. The
+# picker offers only the explicit ids for that reason.
 
 
-def is_cli_model(model: str) -> bool:
-    return str(model).split(":", 1)[0].strip() == CLI_MODEL
+def parse_model(model_id: str) -> tuple[str, str]:
+    """(backend name, backend-local model) for a configured id."""
+    return backends_base.parse_model(model_id)
+
+
+def backend_of(model_id: str) -> str:
+    return parse_model(model_id)[0]
+
+
+def model_alias(model_id: str) -> str | None:
+    """The model to hand the backend, or None to accept the backend's default."""
+    return parse_model(model_id)[1] or None
+
+
+def supports_dm(model_id: str) -> bool:
+    """Can this id drive the orchestrator loop?
+
+    Asked of the backend registry rather than hard-coded, so a backend with no
+    way to hand a tool call back is kept out of the DM picker by construction
+    instead of by a rule someone has to remember.
+    """
+    spec = backends_base.info(backend_of(model_id))
+    return bool(spec and spec.supports_dm)
+
+
+def on_subscription(model_id: str) -> bool:
+    """True when this id runs on the machine's Claude login, not paid credit."""
+    spec = backends_base.info(backend_of(model_id))
+    return bool(spec and spec.subscription)
 
 
 def model_choices(role: str | None = None) -> list:
     """The models a role can actually be set to.
 
-    Offering the dm a local-CLI model would be offering a setting that cannot
-    work: the setup screen would save it and role_model() would silently
-    ignore it, and the dev panel would reject it with an error. Don't render
-    the choice.
+    Offering the dm a backend that can't drive the loop would be offering a
+    setting that cannot work: the setup screen would save it and role_model()
+    would silently ignore it. Don't render the choice.
     """
     if role == "dm":
-        return [(i, label) for i, label in MODEL_CHOICES if not is_cli_model(i)]
+        return [(i, label) for i, label in MODEL_CHOICES if supports_dm(i)]
     return list(MODEL_CHOICES)
-
-
-def cli_model_alias(model: str) -> str | None:
-    """The `--model` alias in a claude-cli id, or None for the CLI default."""
-    parts = str(model).split(":", 1)
-    return parts[1].strip() or None if len(parts) == 2 else None
 
 
 # Developer knobs — hidden behind the #dev reveal in the app's Settings. Kept
@@ -197,7 +226,7 @@ def role_model(role: str) -> str:
               or (cfg.get("model") if role == "dm" else None)
               or DEV_DEFAULTS["role_models"].get(role)
               or FALLBACK_MODEL)
-    if role == "dm" and is_cli_model(picked):
+    if role == "dm" and not supports_dm(picked):
         # Saved by hand or carried over from a role swap — don't boot broken.
         return FALLBACK_MODEL
     return picked

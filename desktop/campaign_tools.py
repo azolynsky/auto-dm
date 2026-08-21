@@ -353,31 +353,46 @@ def run_tool(tool: str, argv: list[str], stdin: str | None = None) -> str:
 
 TOOLS = [read_file, write_file, edit_file, list_files, run_tool]
 
+
+def _narrator_read(path: str) -> str:
+    """Read a text file, e.g. campaign/state/current.json or an entity's
+    summary.md/voice.md. Paths are repo-relative. motivations.md and
+    secrets.md are GM-eyes-only and will be refused."""
+    if Path(config.norm_path(path)).name in ("motivations.md", "secrets.md"):
+        refusal = ("error: that file is GM-eyes-only (the motivations "
+                   "firewall) — narrate from what the players have "
+                   "earned on screen")
+        _devlog("read_file", {"path": path}, refusal, _utcnow())
+        return refusal
+    return read_file(path)
+
+
+# The tool name reaches the model, and on the MCP backends it reaches the
+# permission allow-list too. A narrator offered a "read_file_safe" would be
+# told a firewall exists and that there is presumably an unsafe one; it sees
+# the same read_file every other role sees, which happens to refuse two files.
+_narrator_read.__name__ = "read_file"
+
+
 def role_tools(role: str) -> list:
     """Bookkeeper is the only role that writes; the Narrator's reads are
-    firewalled (invariant #7); everyone else reads and runs tools."""
+    firewalled (invariant #7); everyone else reads and runs tools.
+
+    This is the whole per-role tool surface, and every backend binds exactly
+    what it returns — the OpenRouter graph, the in-process MCP server, and the
+    stdio one. A firewall that lives in the function travels with it; one that
+    lived in a backend would have to be written three times and would be
+    missing from the fourth.
+    """
     if role == "bookkeeper":
         return TOOLS
     if role == "narrator":
-        base_read = read_file
-
-        def read_file_safe(path: str) -> str:
-            """Read a text file, e.g. campaign/state/current.json or an entity's
-            summary.md/voice.md. Paths are repo-relative. motivations.md and
-            secrets.md are GM-eyes-only and will be refused."""
-            if Path(config.norm_path(path)).name in ("motivations.md", "secrets.md"):
-                refusal = ("error: that file is GM-eyes-only (the motivations "
-                           "firewall) — narrate from what the players have "
-                           "earned on screen")
-                _devlog("read_file", {"path": path}, refusal, _utcnow())
-                return refusal
-            return base_read(path)
-
         # No run_tool: the narrator returns prose for the DM to publish —
         # with narrate.py it double-posted (observed s14) and it has no
         # other tool business (no dice, no state writes).
-        return [read_file_safe, list_files]
+        return [_narrator_read, list_files]
     return [read_file, list_files, run_tool]
+
 
 # ── Per-turn flags ────────────────────────────────────────────────────────────
 # run_tool sets these; agent.py reads them to decide whether a turn ever
