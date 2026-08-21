@@ -117,11 +117,6 @@ def backend_of(model_id: str) -> str:
     return parse_model(model_id)[0]
 
 
-def model_alias(model_id: str) -> str | None:
-    """The model to hand the backend, or None to accept the backend's default."""
-    return parse_model(model_id)[1] or None
-
-
 def supports_dm(model_id: str) -> bool:
     """Can this id drive the orchestrator loop?
 

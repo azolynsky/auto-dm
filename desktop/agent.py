@@ -6,9 +6,9 @@ rules that hold whichever model is thinking.
 Take one player message, run the loop with file and campaign-tool access, and
 leave the player-facing result in the chronicle via narrate.py. What actually
 runs the loop is a backend (desktop/backends/, docs/backends.md) — OpenRouter,
-the local `claude -p`, or the local Claude Agent SDK — chosen per role from
-config. This module knows nothing about any of them beyond the interface: it
-hands over a spec and a message and gets text back.
+or the `claude` binary this machine already has — chosen per role from config.
+This module knows nothing about either beyond the interface: it hands over a
+spec and a message and gets text back.
 
 What stays here is everything that is true regardless of who is thinking: the
 session brief, the per-role information silo, the narration gate, the
@@ -36,12 +36,11 @@ from backends import AgentSpec, BackendError, ToolSpec  # noqa: E402
 
 sys.path.insert(0, str(config.BUNDLE / "tools"))
 import campaign_lib  # noqa: E402
-import campaign_tools  # noqa: E402
-from campaign_tools import (ROLE_ACTIVITY, TOOLS,  # noqa: E402,F401
+from campaign_tools import (ROLE_ACTIVITY, TOOLS,  # noqa: E402
                             _activity, _devlog, _logged, _thread, _utcnow,
-                            allow_narration, begin_turn, edit_file, list_files,
-                            narrated, read_file, resolve_path, role_tools,
-                            run_tool, write_file)
+                            allow_narration, begin_turn, list_files, narrated,
+                            read_file, resolve_path, role_tools, run_tool,
+                            write_file)
 
 THREAD_ID = "dm"           # one running conversation per campaign
 DM_TURN_LIMIT = 40         # tool round trips in one player turn
@@ -116,7 +115,6 @@ def spec_for(role: str, model: str) -> AgentSpec:
         system_prompt=prompts.resolve(role).read_text(encoding="utf-8"),
         tools=tuple(ToolSpec.of(fn) for fn in role_tools(role)),
         turn_limit=SUB_TURN_LIMIT, stateful=False)
-
 
 
 # What each role's brief carries — the information silo. GM-side roles get

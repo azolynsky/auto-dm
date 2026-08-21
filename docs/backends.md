@@ -40,7 +40,6 @@ OpenRouter model id, which keeps suffixed ids like
 | `google/gemini-3.7-flash` | openrouter | OpenRouter credit |
 | `openrouter:openai/gpt-5.6-luna-pro` | openrouter | OpenRouter credit |
 | `claude-agent:opus` | claude-agent | your Claude subscription |
-| `claude-cli:opus` | claude-agent (alias) | your Claude subscription |
 
 The Claude backend never touches `ANTHROPIC_API_KEY`. It spawns the `claude`
 binary already installed on the machine and uses its OAuth login — the same
@@ -73,8 +72,11 @@ a second way to do one thing:
   and a DM served a tool surface with no `consult_role` in it. Neither was the
   CLI's fault; both were the cost of maintaining the second path.
 
-`claude-cli:*` ids still resolve, as an alias to `claude-agent` — saved configs
-are full of them. The picker never offers one.
+Its ids were briefly kept as an alias. That is the compatibility shim the
+`migrate-callers-then-delete-legacy-apis` principle warns about, and the caller
+inventory here was one config file, so the alias went too: `claude-cli:opus` now
+parses as an OpenRouter model id and fails loudly, which is the right way for a
+retired id to behave.
 
 The MCP server stays. It was never only a transport for that backend: it is how
 a terminal `claude`, Codex, or any other client runs the table, which is the

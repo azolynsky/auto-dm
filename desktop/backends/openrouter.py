@@ -67,7 +67,7 @@ def mark_cache(messages: list, spots: int = 2) -> list:
     return marked
 
 
-def final_text(result: dict) -> str:
+def _final_text(result: dict) -> str:
     for message in reversed(result.get("messages", [])):
         if message.__class__.__name__ == "AIMessage":
             return message.text() if callable(getattr(message, "text", None)) \
@@ -102,8 +102,6 @@ def friendly(e: Exception, model: str) -> BackendError:
 
 class OpenRouterBackend(Backend):
     name = "openrouter"
-    label = "OpenRouter"
-    supports_dm = True
 
     def __init__(self) -> None:
         self._graphs: dict = {}
@@ -263,7 +261,7 @@ class OpenRouterBackend(Backend):
                     f"the {spec.role} got stuck — break the task into smaller "
                     "pieces") from e
             raise friendly(e, spec.model) from e
-        return final_text(result)
+        return _final_text(result)
 
 
 BACKEND = OpenRouterBackend

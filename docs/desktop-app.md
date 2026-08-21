@@ -111,8 +111,9 @@ CLI accepts works.
 There was briefly a second Claude backend that shelled out to the plain
 `claude -p` command. Same binary, same login, same models, so it gave the picker
 two indistinguishable rows per model — and both bugs found while building this
-reproduced only on it. Removed; `claude-cli:*` ids still resolve as an alias so
-saved configs keep working. See [backends.md](backends.md).
+reproduced only on it. Removed outright, alias included; a config still holding
+a `claude-cli:` id needs that row repointed in Developer settings. See
+[backends.md](backends.md).
 
 **Name the model.** A bare `claude-agent` resolves, but sends no model flag, so
 that role inherits whatever the machine's Claude Code is set to — a `model` key

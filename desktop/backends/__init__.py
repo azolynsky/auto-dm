@@ -23,9 +23,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from .base import (BACKENDS, DEFAULT_BACKEND, AgentSpec,  # noqa: E402,F401
-                   Backend, BackendError, BackendInfo, ToolSpec, info,
-                   parse_model)
+from .base import (BACKENDS, AgentSpec, Backend,  # noqa: E402,F401
+                   BackendError, ToolSpec, info, parse_model)
 
 _instances: dict[str, Backend] = {}
 _lock = threading.Lock()

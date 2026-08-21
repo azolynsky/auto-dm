@@ -47,7 +47,9 @@ class DesktopTestCase(unittest.TestCase):
         import agent
         import config
         import prompts
+        import campaign_tools
         self.agent, self.config, self.prompts = agent, config, prompts
+        self.campaign_tools = campaign_tools
         # Keep the test off the real user config file.
         config.APP_DIR = self.tmp / "appdir"
         config.CONFIG_FILE = config.APP_DIR / "config.json"
@@ -580,30 +582,10 @@ class TestBackendRouting(DesktopTestCase):
         self.assertEqual(c.parse_model("claude-agent:fable"),
                          ("claude-agent", "fable"))
         self.assertEqual(c.parse_model("claude-agent"), ("claude-agent", ""))
-        self.assertIsNone(c.model_alias("claude-agent"))
-        self.assertEqual(c.model_alias("claude-agent:opus"), "opus")
-
-    def test_saved_claude_cli_ids_still_resolve(self):
-        # claude-cli was a second backend running the plain `claude -p` command
-        # — same binary, same login, same models, so it gave the picker two
-        # near-identical rows per model and doubled the paths a bug could hide
-        # in. Removed, but saved configs are full of its ids and must keep
-        # working rather than falling through to a bogus OpenRouter model.
-        c = self.config
+        # An unknown head is an OpenRouter model, not a backend — that is what
+        # keeps a suffixed OpenRouter id from being split in half.
         self.assertEqual(c.parse_model("claude-cli:opus"),
-                         ("claude-agent", "opus"))
-        self.assertEqual(c.parse_model("claude-cli"), ("claude-agent", ""))
-        self.assertTrue(c.on_subscription("claude-cli:sonnet"))
-        self.assertTrue(c.supports_dm("claude-cli:sonnet"))
-        self.config.save(role_models={"director": "claude-cli:opus"})
-        import backends
-        backend, model = backends.for_role("director")
-        self.assertEqual((backend.name, model), ("claude-agent", "opus"))
-
-    def test_the_picker_never_offers_a_retired_id(self):
-        # Resolving one is back-compat; offering one is a dead choice.
-        self.assertFalse([i for i, _ in self.config.MODEL_CHOICES
-                          if i.startswith("claude-cli")])
+                         ("openrouter", "claude-cli:opus"))
 
     def test_bare_and_suffixed_ids_stay_on_openrouter(self):
         # An OpenRouter id may carry its own colon; splitting on the first one
@@ -993,9 +975,9 @@ class TestWriteGuard(DesktopTestCase):
     def test_edit_requires_unique_match(self):
         self.agent.write_file("campaign/state/scratch.md", "a\na\n")
         self.assertIn("appears 2 times",
-                      self.agent.edit_file("campaign/state/scratch.md", "a", "b"))
+                      self.campaign_tools.edit_file("campaign/state/scratch.md", "a", "b"))
         self.assertIn("not found",
-                      self.agent.edit_file("campaign/state/scratch.md", "zzz", "b"))
+                      self.campaign_tools.edit_file("campaign/state/scratch.md", "zzz", "b"))
 
 
 class TestDottedPaths(DesktopTestCase):

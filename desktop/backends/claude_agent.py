@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-The claude-agent backend: the same `claude` binary as the CLI backend, driven
-through claude-agent-sdk so the campaign tools live in-process.
+The Claude backend: the `claude` binary this machine already has, driven through
+claude-agent-sdk so the campaign tools live in-process.
 
-Same login, same models, same subscription usage — no API key is read and none
-is needed. What the library form adds over `claude -p` is a tool channel that
+The same login and the same models as running `claude -p` by hand — no API key
+is read and none is needed. What the library form adds is a tool channel that
 doesn't leave the process: a tool call is a Python call, not a pipe round trip
-to a second MCP server, so the activity labels and dev-log entries the tools
+to a separate MCP server, so the activity labels and dev-log entries the tools
 already write land exactly as they do on the OpenRouter path.
 
-One `claude` process per exchange, as with the CLI backend. Holding a live
-ClaudeSDKClient open between turns would save that start-up, at the cost of a
-long-lived subprocess per role; it is the upgrade if process start ever shows
-up next to a model call, which today it doesn't.
+One `claude` process per exchange, about 2-3s. Holding a live ClaudeSDKClient
+open between turns would save that, at the cost of a long-lived subprocess per
+role; it is the upgrade if start-up ever shows up next to a model call, which
+against a 10-50s consult it doesn't.
 """
 from __future__ import annotations
 
@@ -106,8 +106,6 @@ def _sdk_tool(spec: ToolSpec):
 
 class ClaudeAgentBackend(Backend):
     name = "claude-agent"
-    label = "Claude Code on this Mac (SDK)"
-    supports_dm = True
 
     def available(self) -> str | None:
         try:
