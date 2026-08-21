@@ -64,14 +64,34 @@ means a second Python process per consult. `claude-agent` is the same binary and
 the same login with the tools in-process, so a tool call is a Python call rather
 than a pipe round trip.
 
-Both still start one `claude` per exchange. Holding a live `ClaudeSDKClient`
-open between turns would save that, at the cost of a long-lived subprocess per
-role; it is the upgrade if process start ever shows up next to a model call,
-which against a 10–50s consult it doesn't.
+### What the overhead actually is
+
+Measured on this machine, 2026-08-20:
+
+| | cost | how often |
+|---|---|---|
+| `claude` start-up | ~2–3s (a whole minimal `-p` round trip is 3.7–5.0s) | once per exchange |
+| MCP server boot (claude-cli only) | 276ms | once per `claude` launch |
+| one tool call, in-process | ~1ms | per call |
+| one tool call, over the MCP pipe | 5–7ms | per call |
+| a real specialist consult | 9–47s | |
+| a real player turn | 42–105s | |
+
+Start-up is **per exchange, not per tool call** — a turn that rolls twelve dice
+pays it once, not twelve times. A turn is one DM exchange plus one launch per
+consult, so a light turn (DM + narrator) carries ~5s of start-up in ~42s, and a
+heavy one (DM + four specialists) carries ~12–15s. Real but not dominant.
+
+Holding a live `ClaudeSDKClient` open between turns would remove it on the SDK
+path, at the cost of a long-lived subprocess per role. That is the upgrade if it
+ever starts to matter; it isn't the first thing to optimise while a single
+specialist consult can take 47s.
 
 The activity spinner and the dev log need nothing from any of this: the tools
 write both themselves, so they land identically whether the tool ran in-process
-or inside the MCP subprocess (which writes to the same campaign files).
+or inside the MCP subprocess (which writes to the same campaign files). The
+per-turn narration flags are the exception, and getting that wrong is what
+broke the claude-cli DM path — see below.
 
 ## The interface
 
@@ -224,5 +244,24 @@ Real runs against a throwaway campaign, not inferred from mocks (2026-08-20):
 | Consult on `claude-cli:haiku` over MCP | 9s; cited `rules/combat-flow.md`, which it had actually read |
 | `tools/mcp_server.py` driven by a real MCP client | 5 tools unscoped, 2 for the narrator; `motivations.md` refused; `dice.py` rolled |
 | Full turn, DM `claude-agent:sonnet`, narrator on OpenRouter | 105s; director consult, narrator consult, `narrate.py` push, one chronicle entry |
+| Full turn, everything on `claude-cli` | 42s; nested narrator consult, push, one entry with its effect |
 | Two turns, backend instances cleared between them | the second resumed the session and answered from the transcript |
 | Full turn with no OpenRouter key at all | `needs_api_key` false; turn completed and narrated |
+
+Running a whole turn is not optional coverage. A specialist consult exercises
+neither the narration gate nor `consult_role`, and both were broken on the
+claude-cli path while its consult test passed:
+
+- **The gate was in memory.** On that backend the tools run in the MCP
+  subprocess, which gets its own copy of every module global — so every
+  narration push was refused there, and the parent never learned one had
+  landed. The flags moved to `campaign/state/dm-turn.json`, the only thing both
+  processes see. Unreadable means locked; a lost gate must refuse prose rather
+  than wave it through.
+- **The DM had no consults.** The server was built from the `campaign_tools`
+  surface, which has no `consult_role` — those live in `agent.py` because they
+  run the backends. An orchestrator that can't reach the Narrator can't publish
+  anything, since the gate exists to refuse prose the Narrator didn't write.
+  The unscoped surface is now `agent.DM_TOOLS`, so this process runs the
+  consults; a specialist on claude-cli spawns its own `claude` and its own copy
+  of this server, one level down and no further.
