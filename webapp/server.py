@@ -30,6 +30,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "desktop"))
+import backends
 import campaign_lib
 import config as appconfig
 import prompts as prompt_registry
@@ -650,8 +651,8 @@ async def get_setup():
         "has_key": bool(appconfig.api_key()),
         "campaign": (read_json(CURRENT_FILE) or {}).get("campaign", ""),
         "model": appconfig.model(),
-        # This screen sets the DM's model, so it gets the DM's choices —
-        # the local CLI can't drive the orchestrator's tool calls.
+        # This screen sets the DM's model, so it gets the DM's choices — every
+        # backend that can actually drive the orchestrator loop.
         "models": [{"id": i, "label": label}
                    for i, label in appconfig.model_choices("dm")],
         "pregens": list_pregens(),
@@ -666,17 +667,22 @@ async def post_setup(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="invalid JSON")
     key = str(body.get("api_key", "")).strip()
+    chosen = str(body.get("model") or "").strip()
+    # A table whose DM runs on this machine's Claude login has nothing to pay
+    # OpenRouter for, so don't demand a key it doesn't have. The specialist
+    # roles can still be moved onto credit later from Developer settings, and
+    # that panel asks for the key then.
+    key_needed = not appconfig.on_subscription(chosen or appconfig.model())
     if key:
         result = await asyncio.to_thread(check_api_key, key)
         if not result["ok"]:
             raise HTTPException(status_code=400, detail=result["error"])
-    elif not appconfig.api_key():
+    elif key_needed and not appconfig.api_key():
         raise HTTPException(status_code=400, detail="An OpenRouter API key is required.")
     else:
         result = {"credit": None}
 
     appconfig.save(api_key=key or None)
-    chosen = str(body.get("model") or "").strip()
     if chosen and not appconfig.supports_dm(chosen):
         # Silently ignoring it (role_model falls back) would leave the setup
         # screen claiming a model the DM isn't running on.
@@ -712,13 +718,21 @@ async def post_setup(request: Request):
 
 @app.get("/api/dev")
 async def get_dev():
+    # Why a backend won't run, if it won't: a missing SDK or an uninstalled
+    # CLI should say so here rather than at the table, mid-turn.
+    status = backends.availability()
     return JSONResponse({**appconfig.dev_settings(),
                          "registry": prompt_registry.registry(),
                          "models": [{"id": i, "label": label}
                                     for i, label in appconfig.model_choices()],
-                         # The dm's row renders from this shorter list.
+                         # The dm's row renders from this list, which drops any
+                         # backend that can't drive the orchestrator loop.
                          "dm_models": [{"id": i, "label": label}
-                                       for i, label in appconfig.model_choices("dm")]})
+                                       for i, label in appconfig.model_choices("dm")],
+                         "backends": [{"name": info.name, "label": info.label,
+                                       "subscription": info.subscription,
+                                       "unavailable": status.get(info.name)}
+                                      for info in backends.BACKENDS]})
 
 
 @app.post("/api/dev")
@@ -959,9 +973,11 @@ async def say(request: Request):
     text = str(body.get("text", "")).strip()[:2000]
     if not text:
         raise HTTPException(status_code=400, detail="text required")
-    if not appconfig.api_key():
-        raise HTTPException(status_code=503,
-                            detail="No OpenRouter API key set — open Settings.")
+    # Ask the DM's own backend whether it can run, rather than assuming that
+    # means an OpenRouter key: a table on this machine's Claude login has none.
+    dm_backend, _ = backends.for_role("dm")
+    if (blocked := dm_backend.available()):
+        raise HTTPException(status_code=503, detail=blocked)
     # One turn at a time, visibly: a message sent mid-turn used to queue
     # silently and land after the reply, which read as the DM ignoring it
     # (table request). The chat box disables itself while the DM works; this

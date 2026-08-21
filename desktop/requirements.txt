@@ -7,3 +7,9 @@ langchain-openai>=1.5,<2    # OpenRouter (OpenAI-compatible) chat model
 langgraph-checkpoint-sqlite>=3.1,<4   # conversation survives closing the app
 certifi                     # CA bundle for the key check — system certs can be absent (frozen app, bare python.org installs)
 aiohttp>=3.10               # openai's vendored httpx-aiohttp transport imports it if present; 3.8 lacks SocketTimeoutError and crashes the first turn
+
+# Running a role on the Claude login this machine already has (docs/backends.md).
+# Both are optional: without them the claude-agent backend reports itself
+# unavailable and the other backends carry on.
+claude-agent-sdk>=0.2,<1    # the claude-agent backend — Claude Code as a library
+mcp>=1.23,<3                # tools/mcp_server.py, the tool channel for `claude -p`

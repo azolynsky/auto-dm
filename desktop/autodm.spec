@@ -4,9 +4,12 @@ PyInstaller spec for the Auto-DM desktop app.
 
     pyinstaller desktop/autodm.spec
 
-The campaign tools are shipped as SOURCE files and executed in-process with
-runpy (see desktop/agent.py), because a frozen app has no python interpreter to
-subprocess out to. Reference content (rules/, .claude/, prompts/, CLAUDE.md, the
+The campaign tools are shipped as SOURCE files and executed in-process (see
+desktop/campaign_tools.py), because a frozen app has no python interpreter to
+subprocess out to. For the same reason the bundled binary answers to
+`--mcp-server`: the claude-cli backend needs to launch tools/mcp_server.py as a
+child process, and re-executing itself is the only interpreter it has.
+Reference content (rules/, .claude/, prompts/, CLAUDE.md, the
 starter campaign) ships read-only; the player's own campaign is created in their
 app-data directory on first launch.
 """
@@ -37,15 +40,23 @@ datas = [
 ]
 binaries = []
 hiddenimports = [
-    "campaign_lib", "config", "prompts", "agent", "server",
+    "campaign_lib", "config", "prompts", "agent", "campaign_tools", "server",
+    # Backends load by name at first use, so nothing imports them statically.
+    "backends", "backends.base", "backends.openrouter", "backends.claude_cli",
+    "backends.claude_agent",
+    "mcp_server",   # app.py --mcp-server re-executes this binary into it
     "uvicorn.protocols.http.h11_impl", "uvicorn.protocols.websockets.auto",
     "uvicorn.lifespan.on", "uvicorn.loops.auto",
 ]
 
-# LangChain/LangGraph resolve providers and serializers dynamically, so let the
-# hooks pull in what static analysis misses.
+# LangChain/LangGraph resolve providers and serializers dynamically, and the
+# MCP/Agent SDKs load transports the same way, so let the hooks pull in what
+# static analysis misses. claude_agent_sdk and mcp are optional at runtime —
+# a build without them just leaves the claude-agent backend reporting itself
+# unavailable, which is what its available() is for.
 for package in ("langgraph", "langgraph_checkpoint", "langchain_core",
-                "langchain_openai", "openai", "webview"):
+                "langchain_openai", "openai", "webview",
+                "claude_agent_sdk", "mcp"):
     try:
         pkg_datas, pkg_binaries, pkg_hidden = collect_all(package)
     except Exception as e:

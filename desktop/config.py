@@ -241,12 +241,34 @@ def model() -> str:
     return os.environ.get("AUTODM_MODEL") or role_model("dm")
 
 
+def configured_roles() -> list[str]:
+    """Every role with a model, shipped defaults plus the user's overrides.
+
+    The authoritative role list lives in prompts.ROLES, which can't be imported
+    here (prompts reads config). These keys are the same set in practice, and
+    a role missing from both has no model to pay for anyway.
+    """
+    return sorted({*DEV_DEFAULTS["role_models"],
+                   *(load().get("role_models") or {})})
+
+
+def needs_api_key() -> bool:
+    """Does this table need an OpenRouter key at all?
+
+    Only if some role is set to spend credit. A table running entirely on the
+    machine's Claude login has nothing to pay for and must not be asked for a
+    key it doesn't have.
+    """
+    return any(not on_subscription(role_model(role))
+               for role in configured_roles())
+
+
 def is_ready() -> bool:
-    """True once the app has a key and a campaign with a seated party — i.e.
+    """True once the app can run and has a campaign with a seated party — i.e.
     setup is done. ensure_campaign() recreates the campaign files at every
     boot, so their existence alone can't mean setup ran; an unseated party is
     the mark of a table that hasn't picked its heroes yet."""
-    if not api_key():
+    if needs_api_key() and not api_key():
         return False
     try:
         current = json.loads(

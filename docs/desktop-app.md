@@ -1,22 +1,26 @@
 # The desktop app
 
-Auto-DM packaged for someone who doesn't use a terminal. They need one thing: an
-OpenRouter API key. No Python, no `claude` CLI, no cloning.
+Auto-DM packaged for someone who doesn't use a terminal. They need one thing to
+run it: either an OpenRouter API key or Claude Code already installed and logged
+in. No Python, no cloning.
 
 ## What's different from the repo version
 
 On `main` the DM *is* Claude Code — the webapp shells out to `claude -p` and the
-CLI does the thinking. That needs a developer's machine and a Claude subscription.
+CLI does the thinking. That needs a developer's machine and a Claude
+subscription.
 
-Here the DM is a [LangGraph](https://langchain-ai.github.io/langgraph/) ReAct
-agent talking to OpenRouter, living inside the app:
+Here every role picks its own **backend** — see [backends.md](backends.md) for
+the contract and the model-id grammar. Three ship: OpenRouter, the local
+`claude -p`, and the local Claude Agent SDK. The orchestrator loop runs on any
+of them, so "the DM is Claude Code" is now a setting rather than a fork.
 
 | | `main` | desktop app |
 |---|---|---|
-| DM brain | `claude -p --continue` subprocess | LangGraph agent (`desktop/agent.py`) |
-| Credentials | Claude Code subscription | one OpenRouter key |
-| Roles/skills | Claude's `Agent` / `Skill` tools | the model reads `.claude/**` and embodies them |
-| History | Claude Code's session | LangGraph SQLite checkpoint in the campaign |
+| DM brain | `claude -p --continue` subprocess | any backend, per role (`desktop/backends/`) |
+| Credentials | Claude Code subscription | an OpenRouter key, or that same subscription, or both |
+| Roles/skills | Claude's `Agent` / `Skill` tools | real subagents — one consult per role, own model |
+| History | Claude Code's session | LangGraph SQLite checkpoint, or the CLI's own session |
 | Chat | optional, gated by `web_input` | always under the adventure log |
 | Campaign files | `<repo>/campaign` | the OS app-data directory |
 
@@ -87,54 +91,66 @@ this section is visible to players by default because it changes how the DM is
 *built*, not how it plays. Prompt variants live in `prompts/` — see
 [prompts/README.md](../prompts/README.md).
 
-### Running a role on Claude Code instead of OpenRouter
+### Running a role on your own Claude login
 
-Any specialist role can run on the `claude` CLI on this machine — your own
-Claude subscription, no API spend. Pick one of the **Claude Code on this Mac**
-entries for that role in Developer settings, or set the model id by hand:
+Any role — the `dm` orchestrator included — can run on the `claude` binary
+already installed on this machine, against the Claude login it already has. No
+API key is read and none is needed; it spends subscription usage, not credit.
+Pick a **Claude on this Mac** entry for that role in Developer settings, or set
+the id by hand:
 
 ```
-"role_models": { "narrator": "claude-cli:haiku", "rules-lawyer": "claude-cli:opus" }
+"role_models": { "dm": "claude-agent:opus", "narrator": "google/gemini-3.7-flash" }
 ```
 
-Four ids, fastest first: `claude-cli:haiku`, `claude-cli:sonnet`,
-`claude-cli:opus`, `claude-cli:fable`. Each passes `--model <alias>` straight
-through, so any alias the installed CLI accepts (or a full model id) works.
+Two Claude backends, because they are good at different things:
 
-**Name the model.** A bare `claude-cli` still resolves, but it sends no
-`--model` flag, so that role inherits whatever the machine's Claude Code is set
-to — a `model` key in `~/.claude/settings.json`, else the CLI's default. That
-setting changes outside the app, which silently changes who is narrating your
-game. The picker offers only the explicit ids.
+| Prefix | What runs | Tools reach it via | Use when |
+|---|---|---|---|
+| `claude-agent:` | `claude-agent-sdk` driving the binary | an in-process MCP server | default — a tool call is a Python call |
+| `claude-cli:` | the plain `claude -p` command | a stdio MCP server (`tools/mcp_server.py`) | you want no extra dependency, or to debug the exact command |
 
-The role's prompt file becomes the CLI's system prompt and the task — pre-read
-brief included — its user turn, so a role runs identically either way and can be
+Four models each, fastest first: `haiku`, `sonnet`, `opus`, `fable`. The alias
+passes straight through, so anything the installed CLI accepts works.
+
+**Name the model.** A bare `claude-agent` or `claude-cli` resolves, but sends no
+model flag, so that role inherits whatever the machine's Claude Code is set to —
+a `model` key in `~/.claude/settings.json`, else the CLI's default. That setting
+changes outside the app, which silently changes who is narrating your game. The
+picker offers only the explicit ids.
+
+The role's prompt file becomes the system prompt and the task — pre-read brief
+included — the user turn, so a role runs identically on any backend and can be
 switched back without touching prompts.
 
-Measured on the same beats (2026-08-19): narrator 7.1s local vs 11–15s on
-OpenRouter; rules-lawyer 32.4s local vs ~14s. Local is free but the CLI has
-its own startup cost per call, so it suits roles you aren't waiting on more
-than the ones you are.
+Measured on the same beats (2026-08-19, before the MCP channel existed):
+narrator 7.1s local vs 11–15s on OpenRouter; rules-lawyer 32.4s local vs ~14s.
+Local is free but the CLI has its own start-up cost per call, so it suits roles
+you aren't waiting on more than the ones you are.
 
-What it does *not* cover:
+What both Claude backends deliberately do *not* get:
 
-- **The `dm` orchestrator.** It drives our own tools (`dice.py`, `narrate.py`,
-  `consult_role`) through structured tool-calling, which `claude -p` has no way
-  to hand back. The app refuses this setting rather than shipping a DM that
-  can't roll dice — and `role_model()` falls back to the API model if a config
-  is hand-edited to try.
-- **A shell.** Every CLI consult passes `--disallowed-tools "Bash WebFetch
-  WebSearch Task"` and an explicit `--allowed-tools` allow-list, so it never
-  blocks on a permission prompt and never gets more reach than the role needs.
-- **File access for the Narrator.** The motivations firewall (invariant #7) is
-  enforced at the tool level on the OpenRouter path; `claude -p` has no
-  per-file hook, so the Narrator runs with no file tools at all and works from
-  its brief — which is what it does anyway.
+- **Claude Code's own tools.** `Read`, `Write`, `Edit`, `Bash`, `Glob`, `Grep`,
+  `WebFetch`, `WebSearch` and `Task` are all denied. Every capability arrives
+  through the campaign tools instead, which is where the path guardrails and
+  the motivations firewall live — Claude Code's own `Read` would walk straight
+  past both.
+- **Your MCP servers and your `CLAUDE.md`.** The CLI backend passes
+  `--strict-mcp-config`; the SDK backend sets `setting_sources=None`. The run
+  is the game, not your working directory.
+- **A permission prompt.** The allow-list is the whole surface and nobody is
+  sitting at a terminal to answer one.
+
+The Narrator's firewall now holds here too. It used to run with no file access
+at all on the CLI path, because `claude -p` had no per-file hook to enforce
+invariant #7; it now gets the same `read_file` that refuses `motivations.md` and
+`secrets.md`, because the firewall lives in the function and the function is
+what every backend binds.
 
 Requires Claude Code installed. A GUI-launched `.app` gets a bare `PATH`, so
 the app also checks `~/.local/bin`, Homebrew, `/usr/local/bin`, and the npm
-global prefix; if it still can't find it the consult returns a plain error
-naming the fix instead of failing silently.
+global prefix; if it still can't find it, Developer settings shows the backend
+as unavailable with the fix, instead of failing at the table mid-turn.
 
 ## Guardrails
 

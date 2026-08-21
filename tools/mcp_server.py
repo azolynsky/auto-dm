@@ -54,6 +54,10 @@ def build_server(role: str | None = None):
     label = f"the {role}" if role else "the DM"
     server = FastMCP(
         name="campaign",
+        # Per-request INFO lines go to stderr, which the parent captures and
+        # shows the table if the run fails — one "Processing request" line per
+        # tool call buries the actual error.
+        log_level="WARNING",
         instructions=(
             f"The live D&D campaign at {config.CAMPAIGN}, served for {label}. "
             "Paths are repo-relative (campaign/state/current.json, "

@@ -645,6 +645,49 @@ class TestBackendRouting(DesktopTestCase):
             base.info = real
 
 
+class TestSubscriptionOnlyTable(DesktopTestCase):
+    """A table with no OpenRouter key at all, running on this Mac's Claude."""
+
+    def _seat_party(self):
+        current = self.campaign / "state" / "current.json"
+        state = json.loads(current.read_text(encoding="utf-8"))
+        state["party"] = ["pc-fighter"]
+        current.write_text(json.dumps(state), encoding="utf-8")
+
+    def test_no_key_is_needed_when_nothing_spends_credit(self):
+        self.config.save(role_models={
+            role: "claude-agent:haiku"
+            for role in self.config.configured_roles()})
+        self.assertFalse(self.config.needs_api_key())
+        self._seat_party()
+        # No key was ever saved, and setup is still complete.
+        self.assertEqual(self.config.api_key(), "")
+        self.assertTrue(self.config.is_ready())
+
+    def test_one_role_on_credit_brings_the_key_back(self):
+        # The goal's own example: everything local except the narrator.
+        self.config.save(role_models={
+            **{role: "claude-agent:haiku"
+               for role in self.config.configured_roles()},
+            "narrator": "google/gemini-3.7-flash"})
+        self.assertTrue(self.config.needs_api_key())
+        self._seat_party()
+        self.assertFalse(self.config.is_ready())   # ...until a key is pasted
+
+    def test_a_mixed_table_routes_each_role_to_its_own_backend(self):
+        self.config.save(api_key="sk-test", role_models={
+            "dm": "claude-agent:sonnet",
+            "narrator": "google/gemini-3.7-flash",
+            "director": "claude-cli:opus"})
+        import backends
+        self.assertEqual(
+            [(r, *[(b.name, m) for b, m in [backends.for_role(r)]][0])
+             for r in ("dm", "narrator", "director")],
+            [("dm", "claude-agent", "sonnet"),
+             ("narrator", "openrouter", "google/gemini-3.7-flash"),
+             ("director", "claude-cli", "opus")])
+
+
 class TestClaudeCliBackend(DesktopTestCase):
     """`claude -p` on this machine, reaching the campaign tools over MCP."""
 

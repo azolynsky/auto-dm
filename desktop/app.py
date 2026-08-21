@@ -128,6 +128,16 @@ def wait_for_server(port: int, timeout: float = 60.0) -> bool:
 
 
 def main() -> int:
+    # Not the app: the campaign MCP server, which the claude-cli backend
+    # launches as a child process. A frozen bundle has no python interpreter to
+    # hand tools/mcp_server.py to — sys.executable is this binary — so the
+    # binary re-executes itself with this flag and serves stdio instead of
+    # opening a window. Must be first: everything below builds a UI.
+    if "--mcp-server" in sys.argv[1:]:
+        sys.path.insert(0, str(config.BUNDLE / "tools"))
+        import mcp_server
+        return mcp_server.main()
+
     # An external CAMPAIGN_ROOT pins the root from outside (tests, sandboxes);
     # the Campaign menu is hidden then, because a switch written to config.json
     # would silently not take effect. Decide before we set the env ourselves.

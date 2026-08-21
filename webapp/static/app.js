@@ -990,8 +990,9 @@ function renderDev(data) {
   // A hand-typed model id that isn't in MODEL_CHOICES still round-trips as an
   // extra option, so a config edited by hand survives a save from this panel.
   const modelSelect = (role, current) => {
-    // The dm can't run on the local claude CLI (no tool-calling), so its row
-    // is served a shorter list — never render a choice that can't be saved.
+    // The dm's row is served its own list: any backend with no way to hand a
+    // tool call back is dropped from it, because a DM that can't roll dice
+    // isn't a DM. Never render a choice that can't be saved.
     const choices = (role === 'dm' && data.dm_models) || data.models;
     return `
       <select data-model-role="${role}" title="Model for this role">
@@ -1020,12 +1021,22 @@ function renderDev(data) {
       <span class="setting-desc">${DEV_HELP[entry.role] || entry.source}</span>
     </label>`).join('');
 
+  // A backend that can't run should say so here, not at the table mid-turn.
+  // Only the broken ones are worth screen space; silence means all is well.
+  const broken = (data.backends || []).filter(b => b.unavailable);
+  const backendNote = !broken.length ? '' : `
+    <p class="settings-hint">${broken.map(b =>
+      `<strong>${b.label}</strong> — ${b.unavailable}`).join('<br>')}</p>`;
+
   document.getElementById('dev-body').innerHTML = `
     <p class="settings-hint">Every role picks its own model — the roles are
       separate agents the DM consults, and each one's tool calls show up in the
-      Dev Log in the sidebar. Add <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code>
-      to offer that role a second prompt variant — see
-      <code>prompts/README.md</code>.</p>
+      Dev Log in the sidebar. A <code>claude-agent:</code> or
+      <code>claude-cli:</code> model runs on this machine's own Claude login
+      instead of OpenRouter credit. Add
+      <code>prompts/&lt;role&gt;/&lt;name&gt;.md</code> to offer that role a
+      second prompt variant — see <code>prompts/README.md</code>.</p>
+    ${backendNote}
     ${rows}
     <div class="settings-actions">
       <span id="dev-status"></span>
